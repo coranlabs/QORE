@@ -4,7 +4,7 @@
   <tr style="border-collapse: collapse; border: none;">
     <td style="border-collapse: collapse; border: none;">
       <a href="http://www.coranlabs.com/">
-         <img src="./docs/coranlabs-logo.png" alt="" border=2 height=130 width=150>
+         <img src="./docs/coranlabs-logo.png" alt="" border=2 height=120 width=150>
          </img>
       </a>
     </td>
