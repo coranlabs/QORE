@@ -56,15 +56,15 @@ QORE addresses these needs by integrating the following post-quantum techniques:
 ## Migration to Post-Quantum Core using QORE
 
 | **Feature**                        | **Classical Core**                                     | **Qore (Post-Quantum Core)**                           | **Status**   |
-|--------------------------------|---------------------------------------------------|----------------------------------------------------|----------|
-| **SUPI to SUCI**                   | ECIES (Elliptic Curve Integrated Encryption Scheme) | Crystals-Kyber (Key Encapsulation Mechanism)       | ✅ Done     |
-|                                |                                                     | Hybrid Post Quantum Mechanism                      |  ✅ Done        |  
-| **Random Number**                  | PRNG (Pseudo Random Number Generator)             | QRNG (Quantum Random Number Generator)              | ✅ Done     |
-| **SBI Communication**              | mTLS                                              | PQ-TLS                                             |  Ongoing  |
-| **Digital Certificates**           | Classical cryptographic algorithm                 | Dilithium                                          | ✅ Done     |
-| **Symmetric Key**                  | AES128                                            | AES256                                             | ✅ Done     |
-| **N3 User Data**                  | IPSec                                            | PQ-IPSec                                             |  Ongoing     |
-| **N3 User Data**                  | DTLS                                            | PQ-DTLS                                             |  Ongoing     |
+|---------------------------|-----------------------------------------------------|-----------------------------------------------|----------|
+| **SUPI to SUCI**          | ECIES (Elliptic Curve Integrated Encryption Scheme) | Crystals-Kyber (Key Encapsulation Mechanism)  | ✅Done     |
+|                           |                                                     | Hybrid Post Quantum Mechanism                 |  ✅Done        |  
+| **Random Number**         | PRNG (Pseudo Random Number Generator)               | QRNG (Quantum Random Number Generator)        | ✅ Done     |
+| **SBI Communication**     | mTLS                                                | PQ-TLS                                        |  🟡Ongoing  |
+| **Digital Certificates**  | Classical cryptographic algorithm                   | Dilithium                                     | ✅ Done     |
+| **Symmetric Key**         | AES128                                              | AES256                                        | ✅ Done     |
+| **N3 User Data**          | IPSec                                               | PQ-IPSec                                      |  🟡Ongoing     |
+| **N3 User Data**          | DTLS                                                | PQ-DTLS                                       |  🟡Ongoing     |
 
 
 ## Current Scenario of QORE
