@@ -4,7 +4,7 @@
   <tr style="border-collapse: collapse; border: none;">
     <td style="border-collapse: collapse; border: none;">
       <a href="http://www.coranlabs.com/">
-         <img src="./docs/coranlabs-logo.png" alt="" border=2 height=130 width=140>
+         <img src="./docs/coranlabs-logo.png" alt="" border=2 height=130 width=150>
          </img>
       </a>
     </td>
@@ -60,11 +60,11 @@ QORE addresses these needs by integrating the following post-quantum techniques:
 | **SUPI to SUCI**                   | ECIES (Elliptic Curve Integrated Encryption Scheme) | Crystals-Kyber (Key Encapsulation Mechanism)       | ✅ Done     |
 |                                |                                                     | Hybrid Post Quantum Mechanism                      |  ✅ Done        |  
 | **Random Number**                  | PRNG (Pseudo Random Number Generator)             | QRNG (Quantum Random Number Generator)              | ✅ Done     |
-| **SBI Communication**              | mTLS                                              | PQ-TLS                                             | 🟡 Ongoing  |
+| **SBI Communication**              | mTLS                                              | PQ-TLS                                             |  Ongoing  |
 | **Digital Certificates**           | Classical cryptographic algorithm                 | Dilithium                                          | ✅ Done     |
 | **Symmetric Key**                  | AES128                                            | AES256                                             | ✅ Done     |
-| **N3 User Data**                  | IPSec                                            | PQ-IPSec                                             | 🟡 Ongoing     |
-| **N3 User Data**                  | DTLS                                            | PQ-DTLS                                             | 🟡 Ongoing     |
+| **N3 User Data**                  | IPSec                                            | PQ-IPSec                                             |  Ongoing     |
+| **N3 User Data**                  | DTLS                                            | PQ-DTLS                                             |  Ongoing     |
 
 
 ## Current Scenario of QORE
