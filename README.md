@@ -9,7 +9,7 @@
       </a>
     </td>
     <td style="border-collapse: collapse; border: none; vertical-align: center;">
-      <b><h1>QORE: QUANTAMISED TELECOM CORE  </h1></b>
+      <b><h1>QORE: Quantumized TELECOM CORE  </h1></b>
       <b><h2>Beyond 5G Core integrated with Post Quantum Cryptography and QRNG</h2></b>
     </td>
   </tr>
@@ -60,7 +60,7 @@ QORE addresses these needs by integrating the following post-quantum techniques:
 | **SUPI to SUCI**          | ECIES (Elliptic Curve Integrated Encryption Scheme) | Crystals-Kyber (Key Encapsulation Mechanism)  | ✅ Done     |
 |                           |                                                     | Hybrid Post Quantum Mechanism                 |  ✅ Done        |  
 | **Random Number**         | PRNG (Pseudo Random Number Generator)               | QRNG (Quantum Random Number Generator)        | ✅ Done     |
-| **SBI Communication**     | mTLS                                                | PQ-TLS                                        |  🟡Ongoing  |
+| **SBI Communication**     | mTLS                                                | PQ-TLS                                        |   ✅ Done |
 | **Digital Certificates**  | Classical cryptographic algorithm                   | Dilithium                                     | ✅ Done     |
 | **Symmetric Key**         | AES128                                              | AES256                                        | ✅ Done     |
 | **N3 User Data**          | IPSec                                               | PQ-IPSec                                      |  🟡Ongoing     |
