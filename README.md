@@ -9,7 +9,7 @@
       </a>
     </td>
     <td style="border-collapse: collapse; border: none; vertical-align: center;">
-      <b><h1>QORE: Quantumized TELECOM CORE  </h1></b>
+      <b><h1>QORE: QUANTUMIZED CORE SOLUTION</h1></b>
       <b><h2>Beyond 5G Core integrated with Post Quantum Cryptography and QRNG</h2></b>
     </td>
   </tr>
@@ -42,26 +42,30 @@ The current Core, as defined by the 3GPP standard, currently relies on **classic
 #### Solution:
 To secure the classical Core against these quantum threats, it is necessary to migrate to a **Post-Quantum Core**. This migration involves utilizing post-quantum cryptographic algorithms that are designed to be secure against the capabilities of quantum computers. Additionally, the generation of truly random numbers is crucial to ensure that cryptographic keys remain safe from quantum attacks.
 QORE addresses these needs by integrating the following post-quantum techniques:
-- **Key Encapsulation Mechanism:** Ensures secure key exchange and protection against quantum attacks
-- **Lattice-Based Cryptography:** Provides strong security foundations against quantum computing threats
-- **Seeds Generated from QRNG:** Utilizes Quantum Random Number Generators to produce truly random seeds, enhancing key security
-- **Crystals-Kyber:** A lattice-based key encapsulation mechanism ensuring quantum-safe key exchanges
-- **Dilithium:** A lattice-based digital signature scheme offering strong security guarantees
-- **PQ-TLS:** Post-Quantum Transport Layer Security to secure communication channels
-- **AES256:** Advanced Encryption Standard with 256-bit keys to ensure robust encryption
-- **PQ-IPSec:** Post-Quantum IPSec for securing Internet Protocol Security communications
-- **PQ-DTLS:** Post-Quantum Datagram Transport Layer Security for securing datagram communications
+* `ML-KEM`: Module-Lattice-Based Key-Encapsulation Mechanism, ensures secure key exchange and protection against quantum attacks, utilizing lattice-based cryptography for strong security foundations.
+
+* `ML-DSA`: Module-Lattice-Based Digital Signature Algorithm, a lattice-based digital signature scheme offering strong security guarantees against quantum computing threats.
+
+* `QRNG seeds`: Utilizes Quantum Random Number Generators to produce truly random seeds, enhancing key security.
+
+* `PQ-mTLS`: Post-Quantum Mutual Transport Layer Security to secure communication channels.
+
+* `AES256`: Advanced Encryption Standard with 256-bit keys to ensure robust encryption.
+
+* `PQ-IPSec`: Post-Quantum IPSec for securing Internet Protocol Security communications.
+
+* `PQ-DTLS`: Post-Quantum Datagram Transport Layer Security for securing datagram communications.
 
 
 ## Migration to Post-Quantum Core using QORE
 
 | **Feature**                        | **Classical Core**                                     | **Qore (Post-Quantum Core)**                           | **Status**   |
 |---------------------------|-----------------------------------------------------|-----------------------------------------------|----------|
-| **SUPI to SUCI**          | ECIES (Elliptic Curve Integrated Encryption Scheme) | Crystals-Kyber (Key Encapsulation Mechanism)  | ✅ Done     |
+| **SUPI to SUCI**          | ECIES (Elliptic Curve Integrated Encryption Scheme) | ML-KEM  | ✅ Done     |
 |                           |                                                     | Hybrid Post Quantum Mechanism                 |  ✅ Done        |  
 | **Random Number**         | PRNG (Pseudo Random Number Generator)               | QRNG (Quantum Random Number Generator)        | ✅ Done     |
-| **SBI Communication**     | mTLS                                                | PQ-TLS                                        |   ✅ Done |
-| **Digital Certificates**  | Classical cryptographic algorithm                   | Dilithium                                     | ✅ Done     |
+| **SBI Communication**     | mTLS                                                | PQ-mTLS                                        |   ✅ Done |
+| **Digital Certificates**  | Classical cryptographic algorithm                   | ML-DSA                                     | ✅ Done     |
 | **Symmetric Key**         | AES128                                              | AES256                                        | ✅ Done     |
 | **N3 User Data**          | IPSec                                               | PQ-IPSec                                      |  🟡Ongoing     |
 | **N3 User Data**          | DTLS                                                | PQ-DTLS                                       |  🟡Ongoing     |
