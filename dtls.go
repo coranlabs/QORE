@@ -12,7 +12,7 @@ import "C"
 import (
 	"fmt"
 	"log"
-	"net"
+	// "net"
 )
 
 const (
@@ -118,36 +118,36 @@ func print_ssl_state(ssl *C.SSL) {
 	log.Println(state)
 }
 
-func main() {
+// func main() {
 
-	// Create UDP connection (non-blocking UDP socket)
-	conn, err := net.Dial("udp", "localhost:4444")
-	if err != nil {
-		fmt.Println("Failed to create UDP connection:", err)
-		return
-	}
-	defer conn.Close()
+// 	// Create UDP connection (non-blocking UDP socket)
+// 	conn, err := net.Dial("udp", "localhost:4444")
+// 	if err != nil {
+// 		fmt.Println("Failed to create UDP connection:", err)
+// 		return
+// 	}
+// 	defer conn.Close()
 
-	// // Convert Go socket to a BoringSSL BIO object for DTLS
-	// bio := C.BIO_new_dgram(C.int(conn.(*net.UDPConn).Fd()), C.BIO_NOCLOSE)
-	// if bio == nil {
-	// 	fmt.Println("Failed to create DTLS BIO")
-	// 	return
-	// }
+// 	// // Convert Go socket to a BoringSSL BIO object for DTLS
+// 	// bio := C.BIO_new_dgram(C.int(conn.(*net.UDPConn).Fd()), C.BIO_NOCLOSE)
+// 	// if bio == nil {
+// 	// 	fmt.Println("Failed to create DTLS BIO")
+// 	// 	return
+// 	// }
 
-	file, err := conn.(*net.UDPConn).File()
-	if err != nil {
-		panic(err)
-	}
-	fd := file.Fd()
-	
-	fmt.Println(fd)
+// 	file, err := conn.(*net.UDPConn).File()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	fd := file.Fd()
 
-	// bio := C.create_bio_from_fd(fd)
-	// if bio == nil {
-	// 	fmt.Println("Failed to create DTLS BIO")
-	// 	return
-	// }
+// 	fmt.Println(fd)
 
-	// fmt.Println("DTLS handshake successful!")
-}
+// 	// bio := C.create_bio_from_fd(fd)
+// 	// if bio == nil {
+// 	// 	fmt.Println("Failed to create DTLS BIO")
+// 	// 	return
+// 	// }
+
+// 	// fmt.Println("DTLS handshake successful!")
+// }
