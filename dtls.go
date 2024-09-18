@@ -12,6 +12,7 @@ import "C"
 import (
 	"fmt"
 	"log"
+	"unsafe"
 	// "net"
 )
 
@@ -48,7 +49,7 @@ func handle_ssl_error(ssl *C.SSL, err_code C.int) {
 	}
 }
 
-func Init_ssl_ctx() *C.SSL_CTX {
+func Init_ssl_ctx(SSLMODE int) *C.SSL_CTX {
 
 	// C.SSL_library_init()
 	// C.SSL_load_error_strings()
@@ -60,11 +61,32 @@ func Init_ssl_ctx() *C.SSL_CTX {
 		C.SSL_CTX_free(ctx)
 		return nil
 	}
+
+	if SSLMODE == SSLMODE_SERVER {
+
+		certPath := C.CString("/home/six/NFs/dtls-standalone-test/server/certificate.pem")
+		keyPath := C.CString("/home/six/NFs/dtls-standalone-test/server/key.pem")
+		defer C.free(unsafe.Pointer(certPath))
+		defer C.free(unsafe.Pointer(keyPath))
+
+		if C.SSL_CTX_use_certificate_file(ctx, certPath, C.SSL_FILETYPE_PEM) <= 0 {
+			log.Fatal("Failed to load certificate")
+			C.SSL_CTX_free(ctx)
+			return nil
+		}
+
+		if C.SSL_CTX_use_PrivateKey_file(ctx, keyPath, C.SSL_FILETYPE_PEM) <= 0 {
+			log.Fatal("Failed to load private key")
+			C.SSL_CTX_free(ctx)
+			return nil
+		}
+	}
+
 	return ctx
 
 }
 
-func New_ssl_conn(ctx *C.SSL_CTX, fd uintptr, SSLMODE int) *C.SSL {
+func New_ssl_conn(ctx *C.SSL_CTX, fd int, SSLMODE int) *C.SSL {
 
 	// Create new DTLS connection using the context
 	// var ssl *C.SSL
@@ -100,6 +122,8 @@ func Do_ssl_handshake(ssl *C.SSL) int {
 
 	// if(!C.SSL_is_init_finished(ssl)){
 	// }
+	print_ssl_state(ssl)
+
 	ret := C.SSL_do_handshake(ssl)
 
 	if ret <= 0 {
@@ -117,7 +141,12 @@ func Do_ssl_handshake(ssl *C.SSL) int {
 
 func print_ssl_state(ssl *C.SSL) {
 	state := C.SSL_state_string_long(ssl)
-	log.Println(state)
+
+	goState := C.GoString(state)
+
+	// Print the state in Go
+	log.Println("SSL state:", goState)
+
 }
 
 // func main() {
