@@ -48,7 +48,7 @@ func handle_ssl_error(ssl *C.SSL, err_code C.int) {
 	}
 }
 
-func init_ssl_ctx() *C.SSL_CTX {
+func Init_ssl_ctx() *C.SSL_CTX {
 
 	// C.SSL_library_init()
 	// C.SSL_load_error_strings()
@@ -64,7 +64,7 @@ func init_ssl_ctx() *C.SSL_CTX {
 
 }
 
-func new_ssl_conn(ctx *C.SSL_CTX, fd uintptr, SSLMODE int) *C.SSL {
+func New_ssl_conn(ctx *C.SSL_CTX, fd uintptr, SSLMODE int) *C.SSL {
 
 	// Create new DTLS connection using the context
 	// var ssl *C.SSL
@@ -96,7 +96,7 @@ func new_ssl_conn(ctx *C.SSL_CTX, fd uintptr, SSLMODE int) *C.SSL {
 }
 
 // call only when C.SSL_is_init_finished returns false
-func do_ssl_handshake(ssl *C.SSL) int {
+func Do_ssl_handshake(ssl *C.SSL) int {
 
 	// if(!C.SSL_is_init_finished(ssl)){
 	// }
@@ -113,7 +113,7 @@ func do_ssl_handshake(ssl *C.SSL) int {
 
 }
 
-func print_ssl_state(ssl *C.SSL) {
+func Print_ssl_state(ssl *C.SSL) {
 	state := C.SSL_state_string_long(ssl)
 	log.Println(state)
 }
