@@ -104,16 +104,18 @@ func Do_ssl_handshake(ssl *C.SSL) int {
 
 	if ret <= 0 {
 		err_code := C.SSL_get_error(ssl, ret)
+		print_ssl_state(ssl)
 		handle_ssl_error(ssl, err_code)
 		return -1
 	}
+	print_ssl_state(ssl)
 
 	log.Println("SSL handshake done.")
 	return 0
 
 }
 
-func Print_ssl_state(ssl *C.SSL) {
+func print_ssl_state(ssl *C.SSL) {
 	state := C.SSL_state_string_long(ssl)
 	log.Println(state)
 }
