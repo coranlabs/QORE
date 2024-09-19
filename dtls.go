@@ -49,7 +49,7 @@ func handle_ssl_error(ssl *C.SSL, err_code C.int) {
 	}
 }
 
-func Init_ssl_ctx(SSLMODE int) *C.SSL_CTX {
+func Init_ssl_ctx(SSLMODE int, certPath string, keyPath string) *C.SSL_CTX {
 
 	// C.SSL_library_init()
 	// C.SSL_load_error_strings()
@@ -64,8 +64,8 @@ func Init_ssl_ctx(SSLMODE int) *C.SSL_CTX {
 
 	if SSLMODE == SSLMODE_SERVER {
 
-		certPath := C.CString("/home/six/NFs/dtls-standalone-test/server/certificate.pem")
-		keyPath := C.CString("/home/six/NFs/dtls-standalone-test/server/key.pem")
+		certPath := C.CString(certPath)
+		keyPath := C.CString(keyPath)
 		defer C.free(unsafe.Pointer(certPath))
 		defer C.free(unsafe.Pointer(keyPath))
 
