@@ -149,6 +149,14 @@ func print_ssl_state(ssl *C.SSL) {
 
 }
 
+// decrypt_buf reads from the SSL connection into the destination buffer.
+func decrypt_buf(ssl *C.SSL, dest []byte) C.int {
+    // Convert Go byte slice to C pointer.
+    cDest := (unsafe.Pointer(&dest[0]))
+    n := C.SSL_read(ssl, cDest, C.int(len(dest)))
+    return n
+}
+
 // func main() {
 
 // 	// Create UDP connection (non-blocking UDP socket)
