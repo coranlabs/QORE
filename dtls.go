@@ -16,6 +16,10 @@ import (
 	// "net"
 )
 
+type SSLConn struct {
+	ssl *C.SSL
+}
+
 const (
 	SSLMODE_SERVER = 0
 	SSLMODE_CLIENT = 1
@@ -86,7 +90,7 @@ func Init_ssl_ctx(SSLMODE int, certPath string, keyPath string) *C.SSL_CTX {
 
 }
 
-func New_ssl_conn(ctx *C.SSL_CTX, fd int, SSLMODE int) *C.SSL {
+func New_ssl_conn(ctx *C.SSL_CTX, fd int, SSLMODE int) *SSLConn {
 
 	// Create new DTLS connection using the context
 	// var ssl *C.SSL
@@ -114,25 +118,25 @@ func New_ssl_conn(ctx *C.SSL_CTX, fd int, SSLMODE int) *C.SSL {
 	// 	check_error(res)
 	// 	return
 	// }
-	return ssl
+	return &SSLConn{ssl: ssl}
 }
 
 // call only when C.SSL_is_init_finished returns false
-func Do_ssl_handshake(ssl *C.SSL) int {
+func Do_ssl_handshake(ssl_conn *SSLConn) int {
 
 	// if(!C.SSL_is_init_finished(ssl)){
 	// }
-	print_ssl_state(ssl)
+	print_ssl_state(ssl_conn.ssl)
 
-	ret := C.SSL_do_handshake(ssl)
+	ret := C.SSL_do_handshake(ssl_conn.ssl)
 
 	if ret <= 0 {
-		err_code := C.SSL_get_error(ssl, ret)
-		print_ssl_state(ssl)
-		handle_ssl_error(ssl, err_code)
+		err_code := C.SSL_get_error(ssl_conn.ssl, ret)
+		print_ssl_state(ssl_conn.ssl)
+		handle_ssl_error(ssl_conn.ssl, err_code)
 		return -1
 	}
-	print_ssl_state(ssl)
+	print_ssl_state(ssl_conn.ssl)
 
 	log.Println("SSL handshake done.")
 	return 0
@@ -150,11 +154,11 @@ func print_ssl_state(ssl *C.SSL) {
 }
 
 // decrypt_buf reads from the SSL connection into the destination buffer.
-func Decrypt_buf(ssl *C.SSL, dest []byte) C.int {
-    // Convert Go byte slice to C pointer.
-    cDest := (unsafe.Pointer(&dest[0]))
-    n := C.SSL_read(ssl, cDest, C.int(len(dest)))
-    return n
+func Decrypt_buf(ssl_conn *SSLConn, dest []byte) C.int {
+	// Convert Go byte siice to C pointer.
+	cDest := (unsafe.Pointer(&dest[0]))
+	n := C.SSL_read(ssl_conn.ssl, cDest, C.int(len(dest)))
+	return n
 }
 
 // func main() {
