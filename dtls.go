@@ -12,6 +12,7 @@ import "C"
 import (
 	"fmt"
 	"log"
+	"os"
 	"unsafe"
 	// "net"
 )
@@ -30,7 +31,7 @@ const (
 
 func check_error(err_code C.int) {
 	if err_code != 1 {
-		fmt.Errorf("Error occurred: %d", C.ERR_get_error())
+		fmt.Fprintf(os.Stderr, "Error occurred: %d", C.ERR_get_error())
 	}
 }
 
@@ -38,20 +39,20 @@ func handle_ssl_error(ssl *C.SSL, err_code C.int) {
 
 	switch err_code {
 	case C.SSL_ERROR_WANT_READ:
-		fmt.Errorf("SSL ERROR WANT READ")
+		fmt.Fprintf(os.Stderr, "SSL ERROR WANT READ")
 	case C.SSL_ERROR_WANT_WRITE:
-		fmt.Errorf("SSL ERROR WANT WRITE")
+		fmt.Fprintf(os.Stderr, "SSL ERROR WANT WRITE")
 	case C.SSL_ERROR_ZERO_RETURN:
-		fmt.Errorf("SSL connection closed")
+		fmt.Fprintf(os.Stderr, "SSL connection closed")
 		C.SSL_free(ssl)
 	case C.SSL_ERROR_SYSCALL:
-		fmt.Errorf("SSL syscall error")
+		fmt.Fprintf(os.Stderr, "SSL syscall error")
 		C.SSL_free(ssl)
 	case C.SSL_ERROR_SSL:
-		fmt.Errorf("SSL library error")
+		fmt.Fprintf(os.Stderr, "SSL library error")
 		C.SSL_free(ssl)
 	default:
-		fmt.Errorf("Unexpected SSL error")
+		fmt.Fprintf(os.Stderr, "Unexpected SSL error")
 		C.SSL_free(ssl)
 	}
 }
@@ -77,13 +78,13 @@ func Init_ssl_ctx(SSLMODE int, certPath string, keyPath string) *C.SSL_CTX {
 		defer C.free(unsafe.Pointer(keyPath))
 
 		if C.SSL_CTX_use_certificate_file(ctx, certPath, C.SSL_FILETYPE_PEM) <= 0 {
-			fmt.Errorf("Failed to load certificate")
+			fmt.Fprintf(os.Stderr, "Failed to load certificate")
 			C.SSL_CTX_free(ctx)
 			return nil
 		}
 
 		if C.SSL_CTX_use_PrivateKey_file(ctx, keyPath, C.SSL_FILETYPE_PEM) <= 0 {
-			fmt.Errorf("Failed to load private key")
+			fmt.Fprintf(os.Stderr, "Failed to load private key")
 			C.SSL_CTX_free(ctx)
 			return nil
 		}
@@ -112,7 +113,7 @@ func New_ssl_conn(ctx *C.SSL_CTX, fd int, SSLMODE int) *SSLConn {
 	} else if SSLMODE == SSLMODE_CLIENT {
 		C.SSL_set_connect_state(ssl)
 	} else {
-		fmt.Errorf("Wrong ssl mode passed. Pass either 0 or 1")
+		fmt.Fprintf(os.Stderr, "Wrong ssl mode passed. Pass either 0 or 1")
 		C.SSL_free(ssl)
 		return nil
 	}
@@ -150,7 +151,7 @@ func Do_ssl_handshake(ssl_conn *SSLConn) int {
 	wbio := C.BIO_new(C.BIO_s_mem())
 
 	if rbio == nil || wbio == nil {
-		fmt.Errorf("SSL BIO error.")
+		fmt.Fprintf(os.Stderr, "SSL BIO error.")
 		return -1
 	}
 
@@ -219,7 +220,7 @@ func Encrypt_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 		log.Printf("Bytes written LENGTH: %d\n", int(n))
 
 		if n <= 0 {
-			fmt.Errorf("failed to encrypt the data\n")
+			fmt.Fprintf(os.Stderr, "failed to encrypt the data\n")
 			return -1
 		}
 		src_len -= int(n)
@@ -239,19 +240,24 @@ func Encrypt_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 
 }
 
-func New_message_decrypt(ssl_conn *SSLConn, src []byte, dest []byte) {
+func New_message_decrypt(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 
 	n := read_enc_buf(ssl_conn, src, dest)
 	if n < 0 {
-		fmt.Errorf("Error decrypting the message")
+		fmt.Fprintf(os.Stderr, "Error decrypting the message")
+		return -1
 	}
+	return n
 
 }
-func New_message_encrypt(ssl_conn *SSLConn, src []byte, dest []byte) {
+func New_message_encrypt(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 
 	n := Encrypt_buf(ssl_conn, src, dest)
 	if n < 0 {
-		fmt.Errorf("Error encrypting the message")
+		fmt.Fprintf(os.Stderr, "Error encrypting the message")
+		return -1
+	} else {
+		return n
 	}
 
 }
