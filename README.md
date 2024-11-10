@@ -1,4 +1,4 @@
-## A Simple Golang wrapper over OpenSSL's DTLS over SCTP/UDP
+## A Simple Golang wrapper for OpenSSL's DTLS over SCTP/UDP
 - Uses CGO
 - Compatible with non-blocking sockets
 - Can be used with both UDP & SCTP sockets
