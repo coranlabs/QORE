@@ -190,7 +190,9 @@ func read_enc_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 
 		// Perform SSL read
 		n := C.SSL_read(ssl_conn.ssl, cDest, C.int(len(dest)))
-		if n <= 0 {
+		if n < 0 {
+			errCode := C.SSL_get_error(ssl, n)
+			handle_ssl_error(ssl_conn.ssl, err_code)
 			return -1
 		}
 
@@ -219,7 +221,9 @@ func Encrypt_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 		n := C.SSL_write(ssl_conn.ssl, cSrc, C.int(src_len))
 		log.Printf("Bytes written LENGTH: %d\n", int(n))
 
-		if n <= 0 {
+		if n < 0 {
+			errCode := C.SSL_get_error(ssl, n)
+			handle_ssl_error(ssl_conn.ssl, err_code)
 			fmt.Fprintf(os.Stderr, "failed to encrypt the data\n")
 			return -1
 		}
@@ -244,7 +248,7 @@ func New_message_decrypt(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 
 	n := read_enc_buf(ssl_conn, src, dest)
 	if n < 0 {
-		fmt.Fprintf(os.Stderr, "Error decrypting the message")
+		fmt.Fprintf(os.Stderr, "Error decrypting the message\n")
 		return -1
 	}
 	return n
@@ -254,7 +258,7 @@ func New_message_encrypt(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 
 	n := Encrypt_buf(ssl_conn, src, dest)
 	if n < 0 {
-		fmt.Fprintf(os.Stderr, "Error encrypting the message")
+		fmt.Fprintf(os.Stderr, "Error encrypting the message\n")
 		return -1
 	} else {
 		return n
