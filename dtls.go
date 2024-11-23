@@ -271,10 +271,11 @@ func Encrypt_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 			if errCode == C.SSL_ERROR_WANT_READ || errCode == C.SSL_ERROR_WANT_WRITE {
 				log.Println("SSL_write requires more data or wants to write. Retrying...")
 				continue
+			} else {
+				log.Printf("SSL_write error: %d\n", errCode)
+				handle_ssl_error(ssl_conn.ssl, errCode)
+				return -1
 			}
-			log.Printf("SSL_write error: %d\n", errCode)
-			handle_ssl_error(ssl_conn.ssl, errCode)
-			return -1
 		}
 
 		log.Printf("Bytes written to SSL: %d\n", int(bytesWritten))
