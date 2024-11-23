@@ -35,7 +35,8 @@ func check_error(err_code C.int) {
 	}
 }
 
-func handle_ssl_error(ssl *C.SSL, err_code C.int) {
+// a bit more layman
+func handle_ssl_error(ssl *C.SSL, err_code C.int) C.int {
 
 	switch err_code {
 	case C.SSL_ERROR_WANT_READ:
@@ -55,6 +56,7 @@ func handle_ssl_error(ssl *C.SSL, err_code C.int) {
 		fmt.Fprintf(os.Stderr, "Unexpected SSL error")
 		C.SSL_free(ssl)
 	}
+	return err_code
 }
 
 func Init_ssl_ctx(SSLMODE int, certPath string, keyPath string) *C.SSL_CTX {
@@ -173,75 +175,134 @@ func print_ssl_state(ssl *C.SSL) {
 
 }
 
-func read_enc_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
-	src_len := len(src)
+func queue_enc_bytes(ssl_conn *SSLConn, src []byte) int {
+
+	srcLen := len(src)
 	cSrc := unsafe.Pointer(&src[0])
-	cDest := unsafe.Pointer(&dest[0])
+	tbw := 0 //total bytes written
 
-	for src_len > 0 {
-		// Write the encrypted buffer to rbio
-		bytes_written := C.BIO_write(ssl_conn.rbio, cSrc, C.int(src_len))
-		if bytes_written <= 0 {
+	// Write the encrypted data to the rbio
+	for srcLen > 0 {
+		bytesWritten := C.BIO_write(ssl_conn.rbio, cSrc, C.int(srcLen))
+		if bytesWritten > 0 {
+			tbw += int(bytesWritten)
+			srcLen -= int(bytesWritten)
+			cSrc = unsafe.Pointer(uintptr(cSrc) + uintptr(bytesWritten))
+			log.Printf("Encrypted data written: %d bytes\n", bytesWritten)
+		} else {
+			log.Println("BIO_write: error or no data to write.")
+			print_openssl_errors()
 			return -1
 		}
+	}
+	return tbw
+}
 
-		log.Printf("Bytes written to the rbio: %d", bytes_written)
-		src_len -= int(bytes_written)
+func read_enc_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 
-		// Perform SSL read
-		n := C.SSL_read(ssl_conn.ssl, cDest, C.int(len(dest)))
-		if n < 0 {
-			err_code := C.SSL_get_error(ssl_conn.ssl, n)
-			handle_ssl_error(ssl_conn.ssl, err_code)
-			return -1
+	decryptedBytesLen := 0
+	srcLenProc := 0 //src length processed
+
+	// Perform SSL_read to decrypt data
+	for {
+
+		if srcLenProc < len(src) {
+			bytesQueued := queue_enc_bytes(ssl_conn, src[srcLenProc:])
+			if bytesQueued < 0 {
+				return -1 // Error during BIO_write
+			}
+			srcLenProc += bytesQueued
+		} else {
+			return C.int(decryptedBytesLen)
 		}
 
-		// if src_len == 0 {
-		// Convert C pointer (cDest) back to Go slice
-		dec_bytes := C.GoBytes(cDest, n)
+		spaceRem := len(dest) - decryptedBytesLen
+		if spaceRem <= 0 {
+			log.Println("Destination buffer is full.")
+			break
+		}
 
-		copy(dest, dec_bytes[:n])
-
-		log.Printf("Decrypted bytes copied: %d", n)
-		return n
-		// }
-
+		n := C.SSL_read(ssl_conn.ssl, unsafe.Pointer(&dest[decryptedBytesLen]), C.int(spaceRem))
+		if n > 0 {
+			decryptedBytesLen += int(n)
+			log.Printf("Decrypted data: %d bytes\n", n)
+		} else {
+			errCode := C.SSL_get_error(ssl_conn.ssl, n)
+			if errCode == C.SSL_ERROR_WANT_READ || errCode == C.SSL_ERROR_WANT_WRITE {
+				log.Println("SSL_read requires more data or wants to write. Retrying...")
+				continue
+			}
+			log.Printf("SSL_read error: %d\n", errCode)
+			handle_ssl_error(ssl_conn.ssl, errCode)
+			return -1
+		}
 	}
 
-	return 0
+	return C.int(decryptedBytesLen)
+}
+
+// a bit more technical
+func print_openssl_errors() {
+	for {
+		err := C.ERR_get_error()
+		if err == 0 {
+			break
+		}
+		errStr := C.GoString(C.ERR_error_string(err, nil))
+		log.Printf("OpenSSL Error: %s\n", errStr)
+	}
 }
 
 func Encrypt_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
+	srcLen := len(src)
+	tbr := 0 // Total bytes read from wbio
+	cSrc := unsafe.Pointer(&src[0])
 
-	src_len := len(src)
-	cSrc := (unsafe.Pointer(&src[0]))
-	cDest := unsafe.Pointer(&dest[0])
+	log.Printf("Encrypting data, src length: %d\n", srcLen)
 
-	for src_len > 0 {
-		n := C.SSL_write(ssl_conn.ssl, cSrc, C.int(src_len))
-		log.Printf("Bytes written LENGTH: %d\n", int(n))
-
-		if n < 0 {
-			err_code := C.SSL_get_error(ssl_conn.ssl, n)
-			handle_ssl_error(ssl_conn.ssl, err_code)
-			fmt.Fprintf(os.Stderr, "failed to encrypt the data\n")
+	for srcLen > 0 {
+		// Write plaintext data to SSL
+		bytesWritten := C.SSL_write(ssl_conn.ssl, cSrc, C.int(srcLen))
+		if bytesWritten <= 0 {
+			errCode := C.SSL_get_error(ssl_conn.ssl, bytesWritten)
+			if errCode == C.SSL_ERROR_WANT_READ || errCode == C.SSL_ERROR_WANT_WRITE {
+				log.Println("SSL_write requires more data or wants to write. Retrying...")
+				continue
+			}
+			log.Printf("SSL_write error: %d\n", errCode)
+			handle_ssl_error(ssl_conn.ssl, errCode)
 			return -1
 		}
-		src_len -= int(n)
-		bytes_read := C.BIO_read(ssl_conn.wbio, cDest, C.int(len(dest)))
-		if bytes_read > 0 {
-			log.Printf("Encrypted data length :%d\n", int(bytes_read))
 
-			enc_bytes := C.GoBytes(cDest, bytes_read)
+		log.Printf("Bytes written to SSL: %d\n", int(bytesWritten))
+		srcLen -= int(bytesWritten)
+		cSrc = unsafe.Pointer(uintptr(cSrc) + uintptr(bytesWritten))
 
-			copy(dest, enc_bytes[:bytes_read])
+		// Read encrypted data from wbio
+		for {
+			remSpace := len(dest) - tbr
+			if remSpace <= 0 {
+				log.Println("Destination buffer is full. Returning")
+				return C.int(tbr)
+			}
 
-			return bytes_read
+			bytesRead := C.BIO_read(ssl_conn.wbio, unsafe.Pointer(&dest[tbr]), C.int(remSpace))
+			if bytesRead > 0 {
+				tbr += int(bytesRead)
+				log.Printf("Encrypted data length: %d bytes", bytesRead)
+			} else if bytesRead == 0 {
+				log.Println("No more encrypted data in wbio.")
+				break
+			} else {
+				log.Println("Error reading from BIO.")
+				print_openssl_errors()
+				return -1
+			}
 		}
-
 	}
-	return 0
 
+	log.Printf("Total encrypted bytes: %d\n", tbr)
+	return C.int(tbr)
 }
 
 func New_message_decrypt(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
