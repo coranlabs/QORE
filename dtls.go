@@ -209,11 +209,13 @@ func read_enc_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 		if srcLenProc < len(src) {
 			bytesQueued := queue_enc_bytes(ssl_conn, src[srcLenProc:])
 			if bytesQueued < 0 {
+				fmt.Fprintf(os.Stderr, "Unable to queue the bytes")
 				return -1 // Error during BIO_write
 			}
 			srcLenProc += bytesQueued
 		} else {
-			return C.int(decryptedBytesLen)
+			// return C.int(decryptedBytesLen)
+			break
 		}
 
 		spaceRem := len(dest) - decryptedBytesLen
@@ -231,10 +233,11 @@ func read_enc_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 			if errCode == C.SSL_ERROR_WANT_READ || errCode == C.SSL_ERROR_WANT_WRITE {
 				log.Println("SSL_read requires more data or wants to write. Retrying...")
 				continue
+			} else {
+				log.Printf("SSL_read error: %d\n", errCode)
+				handle_ssl_error(ssl_conn.ssl, errCode)
+				return -1
 			}
-			log.Printf("SSL_read error: %d\n", errCode)
-			handle_ssl_error(ssl_conn.ssl, errCode)
-			return -1
 		}
 	}
 
@@ -276,6 +279,7 @@ func Encrypt_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 
 		log.Printf("Bytes written to SSL: %d\n", int(bytesWritten))
 		srcLen -= int(bytesWritten)
+		log.Printf("srcLen: %d\n", srcLen)
 		cSrc = unsafe.Pointer(uintptr(cSrc) + uintptr(bytesWritten))
 
 		// Read encrypted data from wbio
@@ -287,16 +291,27 @@ func Encrypt_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 			}
 
 			bytesRead := C.BIO_read(ssl_conn.wbio, unsafe.Pointer(&dest[tbr]), C.int(remSpace))
+			log.Println(bytesRead)
 			if bytesRead > 0 {
 				tbr += int(bytesRead)
 				log.Printf("Encrypted data length: %d bytes", bytesRead)
+
 			} else if bytesRead == 0 {
 				log.Println("No more encrypted data in wbio.")
 				break
 			} else {
 				log.Println("Error reading from BIO.")
-				print_openssl_errors()
-				return -1
+				for {
+					err := C.ERR_get_error()
+					if err == 0 {
+						log.Println("nil error")
+						break
+					}
+					errStr := C.GoString(C.ERR_error_string(err, nil))
+					log.Printf("OpenSSL Error: %s\n", errStr)
+				}
+				// print_openssl_errors()
+				break
 			}
 		}
 	}
@@ -324,7 +339,6 @@ func New_message_encrypt(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 	} else {
 		return n
 	}
-
 }
 
 // func main() {
