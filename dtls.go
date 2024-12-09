@@ -29,6 +29,8 @@ const (
 	SSLMODE_CLIENT = 1
 )
 
+const maxRetries = 10
+
 func check_error(err_code C.int) {
 	if err_code != 1 {
 		fmt.Fprintf(os.Stderr, "Error occurred: %d", C.ERR_get_error())
@@ -191,8 +193,17 @@ func queue_enc_bytes(ssl_conn *SSLConn, src []byte) int {
 			log.Printf("Encrypted data written: %d bytes\n", bytesWritten)
 		} else {
 			log.Println("BIO_write: error or no data to write.")
-			print_openssl_errors()
-			return -1
+			// print_openssl_errors()
+			err := C.ERR_get_error()
+			if err != 0 {
+				errStr := C.GoString(C.ERR_error_string(err, nil))
+				log.Printf("OpenSSL Error: %s\n", errStr)
+				return -1
+			} else {
+				log.Println("nil error") // if the error is actually nil, then it means the all the data of the src has been written to the rbio, we can exit here, but instead we simply check again if the any new data has arrived or not.   
+				continue
+			}
+
 		}
 	}
 	return tbw
@@ -202,20 +213,29 @@ func read_enc_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 
 	decryptedBytesLen := 0
 	srcLenProc := 0 //src length processed
+	shouldRetryRead := false
+	retryCount := 0
 
 	// Perform SSL_read to decrypt data
 	for {
 
-		if srcLenProc < len(src) {
-			bytesQueued := queue_enc_bytes(ssl_conn, src[srcLenProc:])
-			if bytesQueued < 0 {
-				fmt.Fprintf(os.Stderr, "Unable to queue the bytes")
-				return -1 // Error during BIO_write
+		if retryCount >= maxRetries {
+			log.Println("Max retries limit exceedeed. Exiting...")
+			return 0
+		}
+
+		if !shouldRetryRead {
+			if srcLenProc < len(src) {
+				bytesQueued := queue_enc_bytes(ssl_conn, src[srcLenProc:])
+				if bytesQueued < 0 {
+					fmt.Fprintf(os.Stderr, "Unable to queue the bytes")
+					return -1 // Error during BIO_write
+				}
+				srcLenProc += bytesQueued
+			} else {
+				// return C.int(decryptedBytesLen)
+				break
 			}
-			srcLenProc += bytesQueued
-		} else {
-			// return C.int(decryptedBytesLen)
-			break
 		}
 
 		spaceRem := len(dest) - decryptedBytesLen
@@ -228,11 +248,16 @@ func read_enc_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 		if n > 0 {
 			decryptedBytesLen += int(n)
 			log.Printf("Decrypted data: %d bytes\n", n)
+			retryCount = 0
+			shouldRetryRead = false // maybe not all data has been written to the rbio
 		} else {
 			errCode := C.SSL_get_error(ssl_conn.ssl, n)
 			if errCode == C.SSL_ERROR_WANT_READ || errCode == C.SSL_ERROR_WANT_WRITE {
 				log.Println("SSL_read requires more data or wants to write. Retrying...")
+				shouldRetryRead = true
+				retryCount++
 				continue
+				// so if the retry flag is set, then we first try to read the existing data in the bio (if any), if not, then we will simply hit max retry limit & start queueing the data again.
 			} else {
 				log.Printf("SSL_read error: %d\n", errCode)
 				handle_ssl_error(ssl_conn.ssl, errCode)
@@ -261,14 +286,23 @@ func Encrypt_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 	tbr := 0 // Total bytes read from wbio
 	cSrc := unsafe.Pointer(&src[0])
 
+	retryCount := 0
+
 	log.Printf("Encrypting data, src length: %d\n", srcLen)
 
 	for srcLen > 0 {
+
+		if retryCount > maxRetries {
+			log.Println("Max retries limit exceedeed. Exiting...")
+			return 0
+		}
+
 		// Write plaintext data to SSL
 		bytesWritten := C.SSL_write(ssl_conn.ssl, cSrc, C.int(srcLen))
 		if bytesWritten <= 0 {
 			errCode := C.SSL_get_error(ssl_conn.ssl, bytesWritten)
 			if errCode == C.SSL_ERROR_WANT_READ || errCode == C.SSL_ERROR_WANT_WRITE {
+				retryCount++
 				log.Println("SSL_write requires more data or wants to write. Retrying...")
 				continue
 			} else {
@@ -276,6 +310,8 @@ func Encrypt_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 				handle_ssl_error(ssl_conn.ssl, errCode)
 				return -1
 			}
+		} else {
+			retryCount = 0
 		}
 
 		log.Printf("Bytes written to SSL: %d\n", int(bytesWritten))
@@ -297,22 +333,21 @@ func Encrypt_buf(ssl_conn *SSLConn, src []byte, dest []byte) C.int {
 				tbr += int(bytesRead)
 				log.Printf("Encrypted data length: %d bytes", bytesRead)
 
-			} else if bytesRead == 0 {
+			} else if bytesRead == 0 { //this might not get called because in non blocking BIOs,-1 is returned when no data is left(not 0)
 				log.Println("No more encrypted data in wbio.")
 				break
 			} else {
-				log.Println("Error reading from BIO.")
 				for {
 					err := C.ERR_get_error()
 					if err == 0 {
-						log.Println("nil error")
+						log.Println("nil error") //no data rem in the BIO, we can now restart SSL_write to add any rem data, if the src is already exhausted though, then it will automatically return.
 						break
+					} else {
+						errStr := C.GoString(C.ERR_error_string(err, nil))
+						log.Printf("OpenSSL Error: %s\n", errStr)
+						return -1
 					}
-					errStr := C.GoString(C.ERR_error_string(err, nil))
-					log.Printf("OpenSSL Error: %s\n", errStr)
 				}
-				// print_openssl_errors()
-				break
 			}
 		}
 	}
