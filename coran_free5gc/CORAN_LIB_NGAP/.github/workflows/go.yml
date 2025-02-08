@@ -1,0 +1,39 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.21' ]
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go }}
+
+    - name: Set up GOPRIVATE environment variable
+      run: echo "GOPRIVATE=github.com/coranlabs/*" >> $GITHUB_ENV
+
+    - name: Set up .netrc for GitHub authentication
+      run: |
+        cat <<EOF > ~/.netrc
+        machine github.com
+        login ${{ secrets.GITHUB_USER }}
+        password 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
+        EOF
+        chmod 600 ~/.netrc
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./...

@@ -1,0 +1,40 @@
+ 
+{{- with .Values.ausf }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "coran-ausf.fullname" $ }}-configmap
+  labels:
+    app: {{ $.Values.global.projectName }}
+data:
+  CORAN_AUSF.yaml: |
+    info:
+      version: 1.0.3
+      description: AUSF initial local configuration
+
+    configuration:
+      nrfCertPem: cert/nrf.pem
+      serviceNameList:
+        {{- .configuration.serviceNameList | nindent 8 }}
+
+      sbi:
+        scheme: {{ $.Values.global.sbi.scheme }}
+        registerIPv4: {{ include "coran-ausf.fullname" $ }}-service # IP used to register to NRF
+        bindingIPv4: 0.0.0.0  # IP used to bind the service
+        port: {{ .service.port }}
+        tls:
+          pem: cert/ausf.pem # AUSF TLS Certificate
+          key: cert/ausf.key # AUSF TLS Private key
+
+      nrfUri: {{ $.Values.global.sbi.scheme }}://{{ $.Values.global.nrf.service.name }}:{{ $.Values.global.nrf.service.port }}
+      scpEnabled: {{ if $.Values.global.scp.scpEnabled | default false }} true {{ else }} false {{ end }} # true for enabling scp
+      scpUri: {{ $.Values.global.sbi.scheme }}://{{ $.Values.global.scp.service.name }}:{{ $.Values.global.scp.service.port }}
+      plmnSupportList:
+        - mcc: {{ $.Values.global.ausf.configuration.plmnSupportList.plmnId.mcc | default "001" }}
+          mnc: {{ $.Values.global.ausf.configuration.plmnSupportList.plmnId.mnc | default "01" }}
+      {{- .configuration.configuration | nindent 6 }}
+
+    logger:
+      {{- toYaml .configuration.logger | nindent 6 }}
+
+{{- end }}

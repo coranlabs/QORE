@@ -1,0 +1,28 @@
+
+
+{{- with .Values.nwdaf }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "coran-nwdaf.fullname" $ }}-service
+  labels:
+    {{- include "coran-nwdaf.labels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+spec:
+  type: {{ .service.type }}
+  ports:
+    - port: {{ .service.port }}
+      targetPort: {{ .service.port }}
+      protocol: TCP  # NWDAF uses HTTP/HTTP2 over TCP
+      name: http  # Service name for HTTP protocol
+  selector:
+    {{- include "coran-nwdaf.selectorLabels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+
+{{- if $.Values.isNgapNeeded }}
+# Removed NGAP configuration as NWDAF does not require SCTP/NGAP 
+{{- end }}
+
+{{- end }}

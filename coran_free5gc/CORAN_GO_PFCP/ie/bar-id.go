@@ -1,0 +1,76 @@
+// Copyright 2019-2024 go-pfcp authors. All rights reserved.
+// Use of this source code is governed by a MIT-style license that can be
+// found in the LICENSE file.
+
+package ie
+
+// NewBARID creates a new BARID IE.
+func NewBARID(id uint8) *IE {
+	return newUint8ValIE(BARID, id)
+}
+
+// BARID returns BARID in uint8 if the type of IE matches.
+func (i *IE) BARID() (uint8, error) {
+	switch i.Type {
+	case BARID:
+		return i.ValueAsUint8()
+	case CreateFAR:
+		ies, err := i.CreateFAR()
+		if err != nil {
+			return 0, err
+		}
+		for _, x := range ies {
+			if x.Type == BARID {
+				return x.BARID()
+			}
+		}
+		return 0, ErrIENotFound
+	case UpdateFAR:
+		ies, err := i.UpdateFAR()
+		if err != nil {
+			return 0, err
+		}
+		for _, x := range ies {
+			if x.Type == BARID {
+				return x.BARID()
+			}
+		}
+		return 0, ErrIENotFound
+	case CreateBAR:
+		ies, err := i.CreateBAR()
+		if err != nil {
+			return 0, err
+		}
+		for _, x := range ies {
+			if x.Type == BARID {
+				return x.BARID()
+			}
+		}
+		return 0, ErrIENotFound
+	case UpdateBARWithinSessionReportResponse,
+		UpdateBARWithinSessionModificationRequest:
+		ies, err := i.UpdateBAR()
+		if err != nil {
+			return 0, err
+		}
+		for _, x := range ies {
+			if x.Type == BARID {
+				return x.BARID()
+			}
+		}
+		return 0, ErrIENotFound
+	case RemoveBAR:
+		ies, err := i.RemoveBAR()
+		if err != nil {
+			return 0, err
+		}
+		for _, x := range ies {
+			if x.Type == BARID {
+				return x.BARID()
+			}
+		}
+		return 0, ErrIENotFound
+	default:
+		return 0, &InvalidTypeError{Type: i.Type}
+	}
+}

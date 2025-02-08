@@ -1,0 +1,17 @@
+ 
+apiVersion: v2
+name: coran-webui
+description: A Helm chart to deploy the coran WEBUI
+type: application
+version: 0.1.5
+appVersion: latest
+dependencies:
+- name: mongodb
+  condition: db.enabled
+maintainers:
+  - email: abderaouf.khichane@orange.com
+    name: Abderaouf KHICHANE
+  - email: ilhem.fajjari@orange.com
+    name: Ilhem FAJJARI
+  - email: ayoub.bousselmi@orange.com
+    name: Ayoub BOUSSELMI

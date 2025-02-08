@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "busybox-alpine-chart.fullname" . }}
+  labels:
+    {{- include "busybox-alpine-chart.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "busybox-alpine-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        k8s.v1.cni.cncf.io/networks: |
+          [
+            {
+              "name": "n3network-coran-gateway",
+              "interface": "n3",
+              "ips": [ "10.100.50.236/29" ],
+              "gateway": [ "10.100.50.235" ]
+            },
+            {
+              "name": "n6network-coran-gateway",
+              "interface": "n6gateway",
+              "ips": [ {{ $.Values.global.gateway.podannotations.n6IPs | default "192.168.5.8/24" | quote }} ],
+              "gateway": [ {{ $.Values.global.gateway.podannotations.n6Gateway | default "192.168.5.1" | quote }} ]
+            }
+          ]
+      labels:
+        {{- include "busybox-alpine-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "busybox-alpine-chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -x; \
+              echo "nameserver 8.8.8.8" >> /etc/resolv.conf; \
+              sysctl -w net.ipv4.conf.all.forwarding=1; \
+              iptables -t nat -A POSTROUTING -s 10.60.0.0/16 -o n6gateway -j MASQUERADE; \
+              iptables -A FORWARD -j ACCEPT; \
+              echo "1100 ueroute" >> /etc/iproute2/rt_tables; \
+              ip rule add from 10.60.0.0/16 table 1100; \
+              ip route add default via {{ $.Values.global.gateway.routes.defaultgateway | default "192.168.5.1" }} dev n6gateway table ueroute; \
+              ip r add 10.60.0.0/16 via {{ $.Values.global.gateway.routes.uerouten6gateway | default "192.168.5.7" }} dev n6gateway; \
+              sleep infinity; \
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

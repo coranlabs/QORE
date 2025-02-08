@@ -1,0 +1,87 @@
+
+{{- with .Values.nwdaf }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "coran-nwdaf.fullname" $ }}-{{ .name }}
+  labels:
+    {{- include "coran-nwdaf.labels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+spec:
+  {{- if not .autoscaling.enabled }}
+  replicas: {{ .replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "coran-nwdaf.selectorLabels" $ | nindent 6 }}
+      project: {{ $.Values.global.projectName }}
+      nf: {{ .name }}
+  template:
+    metadata:
+      annotations:
+        {{- include "coran-nwdaf.nwdafAnnotations" $ | nindent 8 }}
+        {{- if and $.Values.isNgapNeeded $.Values.global.n2network.enabled }}
+        k8s.v1.cni.cncf.io/networks: '[
+            { "name": "{{ $.Values.global.n2network.name }}-{{ include "coran-nwdaf.fullname" $ }}",
+              "interface": "nwdaf0",
+              "ips": [ "{{ $.Values.global.nwdaf.n2if.ipAddress }}/{{ $.Values.global.n2network.cidr }}" ],
+              "gateway": [ "{{ $.Values.global.n2network.gatewayIP }}" ]
+            }]'
+        {{- end }}
+        checksum/config: {{ include (print $.Template.BasePath "/nwdaf-configmap.yaml") $ | sha256sum }}
+      labels:
+        {{- include "coran-nwdaf.selectorLabels" $ | nindent 8 }}
+        project: {{ $.Values.global.projectName }}
+        nf: {{ .name }}
+    spec:
+      imagePullSecrets:
+        {{- toYaml $.Values.global.imagePullSecrets | nindent 8 }}
+      securityContext:
+        {{- toYaml .podSecurityContext | nindent 8 }}
+      initContainers:
+      - name: wait-nrf
+        {{- with $.Values.initcontainers.curl }}
+        image: {{ .registry }}/{{ .image }}:{{ .tag }}
+        {{- end }}
+        env:
+        - name: DEPENDENCIES
+          value: {{ $.Values.global.sbi.scheme }}://{{ $.Values.global.nrf.service.name }}:{{ $.Values.global.nrf.service.port }}
+        command: ['sh', '-c', 'set -x; for dependency in $DEPENDENCIES; do while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" $dependency) -ne 200 ]; do echo waiting for dependencies; sleep 1; done; done;']
+
+      containers:
+      - name: {{ .name }}
+        image: {{ $.Values.global.nwdaf.image.name }}
+        imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
+        securityContext:
+            {{- toYaml .securityContext | nindent 12 }}
+        ports:
+        - name: nnwdaf
+          containerPort: {{ .service.port }}
+        command: ["./entrypoint.sh"]
+        env:
+          - name: GIN_MODE
+            value: release
+          - name: SERVICE_NAME
+            value: events
+        volumeMounts:
+        - mountPath: {{ .volume.mount }}
+          name: {{ include "coran-nwdaf.fullname" $ }}-volume
+        resources:
+            {{- toYaml .resources | nindent 12 }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {{- toYaml .nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .tolerations | nindent 8 }}
+
+      volumes:
+      - name: {{ include "coran-nwdaf.fullname" $ }}-volume
+        projected:
+          sources:
+          - configMap:
+              name: {{ include "coran-nwdaf.fullname" $ }}-configmap
+{{- end }}

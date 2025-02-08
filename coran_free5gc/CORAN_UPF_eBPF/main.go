@@ -1,0 +1,11 @@
+/*
+Copyright © 2024 NAME HERE <EMAIL ADDRESS>
+
+*/
+package main
+
+import "github.com/coranlabs/CORAN_UPF_eBPF/start"
+
+func main() {
+	cmd.Execute()
+}

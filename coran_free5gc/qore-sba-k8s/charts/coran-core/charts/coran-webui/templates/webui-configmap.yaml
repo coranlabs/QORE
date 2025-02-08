@@ -1,0 +1,40 @@
+{{- with .Values.webui }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .configmap.name }}
+  labels:
+    app: {{ $.Values.global.projectName }}
+data:
+  webuicfg.yaml: |
+    info:
+      version: 1.0.3
+      description: WEBUI initial local configuration
+
+    configuration:
+      mongodb:
+        name: coran
+        url: mongodb://{{ $.Values.mongodb.service.name }}:{{ $.Values.mongodb.service.port }}
+      nrfCertPem: cert/nrf.pem
+      nrfUri: {{ $.Values.global.sbi.scheme }}://{{ $.Values.global.nrf.service.name }}:{{ $.Values.global.nrf.service.port }}
+      webServer:
+        scheme: https
+        ipv4Address: 0.0.0.0
+        port: 5000
+      billingServer:
+        enable: true
+        hostIPv4: webui
+        listenPort: 2121
+        portRange: # passive port range
+          start: 2123
+          end: 2130
+        basePath: /tmp/webconsole
+        port: 2122
+        tls:
+          pem: cert/chf.pem
+          key: cert/chf.key
+        
+    logger:
+      {{- toYaml .configuration.logger | nindent 6 }}
+
+{{- end }}

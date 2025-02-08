@@ -1,0 +1,97 @@
+
+{{- with .Values.scp }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "coran-scp.fullname" $ }}-{{ .name }}
+  labels:
+    {{- include "coran-scp.labels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+spec:
+  {{- if not .autoscaling.enabled }}
+  replicas: {{ .replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "coran-scp.selectorLabels" $ | nindent 6 }}
+      project: {{ $.Values.global.projectName }}
+      nf: {{ .name }}
+  template:
+    metadata:
+      annotations:
+        {{- include "coran-scp.scpAnnotations" $ | nindent 8 }}
+        checksum/config: {{ include (print $.Template.BasePath "/scp-configmap.yaml") $ | sha256sum }}
+      labels:
+        {{- include "coran-scp.selectorLabels" $ | nindent 8 }}
+        project: {{ $.Values.global.projectName }}
+        nf: {{ .name }}
+    spec:
+      imagePullSecrets:
+        {{- toYaml $.Values.global.imagePullSecrets | nindent 8 }}
+      securityContext:
+        {{- toYaml .podSecurityContext | nindent 8 }}
+      initContainers:
+      - name: wait-mongo
+        {{- with $.Values.initcontainers.busybox }}
+        image: {{ .image }}:{{ .tag }}
+        {{- end }}
+        env:
+        - name: DEPENDENCIES
+          {{- with $.Values.mongodb.service }}
+          value: {{ .name }}:{{ .port }}
+          {{- end }}
+        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the MongoDB; sleep 2; done;"]
+      containers:
+      - name: {{ .name }}
+        image: {{ $.Values.global.scp.image.name }}
+        imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
+        securityContext:
+            {{- toYaml .securityContext | nindent 12 }}
+        ports:
+        - containerPort: {{ $.Values.global.scp.service.port }}
+        command: ["./scp"]
+        env:
+          - name: DB_URI
+            value: mongodb://{{ $.Values.mongodb.service.name }}/coran
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: {{ .volume.mount }}
+          name: {{ include "coran-scp.fullname" $ }}-volume
+        resources:
+            {{- toYaml .resources | nindent 12 }}
+        readinessProbe:
+          initialDelaySeconds: {{ .readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .readinessProbe.timeoutSeconds }}
+          failureThreshold:  {{ .readinessProbe.failureThreshold }}
+          successThreshold: {{ .readinessProbe.successThreshold }}
+          httpGet:
+            scheme: {{ $.Values.global.sbi.scheme | quote | upper }}
+            port: {{ $.Values.global.scp.service.port }}
+        livenessProbe:
+          initialDelaySeconds: {{ .livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .livenessProbe.failureThreshold }}
+          successThreshold: {{ .livenessProbe.successThreshold }}
+          httpGet:
+            scheme: {{ $.Values.global.sbi.scheme | quote | upper }}
+            port: {{ $.Values.global.scp.service.port }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {{- toYaml .nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .tolerations | nindent 8 }}
+
+      volumes:
+      - name: {{ include "coran-scp.fullname" $ }}-volume
+        projected:
+          sources:
+          - configMap:
+              name: {{ include "coran-scp.fullname" $ }}-configmap
+{{- end }}

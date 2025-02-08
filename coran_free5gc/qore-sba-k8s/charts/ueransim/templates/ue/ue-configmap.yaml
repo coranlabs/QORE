@@ -1,0 +1,31 @@
+
+{{- with .Values.ue }}
+{{- if .enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .configmap.name }}
+  labels:
+    app: {{ $.Values.projectName }}
+    component: {{ .name }}
+data:
+  ue-config.yaml: |
+
+    {{- .configuration | nindent 4 }}
+    
+    # List of gNB IP addresses for Radio Link Simulation
+    gnbSearchList:
+      - {{ $.Values.gnb.service.name }}
+
+  wrapper.sh: |
+    #!/bin/bash
+
+    mkdir /dev/net
+    mknod /dev/net/tun c 10 200
+
+    {{ .command }} 
+
+    {{ .script | nindent 4 }}
+
+{{- end }}
+{{- end }}

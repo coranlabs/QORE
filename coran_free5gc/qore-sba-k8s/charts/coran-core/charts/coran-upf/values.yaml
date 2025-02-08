@@ -1,0 +1,56 @@
+global:
+  imagePullPolicy: IfNotPresent
+  upf:
+    mode: normal
+replicaCount: 1
+
+deploymentType: deployment
+
+deploymentStrategy:
+  type: Recreate
+
+image:
+  registry: docker.io
+  repository: nikhdock
+  name: coran_upf
+  tag: "latest" 
+  pullPolicy: Always
+
+fullnameOverride: "coran-upf"
+
+hostNetwork: false
+
+serviceAccount:
+  create: true
+
+extraContainerPorts:
+  - name: pfcp
+    containerPort: 8805
+    protocol: UDP
+  - name: metrics
+    containerPort: 9090
+    protocol: TCP
+
+service:
+  type: ClusterIP
+  port: 80
+  extraPorts:
+    - port: 8805
+      targetPort: pfcp
+      protocol: UDP
+      name: pfcp
+
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+

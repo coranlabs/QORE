@@ -1,0 +1,64 @@
+// Copyright 2019-2024 go-pfcp authors. All rights reserved.
+// Use of this source code is governed by a MIT-style license that can be
+// found in the LICENSE file.
+
+package ie
+
+import (
+	"encoding/binary"
+	"io"
+	"time"
+)
+
+// NewSubsequentTimeThreshold creates a new SubsequentTimeThreshold IE.
+func NewSubsequentTimeThreshold(t time.Duration) *IE {
+	return newUint32ValIE(SubsequentTimeThreshold, uint32(t.Seconds()))
+}
+
+// SubsequentTimeThreshold returns SubsequentTimeThreshold in time.Duration if the type of IE matches.
+func (i *IE) SubsequentTimeThreshold() (time.Duration, error) {
+	if len(i.Payload) < 4 {
+		return 0, io.ErrUnexpectedEOF
+	}
+
+	switch i.Type {
+	case SubsequentTimeThreshold:
+		t := binary.BigEndian.Uint32(i.Payload[0:4])
+		return time.Duration(t) * time.Second, nil
+	case CreateURR:
+		ies, err := i.CreateURR()
+		if err != nil {
+			return 0, err
+		}
+		for _, x := range ies {
+			if x.Type == SubsequentTimeThreshold {
+				return x.SubsequentTimeThreshold()
+			}
+		}
+		return 0, ErrIENotFound
+	case UpdateURR:
+		ies, err := i.UpdateURR()
+		if err != nil {
+			return 0, err
+		}
+		for _, x := range ies {
+			if x.Type == SubsequentTimeThreshold {
+				return x.SubsequentTimeThreshold()
+			}
+		}
+		return 0, ErrIENotFound
+	case AdditionalMonitoringTime:
+		ies, err := i.AdditionalMonitoringTime()
+		if err != nil {
+			return 0, err
+		}
+		for _, x := range ies {
+			if x.Type == SubsequentTimeThreshold {
+				return x.SubsequentTimeThreshold()
+			}
+		}
+		return 0, ErrIENotFound
+	default:
+		return 0, &InvalidTypeError{Type: i.Type}
+	}
+}

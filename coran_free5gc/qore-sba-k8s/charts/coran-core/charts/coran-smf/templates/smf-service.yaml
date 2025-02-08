@@ -1,0 +1,26 @@
+
+{{- with .Values.smf }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "coran-smf.fullname" $ }}-service
+  labels:
+    {{- include "coran-smf.labels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+spec:
+  type: {{ .service.type }}
+  ports:
+    - port: {{ .service.port }}
+      targetPort: {{ .service.port }}
+      protocol: TCP
+      name: http
+    - port: 8805
+      targetPort: 8805
+      protocol: UDP
+      name: pfcp
+  selector:
+    {{- include "coran-smf.selectorLabels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+{{- end }}

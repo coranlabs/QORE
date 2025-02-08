@@ -1,0 +1,31 @@
+ 
+{{- with .Values.scp }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "coran-scp.fullname" $ }}-configmap
+  labels:
+    app: {{ $.Values.global.projectName }}
+data:
+  CORAN_SCP.yaml: |
+    info:
+      version: 1.0.0
+      description: scp initial local configuration
+
+    configuration:
+      nrfUri: {{ $.Values.global.sbi.scheme }}://{{ $.Values.global.nrf.service.name }}:{{ $.Values.global.nrf.service.port }}
+      sbi:
+        scheme: {{ $.Values.global.sbi.scheme }}
+        registerIPv4: {{ $.Values.global.scp.service.name }} # IP used to serve NFs or register to another scp
+        bindingIPv4: 0.0.0.0  # IP used to bind the service
+        port: {{ $.Values.global.scp.service.port }}
+        cert:
+          key: ../cert/scp.key
+          pem: ../cert/scp.pem
+
+      {{- .configuration.configuration | nindent 6 }}
+
+    logger:
+      {{- toYaml .configuration.logger | nindent 6 }}
+
+{{- end }}

@@ -1,0 +1,17 @@
+global:
+  imagePullSecrets:
+    - name: coran-pull-secret
+
+
+pullSecret:
+  auth: |
+    {
+      "auths": {
+        "https://index.docker.io/v1/": {
+          "username": "ngkore",
+          "password": "dckr_pat_rPHwjsHYA3Ak0Nu-ygeKatTl-Fg",
+          "email": "",
+          "auth": ""
+        }
+      }
+    }

@@ -1,0 +1,160 @@
+{{- if eq .Values.deploymentType "deployment" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coran-upf
+  labels:
+    {{- include "hexaupf.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "hexaupf.selectorLabels" . | nindent 6 }}
+  {{- with .Values.deploymentStrategy }}
+  strategy:
+    {{- toYaml . | trim | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      annotations:
+        k8s.v1.cni.cncf.io/networks: |
+          [
+              { "name": "n3network-coran-gateway",
+                "interface": "n3",
+                "ips": [ "10.100.50.233/29" ],
+                "gateway": [ "10.100.50.235" ]
+              },
+              { "name": "n6network-coran-gateway",
+                "interface": "n6",
+                "ips": [ {{ $.Values.global.upf.podannotations.n6IPs | default "192.168.5.7/24" | quote }} ],
+                "gateway": [ {{ $.Values.global.upf.podannotations.n6Gateway | default "192.168.5.1" | quote }} ]
+              }
+              {{- if $.Values.global.n4network.enabled }}
+              ,
+              { "name": "n4network-coran-smf",
+                "interface": "n4",
+                "ips": [ "10.100.50.240/29" ],
+                "gateway": [ "10.100.50.246" ]
+              }
+              {{- end }}
+          ]
+      labels:
+        {{- include "hexaupf.selectorLabels" . | nindent 8 }}
+    spec:
+      hostNetwork: {{ .Values.hostNetwork }}
+      serviceAccountName: {{ include "hexaupf.serviceAccountName" . }}
+      securityContext:
+        sysctls:
+        - name: net.ipv4.ip_forward
+          value: "1"
+        - name: net.ipv6.conf.all.forwarding
+          value: "1"
+      # initContainers:
+      #   - name: wait-smf
+      #     image: alpine/curl
+      #     command: 
+      #       - /bin/sh
+      #       - -c
+      #       - |
+      #           set -x; \
+      #           addr="${CORAN_SMF_SERVICE_PORT_80_TCP_ADDR:-$(sh -c 'exit 1; echo no address found')}" && \
+      #           port="${CORAN_SMF_SERVICE_PORT_80_TCP_PORT:-$(sh -c 'exit 1; echo no port found')}" && \
+      #           tries=0 && \
+      #           while [ $tries -lt 60 ]; do \
+      #             status_code=$(curl --interface eth0 --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" "$addr:$port"); \
+      #             if [ "$status_code" -eq 200 ] || [ "$status_code" -eq 404 ]; then \
+      #               echo "Service is up with status code $status_code"; \
+      #               break; \
+      #             else \
+      #               echo "Waiting for dependencies, current status: $status_code"; \
+      #               sleep 1; \
+      #               tries=$((tries+1)); \
+      #             fi; \
+      #           done; \
+      #           if [ $tries -ge 100 ]; then \
+      #             echo "Dependencies are not up after $tries tries" && \
+      #             exit 0; \
+      #           fi;
+      containers:
+        - name: hexaupf
+          securityContext:
+            privileged: true
+          image: {{ $.Values.global.upf.image.name }}
+          imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+                set -x; \
+                mkdir /etc/iproute2 ; echo "111  core" >> /etc/iproute2/rt_tables; \
+                iptables -t nat -A POSTROUTING -o n6 -j MASQUERADE; \
+                ip rule add from 10.60.0.0/16 table core; \
+                ip route del default via {{ .Values.global.upf.podannotations.n6Gateway }} dev n6; \
+                ip route del default via 10.100.50.238 dev n3; \
+                ip route del default via 10.100.50.246 dev n4; \
+                ip route add default via {{ $.Values.global.upf.podannotations.n6Gateway | default "192.168.5.1" }} dev n6 table core; \
+                sysctl -w net.ipv4.ip_forward=1; \
+                echo "nameserver 8.8.8.8" >> /etc/resolv.conf; \
+                {{- if .Values.global.smf.n4if.enabled }}
+                ./bin/hexa --nodeid 10.100.50.240 --paddr 10.100.50.240:8805 --n3addr 10.100.50.233
+                {{- else }}
+                ./bin/hexa --nodeid ${CORAN_UPF_SERVICE_HOST} --paddr ${MY_POD_IP}:8805 --n3addr 10.100.50.233
+                {{- end }}
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: UPF_PFCP_NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+            {{- if .Values.extraContainerPorts }}
+            {{- include "helpers.common.tplvalues.render" (dict "value" .Values.extraContainerPorts "context" $) | nindent 12 }}
+            {{- end }}
+          {{- include "helpers.pod.probes" . | nindent 10 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - mountPath: /sys
+            name: sys
+            readOnly: true
+          - mountPath: /app/conf
+            name: conf
+          - mountPath: /app/config
+            name: config
+      volumes:
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: conf
+        configMap:
+          name: coran-upf-config
+      - name: config
+        configMap:
+          name: coran-upf-configmap
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

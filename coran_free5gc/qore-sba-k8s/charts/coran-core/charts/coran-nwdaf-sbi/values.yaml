@@ -1,0 +1,126 @@
+nameOverride: ""
+fullnameOverride: ""
+
+global:
+  image:
+    pullPolicy: IfNotPresent
+  projectName: coran
+  nrf:
+    service:
+      name: nrf-nnrf
+      type: ClusterIP
+      port: "8000"
+      nodePort: "30800"
+  sbi:
+    scheme: http
+  nwdaf:
+    service:
+      name: nwdaf-sbi
+      port: 80
+      nodePort: 31800
+      protocol: TCP  # Changed from SCTP to TCP as NWDAF uses HTTP/HTTP2 over TCP
+      type: ClusterIP
+  n2network:
+    enabled: true  # Since NWDAF doesn't handle NGAP, we can disable N2 network
+    # N2 Network configuration is no longer needed and removed.
+
+# Initialization containers
+initcontainers:
+  curl:
+    registry: nikhdock
+    image: initpod
+    tag: "v1.0"
+  busybox:
+    image: busybox
+    tag: "1.32.0"
+
+isNgapNeeded: false  # Set to false as NWDAF doesn't require NGAP
+
+nwdaf:
+  name: nwdaf
+  replicaCount: 1
+  image:
+    name: khushichhillar/nwdaf
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 80  # Matching the `deployment` port for NWDAF's SBI (Service-Based Interface)
+  volume:
+    mount: /nwdaf/config  # Config path for NWDAF’s configurations
+
+  podAnnotations: {}
+  imagePullSecrets: []
+  podSecurityContext: {}
+  securityContext: {}
+  
+  # Resource allocations
+  resources:
+    requests:
+      cpu: 150m
+      memory: 128Mi
+  
+  # readinessProbe:
+  #   initialDelaySeconds: 5
+  #   periodSeconds: 10
+  #   timeoutSeconds: 5
+  #   failureThreshold: 5
+  #   successThreshold: 1
+  
+  # livenessProbe:
+  #   initialDelaySeconds: 120
+  #   periodSeconds: 10
+  #   timeoutSeconds: 5
+  #   failureThreshold: 5
+  #   successThreshold: 1
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  # Autoscaling configurations
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+
+  ingress:
+    enabled: false
+    annotations: {}
+    hosts:
+      - host: chart-example.local
+        paths: []
+    tls: []
+  amf:
+    ipAddr: "http://coran-amf-service:80"
+    httpVersion: "2"
+    subscrRoute: "/namf-evts/v1"
+    apiRoute: "/test/amf"
+    notifyCorrelationId: "string"
+    notificationId: "1"
+    notificationForwardRoute: "/sbi/notification/amf"
+  smf:
+    ipAddr: "http://coran-smf-service:80"
+    httpVersion: "2"
+    subscrRoute: "/nsmf_event-exposure/v1"
+    apiRoute: "/test/smf"
+    notifyCorrelationId: "string"
+    notificationId: "2"
+    notificationForwardRoute: "/sbi/notification/smf"
+  database:
+    mongodbUri: "mongodb://mongodbnwdaf:27018"
+    name: "testing"
+    amfCollection: "amf"
+    smfCollection: "smf"
+  server:
+    eventNotifyUri: "http://192.168.70.1:8885"
+  uris:
+    eventsUri: "http://localhost:8000"
+    engineUri: "http://localhost:8888"
+    engineAdsUri: "http://localhost:8989"
+  routes:
+    numOfUeRoute: "/network_performance/num_of_ue"
+    sessSuccRatioRoute: "/network_performance/sess_succ_ratio"
+    ueCommunicationRoute: "/ue_communication"
+    ueMobilityRoute: "/ue_mobility"
+    unexpectedLargeRateFlowRoute: "/abnormal_behaviour/unexpected_large_rate_flow"

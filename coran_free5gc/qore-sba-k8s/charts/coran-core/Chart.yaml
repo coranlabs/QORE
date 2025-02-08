@@ -1,0 +1,55 @@
+
+apiVersion: v2
+name: coran
+description: A Helm chart to deploy coran
+version: 1.0.0
+appVersion: k
+dependencies:
+- name: mongodb
+  condition: deployMongoDb
+- name: mongodbnwdaf
+  condition: deployNwdafDb
+- name: coran-chf
+  condition: deploychf
+- name: coran-amf
+  condition: deployAmf
+- name: coran-ausf
+  condition: deployAusf
+- name: coran-n3iwf
+  condition: deployN3iwf
+- name: coran-nrf
+  condition: deployNrf
+- name: coran-nssf
+  condition: deployNssf
+- name: coran-pcf
+  condition: deployPcf
+- name: coran-smf
+  condition: deploySmf
+- name: coran-udm
+  condition: deployUdm
+- name: coran-udr
+  condition: deployUdr
+- name: coran-upf
+  condition: deployUpf
+- name: coran-webui
+  condition: deployWebui
+- name: coran-dbpython
+  condition: deployDbPython
+- name: coran-scp
+  condition: deployScp
+- name: nwdaf-sbi
+  condition: deployNwdafSbi
+- name: coran-gateway
+  condition: deployGateway
+- name: nwdaf-analytics
+  condition: deployNwdafAnalytics
+- name: nwdaf-engine
+  condition: deployNwdafEngine
+- name: nwdaf-events
+  condition: deployNwdafEvent
+- name: nwdaf-nbiml
+  condition: deployNwdafNbiml
+- name: pv 
+  condition: deployPv
+- name: pull-secret
+  condition: deploySecret

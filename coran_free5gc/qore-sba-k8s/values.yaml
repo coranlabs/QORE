@@ -1,0 +1,280 @@
+# Default values for coran-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  imagePullSecrets:
+    - name: my-global-pull-secret
+  image:
+    pullPolicy: Always
+  persistentVolumeClaim:
+    name: coran-pvc
+  persistentVolume:
+    hostPath: ${CERTS_PWD}
+  name: coran
+  userPlaneArchitecture: single  # possible values are "single" and "ulcl"
+
+  nrf:
+    image:
+      name: ngkore/nrf-pq:v2.0.1
+    configuration:
+      DefaultPlmnId:
+        mcc: "001"
+        mnc: "01"
+    service:
+      name: nrf-nnrf
+      type: ClusterIP
+      port: "8000"
+      nodePort: "30800"
+  scp:
+    image:
+      name: evershalik/scp:v1
+    scpEnabled: false
+    service:
+      name: scp
+      port: "8000"
+  
+  sbi:
+    scheme: https
+  amf:
+    image:
+      name: ngkore/amf-pq:v2.0
+    configuration:
+      plmnSupportList:
+        plmnId:
+          mcc: "001"
+          mnc: "01"
+        snssaiList:
+          - sst: 1
+            sd: "010203"
+          - sst: 1
+            sd: "112233"
+      supportTaiList:
+        plmnId:
+          mcc: "001"
+          mnc: "01"
+      servedGuamiList:
+        plmnId:
+          mcc: "001"
+          mnc: "01"
+      supportDnnList:
+        Dnn: coran
+    n2if:  # NGAP
+      ipAddress: 10.102.50.249
+    service:
+      ngap:
+        enabled: true
+        name: amf-n2
+        port: 38412
+        nodeport: 31412
+        protocol: SCTP
+        type: LoadBalancer
+        externalIPs:
+          - ${AMF_EXTERNAL_IP}
+
+  smf:
+    image:
+      name: lakshyachopra/coran-smf-pq:v1.0.2
+    n4if:
+      enabled: true # true for enabling n4 interface (if this is true then upf's n4 interface also will be enabled).
+      # Note that even if this is false, N4 NAD will still be created
+      ipAddress: 10.100.50.244 # IP address of N4 interface
+    configuration:
+      servedGuamiList:
+        mcc: "001"
+        mnc: "01"
+      snssaiInfos:
+        - sNssai:
+            sst: 1
+            sd: "010203"
+          dnnInfos:
+            - dnn: coran
+              dns:
+                ipv4: 8.8.8.8
+                ipv6: 2001:4860:4860::8888
+        - sNssai:
+            sst: 1
+            sd: "112233"
+          dnnInfos: # DNN information list
+            - dnn: coran # Data Network Name
+              dns: # the IP address of DNS
+                ipv4: 8.8.8.8
+                ipv6: 2001:4860:4860::8888
+        - sNssai:
+            sst: 2
+            sd: "112234"
+          dnnInfos:
+            - dnn: coran
+              dns:
+                ipv4: 8.8.8.8
+                ipv6: 2001:4860:4860::8888
+      
+  ausf:
+    image:
+      name: ngkore/ausf-pq:v2.0
+    configuration:
+      plmnSupportList:
+        plmnId:
+          mcc: "001"
+          mnc: "01"
+
+  chf:
+    image:
+      name: ngkore/chf-pq:v2.0
+
+  nssf:
+    image:
+      name: ngkore/nssf-pq:v2.0
+
+  nwdaf:
+    image:
+      name: evershalik/nwdaf:v1
+
+  pcf:
+    image:
+      name: ngkore/pcf-pq:v2.0
+
+  udm:
+    image:
+      name: ngkore/udm-pq:v2.0
+
+  udr:
+    image:
+      name: ngkore/udr-pq:v2.0
+
+  webui:
+    image:
+      name: ngkore/webui-pq:v2.0
+
+  upf:
+    image:
+      name: nikhdock/coran_upf:latest
+    mode: normal # possible values are "eupf" and "normal"
+    podannotations:
+      n6IPs: "${NODE_IP_SUBNET}.7/24"
+      n6Gateway: ${NODE_IP_SUBNET}.1 
+    
+  
+  #Global network parametes
+  n2network:
+    enabled: true
+    name: n2network
+    type: macvlan
+    masterIf: ${DATA_IFACE}
+    subnetIP: 10.102.50.248
+    cidr: 29
+    gatewayIP: 10.102.50.254
+    excludeIP: 10.100.50.254
+  n4network:
+    enabled: true
+    name: n4network
+    type: macvlan
+    masterIf: ${DATA_IFACE}
+    subnetIP: 10.100.50.240
+    cidr: 29
+    gatewayIP: 10.100.50.246
+    excludeIP: 10.100.50.246
+    
+  gateway:
+    podannotations:
+        n6IPs: "${NODE_IP_SUBNET}.8/24"
+        n6Gateway: ${NODE_IP_SUBNET}.1 
+    routes:
+      uerouten6gateway: ${NODE_IP_SUBNET}.7
+      defaultgateway: ${NODE_IP_SUBNET}.1
+    n3network:
+      enabled: true
+      name: n3network
+      type: macvlan
+      masterIf: ${DATA_IFACE}
+      subnetIP: 10.100.50.232
+      cidr: 29
+      gatewayIP: 10.100.50.238
+      excludeIP: 10.100.50.238
+  
+    n6network:
+      enabled: true
+      name: n6network
+      type: macvlan
+      masterIf: ${DATA_IFACE}
+      # subnetIP: 192.168.6.0
+      subnetIP: "${NODE_IP_SUBNET}.0"
+      cidr: 24
+      gatewayIP: "${NODE_IP_SUBNET}.1"
+      # gatewayIP: 192.168.6.1
+      excludeIP: 10.100.100.254
+
+
+
+initcontainers:
+  curl:
+    registry: nikhdock
+    image: initpod
+    tag: "v1.0"
+  busybox:
+    image: busybox
+    tag: "1.32.0"
+
+
+
+  
+
+# These parameters can be used to enable/disable deployment of subcharts
+deployMongoDb: true
+deployAmf: true
+deployAusf: true
+deployN3iwf: false
+deployNrf: true
+deployNssf: true
+deployPcf: true
+deploySmf: true
+deployUdm: true
+deployUdr: true
+deployUpf: true
+deployWebui: true
+deployDbPython: false
+deploychf: true
+deployGateway: true
+deployNwdafAnalytics: false
+deployNwdafEngine: false
+deployNwdafEvent: false
+deployNwdafNbiml: false
+deployNwdafSbi: false
+deployScp: false
+deploypq: true
+deploysecurity: true
+deployNwdafDb: false
+
+# Disable the deployment of mongodb as an NRF subchart
+coran-nrf:
+  db:
+    enabled: false
+
+# This section can be used to override the default values in the MongoDB chart
+mongodb:
+  fullnameOverride: "mongodb"
+  useStatefulSet: true
+  auth:
+    enabled: false
+  persistence:
+    size: 6Gi
+    mountPath: /bitnami/mongodb/data/db/
+  service:
+    name: mongodb
+    type: ClusterIP
+    port: 27017
+    nodePort: "30017"
+
+mongodbnwdaf:
+  fullnameOverride: "mongodbnwdaf"
+  useStatefulSet: true
+  auth:
+    enabled: false
+  persistence:
+    size: 6Gi
+    mountPath: /bitnami/mongodb/data/db/
+  service:
+    name: mongodb1
+    type: ClusterIP
+    port: 27018
+    nodePort: "30018"

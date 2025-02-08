@@ -1,0 +1,40 @@
+ 
+{{- with .Values.nrf }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "coran-nrf.fullname" $ }}-configmap
+  labels:
+    app: {{ $.Values.global.projectName }}
+data:
+  CORAN_NRF.yaml: |
+    info:
+      version: 1.0.2
+      description: NRF initial local configuration
+
+    configuration:
+      MongoDBName: coran
+      MongoDBUrl: mongodb://{{ $.Values.mongodb.service.name }}:{{ $.Values.mongodb.service.port }}
+
+      serviceNameList:
+        {{- .configuration.serviceNameList | nindent 8 }}
+      nrfCertPem: cert/nrf.pem
+      sbi:
+        scheme: {{ $.Values.global.sbi.scheme }}
+        registerIPv4: {{ $.Values.global.nrf.service.name }} # IP used to serve NFs or register to another NRF
+        bindingIPv4: 0.0.0.0  # IP used to bind the service
+        port: {{ $.Values.global.nrf.service.port }}
+        cert: # the local path of TLS key
+          pem: cert/nrf.pem # NRF TLS Certificate
+          key: cert/key-nrf.pem # NRF TLS Private key
+        rootcert: # the local path of root CA certs
+          pem: cert/nrf.pem
+          key: cert/nrf.key
+      DefaultPlmnId:
+        mcc: {{ $.Values.global.nrf.configuration.DefaultPlmnId.mcc | default "001" }}
+        mnc: {{ $.Values.global.nrf.configuration.DefaultPlmnId.mnc | default "01" }}
+
+    logger:
+      {{- toYaml .configuration.logger | nindent 6 }}
+
+{{- end }}

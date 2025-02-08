@@ -1,0 +1,7 @@
+ 
+apiVersion: v2
+name: coran-pcf
+description: A Helm chart to deploy the coran PCF
+type: application
+version: 1.0.0
+appVersion: v1.0

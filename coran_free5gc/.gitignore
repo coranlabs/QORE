@@ -1,0 +1,47 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+**/bin/
+**/build/
+
+# Go
+go.work
+go.work.sum
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Configs (may contain secrets)
+*.key
+*.pem
+*.crt
+**/config/local*.yaml
+
+# Docker
+docker-compose.override.yml
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Build artifacts
+*.a
+*.o

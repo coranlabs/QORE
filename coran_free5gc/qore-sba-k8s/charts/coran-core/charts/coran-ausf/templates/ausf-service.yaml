@@ -1,0 +1,22 @@
+
+{{- with .Values.ausf }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "coran-ausf.fullname" $ }}-service
+  labels:
+    {{- include "coran-ausf.labels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+spec:
+  type: {{ .service.type }}
+  ports:
+    - port: {{ .service.port }}
+      targetPort: {{ .service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "coran-ausf.selectorLabels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+{{- end }}

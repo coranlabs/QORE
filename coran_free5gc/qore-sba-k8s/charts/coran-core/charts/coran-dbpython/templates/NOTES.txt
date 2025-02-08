@@ -1,0 +1,7 @@
+
+{{- with .Values.dbpython }}
+1. Get the Pod name running these commands:
+  export DB_PYTHON_POD_NAME=$(kubectl get po --namespace {{ $.Release.Namespace }} -o name -l nf={{ .name }})
+2. Show the manual:
+  kubectl --namespace {{ $.Release.Namespace }} exec -it ${DB_PYTHON_POD_NAME} -- python3 add_subscribers.py -h
+{{- end }}

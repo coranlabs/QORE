@@ -1,0 +1,14 @@
+/*
+ * NRF UriList
+ */
+
+package context
+
+import (
+	"github.com/coranlabs/CORAN_LIB_OPENAPI/models"
+)
+
+type UriList struct {
+	NfType models.NfType `json:"nfType,omitempty" bson:"nfType,omitempty"`
+	Link   Links         `json:"_link" bson:"_link" mapstructure:"_link"`
+}

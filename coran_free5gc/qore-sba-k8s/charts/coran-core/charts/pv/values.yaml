@@ -1,0 +1,9 @@
+global:
+  persistentVolume:
+    name: coran-pv
+    size: 100Mi
+    hostPath: /home/ubuntu/aditya/coran-sba-k8s/cert
+
+  persistentVolumeClaim:
+    name: coran-pvc
+    size: 100Mi
