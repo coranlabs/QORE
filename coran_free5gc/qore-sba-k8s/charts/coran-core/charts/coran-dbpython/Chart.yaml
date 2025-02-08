@@ -1,0 +1,10 @@
+
+apiVersion: v2
+name: coran-dbpython
+description: A Helm chart to deploy the coran dbpython
+type: application
+version: 1.0.0
+appVersion: "latest"
+maintainers:
+  - email: abderaouf.khichane@orange.com
+    name: Abderaouf KHICHANE

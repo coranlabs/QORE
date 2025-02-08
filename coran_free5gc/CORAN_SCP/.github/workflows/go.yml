@@ -1,0 +1,39 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.W_TOKEN }}
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23.0'
+        
+    - name: Create .netrc file
+      run: |
+        echo "machine github.com" > ~/.netrc
+        echo "login Nikhil690" >> ~/.netrc
+        echo "password ${{ secrets.W_TOKEN }}" >> ~/.netrc
+        chmod 600 ~/.netrc  # Set permissions to read/write for the user only
+    - name: Set GO_PRIVATE environment variable
+      run: echo "GO_PRIVATE=github.com/coranlabs" >> $GITHUB_ENV
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./...

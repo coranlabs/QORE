@@ -1,0 +1,18 @@
+
+{{- with .Values.ausf }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "coran-ausf.fullname" $ }}-test-connection"
+  labels:
+    {{- include "coran-ausf.labels" $ | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ .service.name }}:{{ .service.port }}']
+  restartPolicy: Never
+{{- end }}

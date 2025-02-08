@@ -1,0 +1,61 @@
+package nas
+
+import (
+	"fmt"
+
+	amf_context "github.com/coranlabs/CORAN_AMF/Messages_controller/context"
+	gmm_common "github.com/coranlabs/CORAN_AMF/Messages_handling_entity/gmm/common"
+	nas "github.com/coranlabs/CORAN_LIB_NAS"
+
+	//"github.com/coranlabs/CORAN_AMF/Application_entity/logger"
+	"github.com/coranlabs/CORAN_AMF/Application_entity/logger"
+	"github.com/coranlabs/CORAN_AMF/Messages_handling_entity/nas/nas_security"
+)
+
+func HandleNAS(ue *amf_context.RanUe, procedureCode int64, nasPdu []byte, initialMessage bool) {
+	amfSelf := amf_context.GetSelf()
+
+	if ue == nil {
+		logger.NasLog.Error("RanUe is nil")
+		return
+	}
+
+	if nasPdu == nil {
+		ue.Log.Error("nasPdu is nil")
+		return
+	}
+
+	if ue.AmfUe == nil {
+		ue.AmfUe = amfSelf.NewAmfUe("")
+		gmm_common.AttachRanUeToAmfUeAndReleaseOldIfAny(ue.AmfUe, ue)
+	}
+
+	msg, integrityProtected, err := nas_security.Decode(ue.AmfUe, ue.Ran.AnType, nasPdu, initialMessage)
+	if err != nil {
+		ue.AmfUe.NASLog.Errorln(err)
+		return
+	}
+	ue.AmfUe.NasPduValue = nasPdu
+	ue.AmfUe.MacFailed = !integrityProtected
+
+	if errDispatch := Dispatch(ue.AmfUe, ue.Ran.AnType, procedureCode, msg); errDispatch != nil {
+		ue.AmfUe.NASLog.Errorf("Handle NAS Error: %v", errDispatch)
+	}
+}
+
+// Get5GSMobileIdentityFromNASPDU is used to find MobileIdentity from plain nas
+// return value is: mobileId, mobileIdType, err
+func GetNas5GSMobileIdentity(gmmMessage *nas.GmmMessage) (string, string, error) {
+	var err error
+	var mobileId, mobileIdType string
+
+	if gmmMessage.GmmHeader.GetMessageType() == nas.MsgTypeRegistrationRequest {
+		mobileId, mobileIdType, err = gmmMessage.RegistrationRequest.MobileIdentity5GS.GetMobileIdentity()
+	} else if gmmMessage.GmmHeader.GetMessageType() == nas.MsgTypeServiceRequest {
+		mobileId, mobileIdType, err = gmmMessage.ServiceRequest.TMSI5GS.Get5GSTMSI()
+	} else {
+		err = fmt.Errorf("gmmMessageType: [%d] is not RegistrationRequest or ServiceRequest",
+			gmmMessage.GmmHeader.GetMessageType())
+	}
+	return mobileId, mobileIdType, err
+}

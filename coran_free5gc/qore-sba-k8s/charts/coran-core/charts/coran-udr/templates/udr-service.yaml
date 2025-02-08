@@ -1,0 +1,22 @@
+
+{{- with .Values.udr }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "coran-udr.fullname" $ }}-service
+  labels:
+    {{- include "coran-udr.labels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+spec:
+  type: {{ .service.type }}
+  ports:
+    - port: {{ .service.port }}
+      targetPort: {{ .service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "coran-udr.selectorLabels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+{{- end }}

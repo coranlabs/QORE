@@ -1,0 +1,47 @@
+
+{{- with .Values.amf }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "coran-amf.fullname" $ }}-service
+  labels:
+    {{- include "coran-amf.labels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+spec:
+  type: {{ .service.type }}
+  ports:
+    - port: {{ .service.port }}
+      targetPort: {{ .service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "coran-amf.selectorLabels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+
+{{- if $.Values.isNgapNeeded }}
+{{- if $.Values.global.amf.service.ngap.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "coran-amf.fullname" $ }}-{{ $.Values.global.amf.service.ngap.name }}
+  labels:
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+spec:
+  type: {{ $.Values.global.amf.service.ngap.type }}
+  externalIPs: {{ $.Values.global.amf.service.ngap.externalIPs }}
+  ports:
+    - name: n2
+      port: {{ $.Values.global.amf.service.ngap.port }}
+      nodePort: {{ $.Values.global.amf.service.ngap.nodeport }}
+      protocol: {{ $.Values.global.amf.service.ngap.protocol }}
+  selector:
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+{{- end }}
+{{- end }}
+
+{{- end }}

@@ -1,0 +1,158 @@
+ 
+{{- with .Values.smf }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "coran-smf.fullname" $ }}-configmap
+  labels:
+    app: {{ $.Values.global.projectName }}
+data:
+  CORAN_SMF.yaml: |
+    info:
+      version: 1.0.7
+      description: SMF initial local configuration
+
+    configuration:
+      serviceNameList:
+        {{- .configuration.serviceNameList | nindent 8 }}
+
+      sbi:
+        scheme: {{ $.Values.global.sbi.scheme }}
+        registerIPv4: {{ include "coran-smf.fullname" $ }}-service # IP used to register to NRF
+        bindingIPv4: 0.0.0.0  # IP used to bind the service
+        port: {{ .service.port }}
+        tls:
+          key: cert/smf.key # SMF TLS Certificate
+          pem: cert/smf.pem # SMF TLS Private key
+      nrfCertPem: cert/nrf.pem
+      nrfUri: {{ $.Values.global.sbi.scheme }}://{{ $.Values.global.nrf.service.name }}:{{ $.Values.global.nrf.service.port }}
+      scpEnabled: {{ if $.Values.global.scp.scpEnabled | default false }} true {{ else }} false {{ end }} # true for enabling scp
+      scpUri: {{ $.Values.global.sbi.scheme }}://{{ $.Values.global.scp.service.name }}:{{ $.Values.global.scp.service.port }}
+      pfcp:
+        nodeID: {{ if $.Values.global.smf.n4if.enabled }}{{ $.Values.global.smf.n4if.ipAddress }}{{ else }} ${NODE_ID} {{ end }}
+        listenAddr: {{ if $.Values.global.smf.n4if.enabled }}{{ $.Values.global.smf.n4if.ipAddress }}{{ else }} ${NODE_ID} {{ end }}
+        externalAddr: {{ if $.Values.global.smf.n4if.enabled }}{{ $.Values.global.smf.n4if.ipAddress }}{{ else }} ${NODE_ID} {{ end }}
+
+        assocFailAlertInterval: 10s
+        AssocFailRetryInterval: 30s
+        heartbeatInterval: 10s
+
+      plmnList: # the list of PLMN IDs that this SMF belongs to (optional, remove this key when unnecessary)
+        - mcc: {{ $.Values.global.amf.configuration.servedGuamiList.plmnId.mcc | default "001" }}
+          mnc: {{ $.Values.global.amf.configuration.servedGuamiList.plmnId.mnc | default "01" }}
+      snssaiInfos:
+        {{- range $.Values.global.smf.configuration.snssaiInfos }}
+        - sNssai:
+            sst: {{ .sNssai.sst }}
+            sd: {{ .sNssai.sd }}
+          dnnInfos: # DNN information list
+            {{- range .dnnInfos }}
+            - dnn: {{ .dnn }} # Data Network Name
+              dns:
+                ipv4: {{ .dns.ipv4 }}
+                ipv6: {{ .dns.ipv6 }}
+            {{- end }}
+        {{- end }}
+      smfName: SMF
+      locality: area1 # Name of the location where a set of AMF, SMF, PCF and UPFs are located
+      pfcp: # the IP address of N4 interface on this SMF (PFCP)
+        assocFailAlertInterval: 10s
+        AssocFailRetryInterval: 30s
+        heartbeatInterval: 10s
+      userplaneInformation: # list of userplane information
+        upNodes: # information of userplane node (AN or UPF)
+          gNB1: # the name of the node
+            type: AN # the type of the node (AN or UPF)
+          UPF:  # the name of the node
+            type: UPF # the type of the node (AN or UPF)
+            nodeID: {{ if $.Values.global.smf.n4if.enabled }} 10.100.50.240 {{ else }} coran-upf {{ end }} # the Node ID of this UPF
+            addr: {{ if $.Values.global.smf.n4if.enabled }} 10.100.50.240 {{ else }} coran-upf {{ end }} # the IP/FQDN of N4 interface on this UPF (PFCP)
+            sNssaiUpfInfos: # S-NSSAI information list for this UPF
+                  - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
+                      sst: 1 # Slice/Service Type (uinteger, range: 0~255)
+                      sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+                    dnnUpfInfoList: # DNN information list for this S-NSSAI
+                      - dnn: coran
+                        pools:
+                          - cidr: 10.1.0.0/17
+                        staticPools:
+                          - cidr: 10.1.64.0/24
+                  - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
+                      sst: 1 # Slice/Service Type (uinteger, range: 0~255)
+                      sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+                    dnnUpfInfoList: # DNN information list for this S-NSSAI
+                      - dnn: coran
+                        pools:
+                          - cidr: 10.1.128.0/17
+                        staticPools:
+                          - cidr: 10.1.192.0/24
+            interfaces: # Interface list for this UPF
+                  - interfaceType: N3 # the type of the interface (N3 or N9)
+                    endpoints: # the IP address of this N3/N9 interface on this UPF
+                      - 10.100.50.233
+                    networkInstances:
+                      - coran # Data Network Name (DNN)
+        links: # the topology graph of userplane, A and B represent the two nodes of each link
+          - A: gNB1
+            B: UPF
+      locality: area1 # Name of the location where a set of AMF, SMF and UPFs are located
+
+      t3591:
+        enable: true     # true or false
+        expireTime: 16s   # default is 6 seconds
+        maxRetryTimes: 3 # the max number of retransmission
+      # retransmission timer for pdu session release command
+      t3592:
+        enable: true     # true or false
+        expireTime: 16s   # default is 6 seconds
+        maxRetryTimes: 3 # the max number of retransmission
+      userplaneInformation: # list of userplane information
+          upNodes: # information of userplane node (AN or UPF)
+            gNB1: # the name of the node
+              type: AN # the type of the node (AN or UPF)
+            UPF: # the name of the node
+              type: UPF # the type of the node (AN or UPF)
+              nodeID: {{ if $.Values.global.smf.n4if.enabled }} 10.100.50.240 {{ else }} coran-upf {{ end }} # the Node ID of this UPF
+              addr: {{ if $.Values.global.smf.n4if.enabled }} 10.100.50.240 {{ else }} coran-upf {{ end }} # the IP/FQDN of N4 interface on this UPF (PFCP)
+              sNssaiUpfInfos: # S-NSSAI information list for this UPF
+                - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
+                    sst: 1 # Slice/Service Type (uinteger, range: 0~255)
+                    sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+                  dnnUpfInfoList: # DNN information list for this S-NSSAI
+                    - dnn: coran
+                      pools:
+                        - cidr: 10.60.0.0/16
+                      staticPools:
+                        - cidr: 10.60.100.0/24
+                - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
+                    sst: 1 # Slice/Service Type (uinteger, range: 0~255)
+                    sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+                  dnnUpfInfoList: # DNN information list for this S-NSSAI
+                    - dnn: coran
+                      pools:
+                        - cidr: 10.61.0.0/16
+                      staticPools:
+                        - cidr: 10.61.100.0/24
+              interfaces: # Interface list for this UPF
+                - interfaceType: N3 # the type of the interface (N3 or N9)
+                  endpoints: # the IP address of this N3/N9 interface on this UPF
+                    - 10.100.50.233
+                  networkInstances: # Data Network Name (DNN)
+                    - coran
+          links: # the topology graph of userplane, A and B represent the two nodes of each link
+            - A: gNB1
+              B: UPF
+
+
+    logger:
+      {{- toYaml .configuration.logger | nindent 6 }}
+  
+
+  UEROUTING.yaml: |
+    info:
+      version: 1.0.7
+      description: Routing information for UE
+    ueRoutingInfo:
+      {{- .configuration.ueRoutingInfo | nindent 6 }}
+
+{{- end }}

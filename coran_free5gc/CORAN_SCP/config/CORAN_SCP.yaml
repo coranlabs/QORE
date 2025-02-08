@@ -1,0 +1,23 @@
+info:
+  version: 1.0.0
+  description: SCP configuration
+
+configuration:
+  sbi: # Service-based interface information
+    scheme: http # the protocol for sbi (http or https)
+    registerIPv4: 0.0.0.0 # IP used to serve NFs or register to another NRF
+    bindingIPv4: 0.0.0.0  # IP used to bind the service
+    port: 8000 # port used to bind the service
+    cert: # the local path of TLS key
+      pem: cert/scp.pem # NRF TLS Certificate
+      key: cert/scp.key # NRF TLS Private key
+    rootcert: # the local path of root CA certs
+      pem: cert/scp.pem
+      key: cert/scp.key
+    oauth: true
+  nrfUri: "http://nrf-nnrf:8000"
+
+logger: # log output setting
+  enable: true # true or false
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  reportCaller: false # enable the caller report or not, value: true or false

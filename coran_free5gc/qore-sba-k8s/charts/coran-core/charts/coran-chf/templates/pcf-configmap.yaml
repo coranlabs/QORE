@@ -1,0 +1,70 @@
+ 
+{{- with .Values.pcf }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "coran-pcf.fullname" $ }}-configmap
+  labels:
+    app: {{ $.Values.global.projectName }}
+data:
+  CORAN_CHF.yaml: |
+    info:
+      version: 1.0.3
+      description: CHF initial local configuration
+
+    configuration:
+      chfName: CHF # the name of this CHF
+      serviceNameList:
+        {{- .configuration.serviceNameList | nindent 8 }}
+
+      quotaValidityTime: 10000
+      volumeLimit: 50000
+      volumeLimitPDU: 10000
+      volumeThresholdRate: 0.8
+      cgf:
+        hostIPv4: webui
+        port: 2121
+        listenPort: 2122
+        tls:
+          pem: ./cert/chf.pem # CHF TLS Certificate
+          key: ./cert/chf.key # CHF TLS Private key
+        cdrFilePath: /tmp
+      abmfDiameter:
+        protocol: tcp
+        hostIPv4: 0.0.0.0
+        port: 3868
+        tls:
+          pem: ./cert/chf.pem # CHF TLS Certificate
+          key: ./cert/chf.key # CHF TLS Private key
+      rfDiameter:
+        protocol: tcp
+        hostIPv4: 0.0.0.0
+        port: 3869
+        tls:
+          pem: ./cert/chf.pem # CHF TLS Certificate
+          key: ./cert/chf.key # CHF TLS Private key
+      nrfCertPem: /cert/nrf.pem # NRF Certificate
+      sbi:
+        scheme: {{ $.Values.global.sbi.scheme }}
+        registerIPv4: {{ include "coran-pcf.fullname" $ }}-service # IP used to register to NRF
+        bindingIPv4: 0.0.0.0  # IP used to bind the service
+        port: {{ .service.port }}
+        tls:
+          pem: ./cert/chf.pem # CHF TLS Certificate
+          key: ./cert/chf.key # CHF TLS Private key
+
+      mongodb:       # the mongodb connected by this PCF
+        name: coran                  # name of the mongodb
+        url: mongodb://{{ $.Values.mongodb.service.name }}:{{ $.Values.mongodb.service.port }} # a valid URL of the mongodb
+      timeFormat: 2019-01-02 15:04:05
+      defaultBdtRefId: BdtPolicyId-
+      locality: area1
+      nrfUri: {{ $.Values.global.sbi.scheme }}://{{ $.Values.global.nrf.service.name }}:{{ $.Values.global.nrf.service.port }}
+      scpEnabled: {{ if $.Values.global.scp.scpEnabled | default false }} true {{ else }} false {{ end }} # true for enabling scp
+      scpUri: {{ $.Values.global.sbi.scheme }}://{{ $.Values.global.scp.service.name }}:{{ $.Values.global.scp.service.port }}
+      {{- .configuration.configuration | nindent 6 }}
+
+    logger:
+      {{- toYaml .configuration.logger | nindent 6 }}
+
+{{- end }}

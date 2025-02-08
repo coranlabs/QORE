@@ -1,0 +1,14 @@
+ 
+apiVersion: v2
+name: coran-n3iwf
+description: A Helm chart to deploy the coran N3IWF
+type: application
+version: 1.0.0
+appVersion: latest
+maintainers:
+  - email: abderaouf.khichane@orange.com
+    name: Abderaouf KHICHANE
+  - email: ilhem.fajjari@orange.com
+    name: Ilhem FAJJARI
+  - email: ayoub.bousselmi@orange.com
+    name: Ayoub BOUSSELMI

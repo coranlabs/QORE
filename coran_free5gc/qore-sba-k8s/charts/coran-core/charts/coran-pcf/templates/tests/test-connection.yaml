@@ -1,0 +1,18 @@
+
+{{- with .Values.pcf }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "coran-pcf.fullname" $ }}-test-connection"
+  labels:
+    {{- include "coran-pcf.labels" $ | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ .service.name }}:{{ .service.port }}']
+  restartPolicy: Never
+{{- end }}

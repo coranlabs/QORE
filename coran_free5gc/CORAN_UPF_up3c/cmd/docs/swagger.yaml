@@ -1,0 +1,418 @@
+basePath: /api/v1
+definitions:
+  config.UpfConfig:
+    properties:
+      api_address:
+        type: string
+      echo_interval:
+        minimum: 1
+        type: integer
+      far_map_size:
+        minimum: 1
+        type: integer
+      feature_ftup:
+        type: boolean
+      feature_ueip:
+        type: boolean
+      gtp_peer:
+        items:
+          type: string
+        type: array
+      heartbeat_interval:
+        type: integer
+      heartbeat_retries:
+        type: integer
+      heartbeat_timeout:
+        type: integer
+      interface_name:
+        items:
+          type: string
+        type: array
+      logging_level:
+        type: string
+      metrics_address:
+        type: string
+      n3_address:
+        type: string
+      pdr_map_size:
+        minimum: 1
+        type: integer
+      pfcp_address:
+        type: string
+      pfcp_node_id:
+        type: string
+      qer_map_size:
+        minimum: 1
+        type: integer
+      resize_ebpf_maps:
+        type: boolean
+      teid_pool:
+        type: integer
+      ueip_pool:
+        type: string
+      xdp_attach_mode:
+        enum:
+        - generic
+        - native
+        - offload
+        type: string
+    required:
+    - logging_level
+    type: object
+  core.NodeAssociation:
+    properties:
+      addr:
+        type: string
+      failedHeartbeats:
+        type: integer
+      heartbeatChannel:
+        type: object
+      heartbeatsActive:
+        type: boolean
+      id:
+        type: string
+      nextSequenceID:
+        type: integer
+      nextSessionID:
+        type: integer
+      sessions:
+        additionalProperties:
+          $ref: '#/definitions/core.Session'
+        type: object
+    type: object
+  core.SFarInfo:
+    properties:
+      farInfo:
+        $ref: '#/definitions/ebpf.FarInfo'
+      globalId:
+        type: integer
+    type: object
+  core.SPDRInfo:
+    properties:
+      allocated:
+        type: boolean
+      ipv4:
+        items:
+          type: integer
+        type: array
+      ipv6:
+        items:
+          type: integer
+        type: array
+      pdrID:
+        type: integer
+      pdrInfo:
+        $ref: '#/definitions/ebpf.PdrInfo'
+      teid:
+        type: integer
+    type: object
+  core.SQerInfo:
+    properties:
+      globalId:
+        type: integer
+      qerInfo:
+        $ref: '#/definitions/ebpf.QerInfo'
+    type: object
+  core.Session:
+    properties:
+      fars:
+        additionalProperties:
+          $ref: '#/definitions/core.SFarInfo'
+        type: object
+      localSEID:
+        type: integer
+      pdrs:
+        additionalProperties:
+          $ref: '#/definitions/core.SPDRInfo'
+        type: object
+      qers:
+        additionalProperties:
+          $ref: '#/definitions/core.SQerInfo'
+        type: object
+      remoteSEID:
+        type: integer
+    type: object
+  ebpf.FarInfo:
+    properties:
+      action:
+        type: integer
+      localIP:
+        type: integer
+      outerHeaderCreation:
+        type: integer
+      remoteIP:
+        type: integer
+      teid:
+        type: integer
+      transportLevelMarking:
+        type: integer
+    type: object
+  ebpf.IpWMask:
+    properties:
+      ip:
+        items:
+          type: integer
+        type: array
+      mask:
+        items:
+          type: integer
+        type: array
+      type:
+        description: '0: any, 1: ip4, 2: ip6'
+        type: integer
+    type: object
+  ebpf.PdrInfo:
+    properties:
+      farId:
+        type: integer
+      outerHeaderRemoval:
+        type: integer
+      qerId:
+        type: integer
+      sdfFilter:
+        $ref: '#/definitions/ebpf.SdfFilter'
+    type: object
+  ebpf.PortRange:
+    properties:
+      lowerBound:
+        type: integer
+      upperBound:
+        type: integer
+    type: object
+  ebpf.QerInfo:
+    properties:
+      gateStatusDL:
+        type: integer
+      gateStatusUL:
+        type: integer
+      maxBitrateDL:
+        type: integer
+      maxBitrateUL:
+        type: integer
+      qfi:
+        type: integer
+      startDL:
+        type: integer
+      startUL:
+        type: integer
+    type: object
+  ebpf.QerMapElement:
+    properties:
+      gate_status_dl:
+        type: integer
+      gate_status_ul:
+        type: integer
+      id:
+        type: integer
+      max_bitrate_dl:
+        type: integer
+      max_bitrate_ul:
+        type: integer
+      qfi:
+        type: integer
+    type: object
+  ebpf.SdfFilter:
+    properties:
+      dstAddress:
+        $ref: '#/definitions/ebpf.IpWMask'
+      dstPortRange:
+        $ref: '#/definitions/ebpf.PortRange'
+      protocol:
+        description: '0: icmp, 1: ip, 2: tcp, 3: udp, 4: icmp6'
+        type: integer
+      srcAddress:
+        $ref: '#/definitions/ebpf.IpWMask'
+      srcPortRange:
+        $ref: '#/definitions/ebpf.PortRange'
+    type: object
+  rest.NodeAssociationMapNoSession:
+    additionalProperties:
+      $ref: '#/definitions/rest.NodeAssociationNoSession'
+    type: object
+  rest.NodeAssociationNoSession:
+    properties:
+      addr:
+        type: string
+      id:
+        type: string
+      nextSessionID:
+        type: integer
+    type: object
+  rest.PacketStats:
+    properties:
+      rx_arp:
+        type: integer
+      rx_gtp_echo:
+        type: integer
+      rx_gtp_other:
+        type: integer
+      rx_gtp_pdu:
+        type: integer
+      rx_gtp_unexp:
+        type: integer
+      rx_icmp:
+        type: integer
+      rx_icmp6:
+        type: integer
+      rx_ip4:
+        type: integer
+      rx_ip6:
+        type: integer
+      rx_other:
+        type: integer
+      rx_tcp:
+        type: integer
+      rx_udp:
+        type: integer
+    type: object
+  rest.XdpStats:
+    properties:
+      aborted:
+        type: integer
+      drop:
+        type: integer
+      pass:
+        type: integer
+      redirect:
+        type: integer
+      tx:
+        type: integer
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+paths:
+  /config:
+    get:
+      description: Display configuration
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/config.UpfConfig'
+      summary: Display configuration
+      tags:
+      - Configuration
+  /packet_stats:
+    get:
+      description: Display packet statistics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.PacketStats'
+      summary: Display packet statistics
+      tags:
+      - Packet
+  /pfcp_associations:
+    get:
+      description: List PFCP associations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.NodeAssociationMapNoSession'
+      summary: List PFCP associations
+      tags:
+      - PFCP
+  /pfcp_associations/full:
+    get:
+      description: List PFCP associations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/core.NodeAssociation'
+            type: object
+      summary: List PFCP associations
+      tags:
+      - PFCP
+  /pfcp_sessions:
+    get:
+      parameters:
+      - description: ip
+        in: query
+        name: ip
+        type: string
+      - description: teid
+        in: query
+        name: teid
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.Session'
+            type: array
+      summary: If no parameters are given, list all PFCP sessions. If ip or teid is
+        given, single session will be returned. If both ip and teid are given, it
+        is possible to return two sessions.
+      tags:
+      - PFCP
+  /qer_map:
+    get:
+      description: List QER map content
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ebpf.QerMapElement'
+            type: array
+      summary: List QER map content
+      tags:
+      - QER
+  /qer_map/{id}:
+    get:
+      description: List QER map content
+      parameters:
+      - description: Qer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ebpf.QerMapElement'
+            type: array
+      summary: List QER map content
+      tags:
+      - QER
+  /xdp_stats:
+    get:
+      description: Display XDP statistics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.XdpStats'
+      summary: Display XDP statistics
+      tags:
+      - XDP
+swagger: "2.0"

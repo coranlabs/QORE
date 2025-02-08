@@ -1,0 +1,16 @@
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "coran-nrf.fullname" . }}-test-connection"
+  labels:
+    {{- include "coran-nrf.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ .Values.global.nrf.service.name }}:{{ .Values.global.nrf.service.port }}']
+  restartPolicy: Never

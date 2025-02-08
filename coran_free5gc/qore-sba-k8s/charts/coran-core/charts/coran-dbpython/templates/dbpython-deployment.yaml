@@ -1,0 +1,66 @@
+
+{{- with .Values.dbpython }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "coran-dbpython.fullname" $ }}-{{ .name }}
+  labels:
+    {{- include "coran-dbpython.labels" $ | nindent 4 }}
+    project: {{ $.Values.global.projectName }}
+    nf: {{ .name }}
+spec:
+  replicas: {{ .replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "coran-dbpython.selectorLabels" $ | nindent 6 }}
+      project: {{ $.Values.global.projectName }}
+      nf: {{ .name }}
+  template:
+    metadata:
+      annotations:
+        {{- include "coran-dbpython.dbpythonAnnotations" $ | nindent 8 }}
+      labels:
+        {{- include "coran-dbpython.selectorLabels" $ | nindent 8 }}
+        project: {{ $.Values.global.projectName }}
+        nf: {{ .name }}
+    spec:
+      imagePullSecrets:
+        {{- toYaml $.Values.global.imagePullSecrets | nindent 8 }}
+      securityContext:
+        {{- toYaml .podSecurityContext | nindent 8 }}
+      initContainers:
+      - name: wait-mongo
+        {{- with $.Values.initcontainers.busybox }}
+        image: {{ .image }}:{{ .tag }}
+        {{- end }}
+        env:
+        - name: DEPENDENCIES
+          {{- with $.Values.mongodb.service }}
+          value: {{ .name }}:{{ .port }}
+          {{- end }}
+        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the MongoDB; sleep 2; done;"]
+      containers:
+      - name: {{ .name }}
+        image: {{ $ .Values.global.image.name }}
+        imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
+        securityContext:
+            {{- toYaml .securityContext | nindent 12 }}
+        command: ["sleep"]
+        args: ["infinity"]
+        #command: ["node"]
+        #args: ["server/index.js"]
+        env:
+          - name: DB_URI
+            value: mongodb://{{ $.Values.mongodb.service.name }}:{{ $.Values.mongodb.service.port }}
+        resources:
+            {{- toYaml .resources | nindent 12 }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {{- toYaml .nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .tolerations | nindent 8 }}
+
+{{- end }}

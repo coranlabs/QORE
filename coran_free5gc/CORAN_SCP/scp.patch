@@ -1,0 +1,844 @@
+diff --git a/.netrc b/.netrc
+index 400d8fb..c463791 100644
+--- a/.netrc
++++ b/.netrc
+@@ -1,3 +1,3 @@
+ # .netrc
+ ## generate token with https://help.github.com/articles/creating-an-oauth-token-for-command-line-use
+-machine github.com login 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
+\ No newline at end of file
++machine github.com login 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
+\ No newline at end of file
+diff --git a/Application_entity/cmd/root.go b/Application_entity/cmd/root.go
+index 244e29b..07d71ef 100644
+--- a/Application_entity/cmd/root.go
++++ b/Application_entity/cmd/root.go
+@@ -2,14 +2,18 @@ package cmd
+ 
+ import (
+ 	"context"
++	"encoding/json"
+ 	"fmt"
+ 	"log"
+ 	"os"
+ 	"os/signal"
+ 	"syscall"
++	"time"
+ 
+ 	"github.com/coranlabs/CORAN_SCP/Application_entity/factory"
++	"github.com/coranlabs/CORAN_SCP/Application_entity/logger"
+ 	"github.com/coranlabs/CORAN_SCP/Application_entity/service"
++	"github.com/sirupsen/logrus"
+ 	"github.com/spf13/cobra"
+ 	"github.com/spf13/viper"
+ )
+@@ -88,6 +92,7 @@ func initConfig() {
+ }
+ 
+ func Action() error {
++	logger.InitializeLogger(logrus.InfoLevel)
+ 	tlsKeyLogPath := ""
+ 	ctx, cancel := context.WithCancel(context.Background())
+ 
+@@ -103,12 +108,19 @@ func Action() error {
+ 		return err
+ 	}
+ 	factory.ScpConfig = cfg
++	jsonData, err := json.MarshalIndent(cfg, "", "    ")
++	if err != nil {
++		log.Fatalf("Error marshaling JSON: %v", err)
++	}
++	fmt.Println(string(jsonData))
++	time.Sleep(500 * time.Millisecond)
++
+ 	scp, err := service.NewApp(ctx, cfg, tlsKeyLogPath)
+ 	if err != nil {
+ 		return err
+ 	}
+ 	SCP = scp
+ 	scp.Start()
+-	
++
+ 	return nil
+ }
+diff --git a/Application_entity/consumer/amf_service.go b/Application_entity/consumer/amf_service.go
+index a92a6b7..39c93e3 100644
+--- a/Application_entity/consumer/amf_service.go
++++ b/Application_entity/consumer/amf_service.go
+@@ -165,14 +165,14 @@ func (s *namfService) CreateUEContextRequest(ue *amf_context.AmfUe, ueContextCre
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				//logger.ConsumerLog.Errorf("CreateUEContext response body cannot close: %+v",
++				//logger.ConsLog.Errorf("CreateUEContext response body cannot close: %+v",
+ 				// rspCloseErr)
+ 			}
+ 		}
+ 	}()
+ 	if localErr == nil {
+ 		ueContextCreatedData = res.JsonData
+-		//logger.ConsumerLog.Debugf("UeContextCreatedData: %+v", *ueContextCreatedData)
++		//logger.ConsLog.Debugf("UeContextCreatedData: %+v", *ueContextCreatedData)
+ 	} else if httpResp != nil {
+ 		if httpResp.Status != localErr.Error() {
+ 			err = localErr
+@@ -217,7 +217,7 @@ func (s *namfService) ReleaseUEContextRequest(ue *amf_context.AmfUe, ngapCause m
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				//logger.ConsumerLog.Errorf("ReleaseUEContext response body cannot close: %+v",
++				//logger.ConsLog.Errorf("ReleaseUEContext response body cannot close: %+v",
+ 				//	rspCloseErr)
+ 			}
+ 		}
+@@ -275,14 +275,14 @@ func (s *namfService) UEContextTransferRequest(
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				//logger.ConsumerLog.Errorf("UEContextTransfer response body cannot close: %+v",
++				//logger.ConsLog.Errorf("UEContextTransfer response body cannot close: %+v",
+ 				//	rspCloseErr)
+ 			}
+ 		}
+ 	}()
+ 	if localErr == nil {
+ 		ueContextTransferRspData = res.JsonData
+-		//logger.ConsumerLog.Debugf("UeContextTransferRspData: %+v", *ueContextTransferRspData)
++		//logger.ConsLog.Debugf("UeContextTransferRspData: %+v", *ueContextTransferRspData)
+ 	} else if httpResp != nil {
+ 		if httpResp.Status != localErr.Error() {
+ 			err = localErr
+@@ -316,7 +316,7 @@ func (s *namfService) RegistrationStatusUpdate(ue *amf_context.AmfUe, request mo
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				//logger.ConsumerLog.Errorf("RegistrationStatusUpdate response body cannot close: %+v",
++				//logger.ConsLog.Errorf("RegistrationStatusUpdate response body cannot close: %+v",
+ 				//	rspCloseErr)
+ 			}
+ 		}
+diff --git a/Application_entity/consumer/ausf_service.go b/Application_entity/consumer/ausf_service.go
+index 335fff4..e6b3b97 100644
+--- a/Application_entity/consumer/ausf_service.go
++++ b/Application_entity/consumer/ausf_service.go
+@@ -77,7 +77,7 @@ func (s *nausfService) SendUEAuthenticationAuthenticateRequest(ue *amf_context.A
+ 	defer func() {
+ 		if httpResponse != nil {
+ 			if rspCloseErr := httpResponse.Body.Close(); rspCloseErr != nil {
+-				//logger.ConsumerLog.Errorf("UeAuthenticationsPost response body cannot close: %+v",
++				//logger.ConsLog.Errorf("UeAuthenticationsPost response body cannot close: %+v",
+ 				//	rspCloseErr)
+ 			}
+ 		}
+@@ -125,7 +125,7 @@ func (s *nausfService) SendAuth5gAkaConfirmRequest(ue *amf_context.AmfUe, resSta
+ 	defer func() {
+ 		if httpResponse != nil {
+ 			if rspCloseErr := httpResponse.Body.Close(); rspCloseErr != nil {
+-				//logger.ConsumerLog.Errorf("UeAuthenticationsAuthCtxId5gAkaConfirmationPut response body cannot close: %+v",	rspCloseErr)
++				//logger.ConsLog.Errorf("UeAuthenticationsAuthCtxId5gAkaConfirmationPut response body cannot close: %+v",	rspCloseErr)
+ 			}
+ 		}
+ 	}()
+@@ -151,7 +151,7 @@ func (s *nausfService) SendEapAuthConfirmRequest(ue *amf_context.AmfUe, eapMsg n
+ ) {
+ 	confirmUri, err := url.Parse(ue.AuthenticationCtx.Links["eap-session"].Href)
+ 	if err != nil {
+-		//logger.ConsumerLog.Errorf("url Parse failed: %+v", err)
++		//logger.ConsLog.Errorf("url Parse failed: %+v", err)
+ 	}
+ 	ausfUri := fmt.Sprintf("%s://%s", confirmUri.Scheme, confirmUri.Host)
+ 
+@@ -174,7 +174,7 @@ func (s *nausfService) SendEapAuthConfirmRequest(ue *amf_context.AmfUe, eapMsg n
+ 	defer func() {
+ 		if httpResponse != nil {
+ 			if rspCloseErr := httpResponse.Body.Close(); rspCloseErr != nil {
+-				//logger.ConsumerLog.Errorf("EapAuthMethod response body cannot close: %+v",rspCloseErr)
++				//logger.ConsLog.Errorf("EapAuthMethod response body cannot close: %+v",rspCloseErr)
+ 			}
+ 		}
+ 	}()
+diff --git a/Application_entity/consumer/nrf_service.go b/Application_entity/consumer/nrf_service.go
+index a56cbcc..2ff4dac 100644
+--- a/Application_entity/consumer/nrf_service.go
++++ b/Application_entity/consumer/nrf_service.go
+@@ -9,7 +9,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/coranlabs/CORAN_AMF/Application_entity/config/factory"
+-	"github.com/coranlabs/CORAN_AMF/Application_entity/logger"
++	"github.com/coranlabs/CORAN_SCP/Application_entity/logger"
+ 	"github.com/coranlabs/CORAN_AMF/Application_entity/server/util"
+ 	amf_context "github.com/coranlabs/CORAN_AMF/Messages_controller/context"
+ 	openapi "github.com/coranlabs/CORAN_LIB_OPENAPI"
+@@ -124,7 +124,7 @@ func (s *nnrfService) SearchUdmSdmInstance(
+ 	ue.NudmSDMUri = sdmUri
+ 	if ue.NudmSDMUri == "" {
+ 		err := fmt.Errorf("AMF can not select an UDM by NRF")
+-		logger.ConsumerLog.Errorf(err.Error())
++		logger.ConsLog.Errorf(err.Error())
+ 		return err
+ 	}
+ 	return nil
+@@ -301,7 +301,7 @@ func (s *nnrfService) SendRegisterNFInstance(nrfUri, nfInstanceId string, profil
+ }
+ 
+ // func (s *nnrfService) SendDeregisterNFInstance() (problemDetails *models.ProblemDetails, err error) {
+-// 	logger.ConsumerLog.Infof("[AMF] Send Deregister NFInstance")
++// 	logger.ConsLog.Infof("[AMF] Send Deregister NFInstance")
+ // 	amfContext := s.consumer.Context()
+ 
+ // 	client := s.getNFManagementClient(amfContext.NrfUri)
+diff --git a/Application_entity/consumer/nssf_service.go b/Application_entity/consumer/nssf_service.go
+index f14c19d..a6f0f58 100644
+--- a/Application_entity/consumer/nssf_service.go
++++ b/Application_entity/consumer/nssf_service.go
+@@ -7,10 +7,10 @@ import (
+ 	"github.com/antihax/optional"
+ 
+ 	amf_context "github.com/coranlabs/CORAN_AMF/Messages_controller/context"
+-	"github.com/coranlabs/CORAN_SCP/Application_entity/logger"
+ 	openapi "github.com/coranlabs/CORAN_LIB_OPENAPI"
+ 	"github.com/coranlabs/CORAN_LIB_OPENAPI/Nnssf_NSSelection"
+ 	"github.com/coranlabs/CORAN_LIB_OPENAPI/models"
++	"github.com/coranlabs/CORAN_SCP/Application_entity/logger"
+ )
+ 
+ type nssfService struct {
+@@ -69,11 +69,11 @@ func (s *nssfService) NSSelectionGetForRegistration(ue *amf_context.AmfUe, reque
+ 
+ 	var paramOpt Nnssf_NSSelection.NSSelectionGetParamOpts
+ 	if e, errsliceinfo := json.Marshal(sliceInfo); errsliceinfo != nil {
+-		logger.ConsumerLog.Warnf("slice json marshal failed: %+v", errsliceinfo)
++		logger.ConsLog.Warnf("slice json marshal failed: %+v", errsliceinfo)
+ 	} else {
+ 		tai, taierr := json.Marshal(ue.Tai)
+ 		if taierr != nil {
+-			logger.ConsumerLog.Warnf("tai json marshal failed: %+v", taierr)
++			logger.ConsLog.Warnf("tai json marshal failed: %+v", taierr)
+ 		}
+ 		paramOpt = Nnssf_NSSelection.NSSelectionGetParamOpts{
+ 			SliceInfoRequestForRegistration: optional.NewInterface(string(e)),
+@@ -86,7 +86,7 @@ func (s *nssfService) NSSelectionGetForRegistration(ue *amf_context.AmfUe, reque
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("NSSelectionGet response body cannot close: %+v",
++				logger.ConsLog.Errorf("NSSelectionGet response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+@@ -127,11 +127,11 @@ func (s *nssfService) NSSelectionGetForPduSession(ue *amf_context.AmfUe, snssai
+ 
+ 	e, err := json.Marshal(sliceInfoForPduSession)
+ 	if err != nil {
+-		logger.ConsumerLog.Warnf("slice json marshal failed: %+v", err)
++		logger.ConsLog.Warnf("slice json marshal failed: %+v", err)
+ 	}
+ 	tai, taierr := json.Marshal(ue.Tai)
+ 	if taierr != nil {
+-		logger.ConsumerLog.Warnf("tai json marshal failed: %+v", taierr)
++		logger.ConsLog.Warnf("tai json marshal failed: %+v", taierr)
+ 	}
+ 	paramOpt := Nnssf_NSSelection.NSSelectionGetParamOpts{
+ 		SliceInfoRequestForPduSession: optional.NewInterface(string(e)),
+@@ -147,7 +147,7 @@ func (s *nssfService) NSSelectionGetForPduSession(ue *amf_context.AmfUe, snssai
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("NSSelectionGet response body cannot close: %+v",
++				logger.ConsLog.Errorf("NSSelectionGet response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+diff --git a/Application_entity/consumer/pcf_service.go b/Application_entity/consumer/pcf_service.go
+index 3173456..887788f 100644
+--- a/Application_entity/consumer/pcf_service.go
++++ b/Application_entity/consumer/pcf_service.go
+@@ -7,7 +7,7 @@ import (
+ 	amf_context "github.com/coranlabs/CORAN_AMF/Messages_controller/context"
+ 	//"github.com/coranlabs/CORAN_AMF/Application_entity/logger"
+ 	"github.com/coranlabs/CORAN_AMF/Application_entity/config/factory"
+-	"github.com/coranlabs/CORAN_AMF/Application_entity/logger"
++	"github.com/coranlabs/CORAN_SCP/Application_entity/logger"
+ 	openapi "github.com/coranlabs/CORAN_LIB_OPENAPI"
+ 	"github.com/coranlabs/CORAN_LIB_OPENAPI/Npcf_AMPolicy"
+ 	"github.com/coranlabs/CORAN_LIB_OPENAPI/models"
+@@ -76,14 +76,14 @@ func (s *npcfService) AMPolicyControlCreate(
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("PoliciesPost response body cannot close: %+v",
++				logger.ConsLog.Errorf("PoliciesPost response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+ 	}()
+ 	if localErr == nil {
+ 		locationHeader := httpResp.Header.Get("Location")
+-		logger.ConsumerLog.Debugf("location header: %+v", locationHeader)
++		logger.ConsLog.Debugf("location header: %+v", locationHeader)
+ 		ue.AmPolicyUri = locationHeader
+ 
+ 		re := regexp.MustCompile("/policies/.*")
+@@ -103,8 +103,8 @@ func (s *npcfService) AMPolicyControlCreate(
+ 			}
+ 		}
+ 
+-		logger.ConsumerLog.Debugf("UE AM Policy Association ID: %s", ue.PolicyAssociationId)
+-		logger.ConsumerLog.Debugf("AmPolicyAssociation: %+v", ue.AmPolicyAssociation)
++		logger.ConsLog.Debugf("UE AM Policy Association ID: %s", ue.PolicyAssociationId)
++		logger.ConsLog.Debugf("AmPolicyAssociation: %+v", ue.AmPolicyAssociation)
+ 	} else if httpResp != nil {
+ 		if httpResp.Status != localErr.Error() {
+ 			return nil, localErr
+@@ -135,7 +135,7 @@ func (s *npcfService) AMPolicyControlUpdate(
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("PoliciesPolAssoIdUpdatePost response body cannot close: %+v",
++				logger.ConsLog.Errorf("PoliciesPolAssoIdUpdatePost response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+@@ -186,7 +186,7 @@ func (s *npcfService) AMPolicyControlDelete(ue *amf_context.AmfUe) (problemDetai
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("PoliciesPolAssoIdDelete response body cannot close: %+v",
++				logger.ConsLog.Errorf("PoliciesPolAssoIdDelete response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+diff --git a/Application_entity/consumer/smf_service.go b/Application_entity/consumer/smf_service.go
+index 35505b1..4edd653 100644
+--- a/Application_entity/consumer/smf_service.go
++++ b/Application_entity/consumer/smf_service.go
+@@ -12,7 +12,7 @@ import (
+ 	amf_context "github.com/coranlabs/CORAN_AMF/Messages_controller/context"
+ 	//"github.com/coranlabs/CORAN_AMF/Application_entity/logger"
+ 	"github.com/coranlabs/CORAN_AMF/Application_entity/config/factory"
+-	"github.com/coranlabs/CORAN_AMF/Application_entity/logger"
++	"github.com/coranlabs/CORAN_SCP/Application_entity/logger"
+ 	"github.com/coranlabs/CORAN_AMF/Application_entity/server/util"
+ 
+ 	"github.com/coranlabs/CORAN_LIB_NAS/nasMessage"
+@@ -175,7 +175,7 @@ func (s *nsmfService) SendCreateSmContextRequest(ue *amf_context.AmfUe, smContex
+ 	defer func() {
+ 		if httpResponse != nil {
+ 			if rspCloseErr := httpResponse.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("PostSmContexts response body cannot close: %+v",
++				logger.ConsLog.Errorf("PostSmContexts response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+@@ -486,7 +486,7 @@ func (s *nsmfService) SendUpdateSmContextRequest(smContext *amf_context.SmContex
+ 	defer func() {
+ 		if httpResponse != nil {
+ 			if rspCloseErr := httpResponse.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("UpdateSmContext response body cannot close: %+v",
++				logger.ConsLog.Errorf("UpdateSmContext response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+@@ -536,7 +536,7 @@ func (s *nsmfService) SendReleaseSmContextRequest(ue *amf_context.AmfUe, smConte
+ 	defer func() {
+ 		if response != nil {
+ 			if rspCloseErr := response.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("ReleaseSmContext response body cannot close: %+v",
++				logger.ConsLog.Errorf("ReleaseSmContext response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+diff --git a/Application_entity/consumer/udm_service.go b/Application_entity/consumer/udm_service.go
+index 09d4bff..e16d35b 100644
+--- a/Application_entity/consumer/udm_service.go
++++ b/Application_entity/consumer/udm_service.go
+@@ -9,7 +9,7 @@ import (
+ 	amf_context "github.com/coranlabs/CORAN_AMF/Messages_controller/context"
+ 	//"github.com/coranlabs/CORAN_AMF/Application_entity/logger"
+ 	"github.com/coranlabs/CORAN_AMF/Application_entity/config/factory"
+-	"github.com/coranlabs/CORAN_AMF/Application_entity/logger"
++	"github.com/coranlabs/CORAN_SCP/Application_entity/logger"
+ 	openapi "github.com/coranlabs/CORAN_LIB_OPENAPI"
+ 	"github.com/coranlabs/CORAN_LIB_OPENAPI/Nudm_SubscriberDataManagement"
+ 	"github.com/coranlabs/CORAN_LIB_OPENAPI/Nudm_UEContextManagement"
+@@ -92,7 +92,7 @@ func (s *nudmService) PutUpuAck(ue *amf_context.AmfUe, upuMacIue string) error {
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("PutUpuAck response body cannot close: %+v",
++				logger.ConsLog.Errorf("PutUpuAck response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+@@ -120,7 +120,7 @@ func (s *nudmService) SDMGetAmData(ue *amf_context.AmfUe) (problemDetails *model
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("GetAmData response body cannot close: %+v",
++				logger.ConsLog.Errorf("GetAmData response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+@@ -161,7 +161,7 @@ func (s *nudmService) SDMGetSmfSelectData(ue *amf_context.AmfUe) (problemDetails
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("GetSmfSelectData response body cannot close: %+v",
++				logger.ConsLog.Errorf("GetSmfSelectData response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+@@ -200,7 +200,7 @@ func (s *nudmService) SDMGetUeContextInSmfData(
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("GetUeContextInSmfData response body cannot close: %+v",
++				logger.ConsLog.Errorf("GetUeContextInSmfData response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+@@ -243,7 +243,7 @@ func (s *nudmService) SDMSubscribe(ue *amf_context.AmfUe) (problemDetails *model
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("Subscribe response body cannot close: %+v",
++				logger.ConsLog.Errorf("Subscribe response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+@@ -286,7 +286,7 @@ func (s *nudmService) SDMGetSliceSelectionSubscriptionData(
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("GetNssai response body cannot close: %+v",
++				logger.ConsLog.Errorf("GetNssai response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+@@ -340,7 +340,7 @@ func (s *nudmService) SDMUnsubscribe(ue *amf_context.AmfUe) (problemDetails *mod
+ 	defer func() {
+ 		if httpResp != nil {
+ 			if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-				logger.ConsumerLog.Errorf("Unsubscribe response body cannot close: %+v",
++				logger.ConsLog.Errorf("Unsubscribe response body cannot close: %+v",
+ 					rspCloseErr)
+ 			}
+ 		}
+@@ -397,7 +397,7 @@ func (s *nudmService) UeCmRegistration(
+ 		defer func() {
+ 			if httpResp != nil {
+ 				if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-					logger.ConsumerLog.Errorf("Registration response body cannot close: %+v",
++					logger.ConsLog.Errorf("Registration response body cannot close: %+v",
+ 						rspCloseErr)
+ 				}
+ 			}
+@@ -426,7 +426,7 @@ func (s *nudmService) UeCmRegistration(
+ 		defer func() {
+ 			if httpResp != nil {
+ 				if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-					logger.ConsumerLog.Errorf("Register response body cannot close: %+v",
++					logger.ConsLog.Errorf("Register response body cannot close: %+v",
+ 						rspCloseErr)
+ 				}
+ 			}
+@@ -474,7 +474,7 @@ func (s *nudmService) UeCmDeregistration(
+ 		defer func() {
+ 			if httpResp != nil {
+ 				if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-					logger.ConsumerLog.Errorf("Update response body cannot close: %+v",
++					logger.ConsLog.Errorf("Update response body cannot close: %+v",
+ 						rspCloseErr)
+ 				}
+ 			}
+@@ -501,7 +501,7 @@ func (s *nudmService) UeCmDeregistration(
+ 		defer func() {
+ 			if httpResp != nil {
+ 				if rspCloseErr := httpResp.Body.Close(); rspCloseErr != nil {
+-					logger.ConsumerLog.Errorf("UpdateAmfNon3gppAccess response body cannot close: %+v",
++					logger.ConsLog.Errorf("UpdateAmfNon3gppAccess response body cannot close: %+v",
+ 						rspCloseErr)
+ 				}
+ 			}
+diff --git a/Application_entity/factory/config.go b/Application_entity/factory/config.go
+index 21920ba..4e16b87 100644
+--- a/Application_entity/factory/config.go
++++ b/Application_entity/factory/config.go
+@@ -27,9 +27,16 @@ const (
+ 
+ type Config struct {
+ 	Configuration *Configuration `yaml:"configuration" valid:"required"`
++	Logger        *Logger `yaml:"logger" valid:"required"`
+ 	sync.RWMutex
+ }
+ 
++type Logger struct {
++	Enable       bool   `yaml:"enable" valid:"type(bool)"`
++	Level        string `yaml:"level" valid:"required,in(trace|debug|info|warn|error|fatal|panic)"`
++	ReportCaller bool   `yaml:"reportCaller" valid:"type(bool)"`
++}
++
+ type Configuration struct {
+ 	Sbi         *Sbi   `yaml:"sbi,omitempty" valid:"required"`
+ 	MongoDBName string `yaml:"MongoDBName" valid:"optional"`
+@@ -132,34 +139,34 @@ func (c *Configuration) validate() (bool, error) {
+ // 	return ""
+ // }
+ 
+-// func (c *Config) SetLogEnable(enable bool) {
+-// 	c.Lock()
+-// 	defer c.Unlock()
++func (c *Config) SetLogEnable(enable bool) {
++	c.Lock()
++	defer c.Unlock()
+ 
+-// 	if c.Logger == nil {
+-// 		logger.CfgLog.Warnf("Logger should not be nil")
+-// 		c.Logger = &Logger{
+-// 			Enable: enable,
+-// 			Level:  "info",
+-// 		}
+-// 	} else {
+-// 		c.Logger.Enable = enable
+-// 	}
+-// }
++	if c.Logger == nil {
++		logger.CfgLog.Warnf("Logger should not be nil")
++		c.Logger = &Logger{
++			Enable: enable,
++			Level:  "info",
++		}
++	} else {
++		c.Logger.Enable = enable
++	}
++}
+ 
+-// func (c *Config) SetLogLevel(level string) {
+-// 	c.Lock()
+-// 	defer c.Unlock()
++func (c *Config) SetLogLevel(level string) {
++	c.Lock()
++	defer c.Unlock()
+ 
+-// 	if c.Logger == nil {
+-// 		logger.CfgLog.Warnf("Logger should not be nil")
+-// 		c.Logger = &Logger{
+-// 			Level: level,
+-// 		}
+-// 	} else {
+-// 		c.Logger.Level = level
+-// 	}
+-// }
++	if c.Logger == nil {
++		logger.CfgLog.Warnf("Logger should not be nil")
++		c.Logger = &Logger{
++			Level: level,
++		}
++	} else {
++		c.Logger.Level = level
++	}
++}
+ 
+ // func (c *Config) SetLogReportCaller(reportCaller bool) {
+ // 	c.Lock()
+@@ -176,25 +183,25 @@ func (c *Configuration) validate() (bool, error) {
+ // 	}
+ // }
+ 
+-// func (c *Config) GetLogEnable() bool {
+-// 	c.RLock()
+-// 	defer c.RUnlock()
+-// 	if c.Logger == nil {
+-// 		logger.CfgLog.Warnf("Logger should not be nil")
+-// 		return false
+-// 	}
+-// 	return c.Logger.Enable
+-// }
++func (c *Config) GetLogEnable() bool {
++	c.RLock()
++	defer c.RUnlock()
++	if c.Logger == nil {
++		logger.CfgLog.Warnf("Logger should not be nil")
++		return false
++	}
++	return c.Logger.Enable
++}
+ 
+-// func (c *Config) GetLogLevel() string {
+-// 	c.RLock()
+-// 	defer c.RUnlock()
+-// 	if c.Logger == nil {
+-// 		logger.CfgLog.Warnf("Logger should not be nil")
+-// 		return "info"
+-// 	}
+-// 	return c.Logger.Level
+-// }
++func (c *Config) GetLogLevel() string {
++	c.RLock()
++	defer c.RUnlock()
++	if c.Logger == nil {
++		logger.CfgLog.Warnf("Logger should not be nil")
++		return "info"
++	}
++	return c.Logger.Level
++}
+ 
+ // func (c *Config) GetLogReportCaller() bool {
+ // 	c.RLock()
+diff --git a/Application_entity/factory/factory.go b/Application_entity/factory/factory.go
+index 80a6bd6..557e18a 100644
+--- a/Application_entity/factory/factory.go
++++ b/Application_entity/factory/factory.go
+@@ -6,7 +6,7 @@ import (
+ 
+ 	// "github.com/asaskevich/govalidator"
+ 	"github.com/asaskevich/govalidator"
+-	"github.com/free5gc/amf/logger"
++	"github.com/coranlabs/CORAN_SCP/Application_entity/logger"
+ 	"gopkg.in/yaml.v2"
+ )
+ 
+diff --git a/Application_entity/logger/logger.go b/Application_entity/logger/logger.go
+index 3b6e95f..8dd771f 100644
+--- a/Application_entity/logger/logger.go
++++ b/Application_entity/logger/logger.go
+@@ -1,43 +1,108 @@
+ package logger
+ 
+ import (
+-	"github.com/sirupsen/logrus"
+-	logger_util "github.com/coranlabs/CORAN_LIB_UTIL/logger"
++	"fmt"
++	"strings"
++
++	log "github.com/sirupsen/logrus"
++)
++
++type ColorFormatter struct{}
++
++var (
++	Log         *log.Logger
++	NfLog       *log.Entry
++	MainLog     *log.Entry
++	InitLog     *log.Entry
++	CfgLog      *log.Entry
++	CtxLog      *log.Entry
++	SBILog      *log.Entry
++	GinLog      *log.Entry
++	ConsLog     *log.Entry
++	NfmLog      *log.Entry
++	AccTokenLog *log.Entry
++	DiscLog     *log.Entry
++	UtilLog     *log.Entry
+ )
+ 
++// ANSI color codes for different log levels
+ var (
+-	Log         *logrus.Logger
+-	NfLog       *logrus.Entry
+-	MainLog     *logrus.Entry
+-	InitLog     *logrus.Entry
+-	CfgLog      *logrus.Entry
+-	CtxLog      *logrus.Entry
+-	SBILog      *logrus.Entry
+-	GinLog      *logrus.Entry
+-	ConsumerLog *logrus.Entry
+-	NfmLog      *logrus.Entry
+-	AccTokenLog *logrus.Entry
+-	DiscLog     *logrus.Entry
+-	UtilLog     *logrus.Entry
++	colorReset   = "\033[0m"
++	colorRed     = "\033[31m"
++	colorBlue    = "\033[38;2;94;205;193m"
++	colorYellow  = "\033[33m"
++	colorMagenta = "\033[35m"
+ )
+ 
+-func init() {
+-	fieldsOrder := []string{
+-		logger_util.FieldNF,
+-		logger_util.FieldCategory,
++// Format implements the Formatter interface
++func (f *ColorFormatter) Format(entry *log.Entry) ([]byte, error) {
++	// Define color based on log level
++	var color string
++	switch entry.Level {
++	case log.DebugLevel:
++		color = colorMagenta
++	case log.InfoLevel:
++		color = colorBlue
++	case log.WarnLevel:
++		color = colorYellow
++	case log.ErrorLevel:
++		color = colorRed
++	case log.FatalLevel:
++		color = colorRed
++	default:
++		color = colorReset
++	}
++
++	// Format the timestamp
++	timestamp := entry.Time.Format("2006-01-02 | 15:04:05")
++
++	// Format log level with 1-character padding between the log level and brackets
++	coloredLevel := fmt.Sprintf("%s[ %-5s ]%s", color, strings.ToUpper(entry.Level.String()), colorReset)
++
++	// Get the component field from the log entry, default to "general" if not provided
++	component, exists := entry.Data["component"]
++	if !exists {
++		component = "general"
+ 	}
+ 
+-	Log = logger_util.New(fieldsOrder)
+-	NfLog = Log.WithField(logger_util.FieldNF, "SCP")
+-	MainLog = NfLog.WithField(logger_util.FieldCategory, "Main")
+-	InitLog = NfLog.WithField(logger_util.FieldCategory, "Init")
+-	CfgLog = NfLog.WithField(logger_util.FieldCategory, "CFG")
+-	CtxLog = NfLog.WithField(logger_util.FieldCategory, "CTX")
+-	SBILog = NfLog.WithField(logger_util.FieldCategory, "SBI")
+-	GinLog = NfLog.WithField(logger_util.FieldCategory, "GIN")
+-	ConsumerLog = NfLog.WithField(logger_util.FieldCategory, "Consumer")
+-	NfmLog = NfLog.WithField(logger_util.FieldCategory, "NFM")
+-	AccTokenLog = NfLog.WithField(logger_util.FieldCategory, "Token")
+-	DiscLog = NfLog.WithField(logger_util.FieldCategory, "DISC")
+-	UtilLog = NfLog.WithField(logger_util.FieldCategory, "Util")
++	// Format component with a fixed width of 4 characters, with 1-character padding
++	coloredComponent := fmt.Sprintf("%s[ %-4s ]%s", color, strings.ToUpper(component.(string)), colorReset)
++
++	// Format the log message
++	logLine := fmt.Sprintf(
++		"%s %s %s | %s\n",
++		timestamp, coloredLevel, coloredComponent, entry.Message,
++	)
++
++	return []byte(logLine), nil
++}
++
++// InitializeLogger sets the custom logger with ColorFormatter
++func InitializeLogger(level log.Level) {
++	log.SetFormatter(&ColorFormatter{})
++	log.SetLevel(level) // Set default log level
++	NfLog = CreateLoggerWithComponent("NF")
++	MainLog = CreateLoggerWithComponent("MAIN")
++	InitLog = CreateLoggerWithComponent("INIT")
++	CfgLog = CreateLoggerWithComponent("CFG")
++	CtxLog = CreateLoggerWithComponent("CTX")
++	UtilLog = CreateLoggerWithComponent("UTIL")
++	ConsLog = CreateLoggerWithComponent("CONS")
++	GinLog = CreateLoggerWithComponent("GIN")
++	SBILog = CreateLoggerWithComponent("SBI")
++	DiscLog = CreateLoggerWithComponent("DISC")
++
++	Log = log.StandardLogger()
++}
++
++// GetLogger allows custom log level configuration or any other setup before using the logger
++func GetLogger() *log.Logger {
++	return log.StandardLogger()
++}
++
++// CreateLoggerWithComponent returns a logger instance with predefined fields like component
++func CreateLoggerWithComponent(component string) *log.Entry {
++	return log.WithFields(log.Fields{
++		"component": strings.ToUpper(component),
++	})
+ }
+diff --git a/Application_entity/service/init.go b/Application_entity/service/init.go
+index 0df1a6c..51b7da2 100644
+--- a/Application_entity/service/init.go
++++ b/Application_entity/service/init.go
+@@ -2,14 +2,16 @@ package service
+ 
+ import (
+ 	"context"
++	"io"
+ 	"os"
+ 	"os/signal"
+ 	"sync"
+ 	"syscall"
+ 
+-	"github.com/coranlabs/CORAN_SCP/Application_entity/logger"
+ 	"github.com/coranlabs/CORAN_SCP/Application_entity/factory"
++	"github.com/coranlabs/CORAN_SCP/Application_entity/logger"
+ 	"github.com/coranlabs/CORAN_SCP/Application_entity/server/sbi"
++	"github.com/sirupsen/logrus"
+ )
+ 
+ var SCP *ScpApp
+@@ -31,12 +33,36 @@ func (s *ScpApp) Config() *factory.Config {
+ 
+ // SetLogEnable implements sbi.ServerScp.
+ func (s *ScpApp) SetLogEnable(enable bool) {
+-	panic("unimplemented")
++	logger.MainLog.Infof("Log enable is set to [%v]", enable)
++	if enable && logger.Log.Out == os.Stderr {
++		return
++	} else if !enable && logger.Log.Out == io.Discard {
++		return
++	}
++
++	s.Config().SetLogEnable(enable)
++	if enable {
++		logger.Log.SetOutput(os.Stderr)
++	} else {
++		logger.Log.SetOutput(io.Discard)
++	}
+ }
+ 
+ // SetLogLevel implements sbi.ServerScp.
+ func (s *ScpApp) SetLogLevel(level string) {
+-	panic("unimplemented")
++	lvl, err := logrus.ParseLevel(level)
++	if err != nil {
++		logger.MainLog.Warnf("Log level [%s] is invalid", level)
++		return
++	}
++
++	logger.MainLog.Infof("Log level is set to [%s]", level)
++	if lvl == logger.Log.GetLevel() {
++		return
++	}
++
++	s.Config().SetLogLevel(level)
++	logger.InitializeLogger(lvl)
+ }
+ 
+ // SetReportCaller implements sbi.ServerScp.
+@@ -63,7 +89,7 @@ func (s *ScpApp) Start() {
+ 		select {
+ 		case <-sigChan:
+ 			logger.InitLog.Infoln("Received shutdown signal")
+-			s.wg.Wait() 
++			s.wg.Wait()
+ 			logger.InitLog.Infoln("Server stopped")
+ 			return
+ 		}
+@@ -116,6 +142,9 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Sc
+ 		cfg: cfg,
+ 		wg:  sync.WaitGroup{},
+ 	}
++	scp.SetLogEnable(cfg.GetLogEnable())
++	scp.SetLogLevel(cfg.GetLogLevel())
++
+ 	err := dummy()
+ 	if scp.sbiServer, err = sbi.NewServer(scp, tlsKeyLogPath); err != nil {
+ 		return nil, err
+diff --git a/config/CORAN_SCP.yaml b/config/CORAN_SCP.yaml
+index 6fc8022..be18804 100644
+--- a/config/CORAN_SCP.yaml
++++ b/config/CORAN_SCP.yaml
+@@ -11,4 +11,9 @@ configuration:
+       pem: cert/scp.pem
+       key: cert/scp.key
+     oauth: true
+-  nrfUri: "http://nrf-nnrf:8000"
+\ No newline at end of file
++  nrfUri: "http://nrf-nnrf:8000"
++
++logger: # log output setting
++  enable: true # true or false
++  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
++  reportCaller: false # enable the caller report or not, value: true or false
+\ No newline at end of file
+

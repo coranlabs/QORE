@@ -1,0 +1,48 @@
+{{- with .Values.nwdaf }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "coran-nwdaf.fullname" $ }}-configmap
+  labels:
+    app: {{ $.Values.global.projectName }}  
+data:
+  nwdaf.env: |
+    # AMF Configuration
+    AMF_IP_ADDR={{ .amf.ipAddr | default "coran-coran-amf-service:80" }}
+    AMF_HTTP_VERSION={{ .amf.httpVersion | default "2" }}
+    AMF_SUBSCR_ROUTE={{ .amf.subscrRoute | default "/namf-evts/v1" }}
+    AMF_API_ROUTE={{ .amf.apiRoute | default "/test/amf" }}
+    AMF_NOTIFY_CORRELATION_ID={{ .amf.notifyCorrelationId | default "string" }}
+    AMF_NOTIFICATION_ID={{ .amf.notificationId | default "1" }}
+    AMF_NOTIFICATION_FORWARD_ROUTE={{ .amf.notificationForwardRoute | default "/sbi/notification/amf" }}
+
+    # SMF Configuration
+    SMF_IP_ADDR={{ .smf.ipAddr | default "coran-coran-smf-service:80" }}    
+    SMF_HTTP_VERSION={{ .smf.httpVersion | default "2" }}
+    SMF_SUBSCR_ROUTE={{ .smf.subscrRoute | default "/nsmf_event-exposure/v1" }}
+    SMF_API_ROUTE={{ .smf.apiRoute | default "/test/smf" }}
+    SMF_NOTIFY_CORRELATION_ID={{ .smf.notifyCorrelationId | default "string" }}
+    SMF_NOTIFICATION_ID={{ .smf.notificationId | default "2" }}
+    SMF_NOTIFICATION_FORWARD_ROUTE={{ .smf.notificationForwardRoute | default "/sbi/notification/smf" }}
+
+    # Database Configuration
+    MONGODB_URI={{ .database.mongodbUri | default "mongodb://mongodbnwdaf:27018" }}
+    MONGODB_DATABASE_NAME={{ .database.name | default "testing" }}
+    MONGODB_COLLECTION_NAME_AMF={{ .database.amfCollection | default "amf" }}
+    MONGODB_COLLECTION_NAME_SMF={{ .database.smfCollection | default "smf" }}
+
+    # Server Configuration
+    EVENT_NOTIFY_URI={{ .server.eventNotifyUri | default "http://192.168.70.1:8885" }}
+
+    # URIs Configuration
+    EVENTS_URI={{ .uris.eventsUri | default "http://localhost:8000" }}
+    ENGINE_URI={{ .uris.engineUri | default "http://localhost:8888" }}
+    ENGINE_ADS_URI={{ .uris.engineAdsUri | default "http://localhost:8989" }}
+
+    # Routes Configuration
+    ENGINE_NUM_OF_UE_ROUTE={{ .routes.numOfUeRoute | default "/network_performance/num_of_ue" }}
+    ENGINE_SESS_SUCC_RATIO_ROUTE={{ .routes.sessSuccRatioRoute | default "/network_performance/sess_succ_ratio" }}
+    ENGINE_UE_COMMUNICATION_ROUTE={{ .routes.ueCommunicationRoute | default "/ue_communication" }}
+    ENGINE_UE_MOBILITY_ROUTE={{ .routes.ueMobilityRoute | default "/ue_mobility" }}
+    ENGINE_UNEXPECTED_LARGE_RATE_FLOW_ROUTE={{ .routes.unexpectedLargeRateFlowRoute | default "/abnormal_behaviour/unexpected_large_rate_flow" }}
+{{- end }}
