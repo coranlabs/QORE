@@ -1,0 +1,1017 @@
+// SPDX-FileCopyrightText: 2022-present Intel Corporation
+// SPDX-FileCopyrightText: 2021 Open Networking Foundation <info@opennetworking.org>
+// Copyright 2019 free5GC.org
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+package service
+
+import (
+	"bufio"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	_ "net/http/pprof" //Using package only for invoking initialization.
+	"os"
+	"os/exec"
+	"os/signal"
+	"strconv"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	nrf_cache "github.com/omec-project/nrf/nrfcache"
+
+	"github.com/gin-contrib/cors"
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
+
+	gClient "github.com/Nikhil690/connsert/proto/client"
+	protos "github.com/Nikhil690/connsert/proto/sdcoreConfig"
+	"github.com/fsnotify/fsnotify"
+	"github.com/omec-project/amf/communication"
+	"github.com/omec-project/amf/consumer"
+	"github.com/omec-project/amf/context"
+	"github.com/omec-project/amf/eventexposure"
+	"github.com/omec-project/amf/factory"
+	"github.com/omec-project/amf/gmm"
+	"github.com/omec-project/amf/httpcallback"
+	"github.com/omec-project/amf/location"
+	"github.com/omec-project/amf/logger"
+	"github.com/omec-project/amf/metrics"
+	"github.com/omec-project/amf/mt"
+	"github.com/omec-project/amf/ngap"
+	ngap_message "github.com/omec-project/amf/ngap/message"
+	ngap_service "github.com/omec-project/amf/ngap/service"
+	"github.com/omec-project/amf/oam"
+	"github.com/omec-project/amf/producer/callback"
+	"github.com/omec-project/amf/util"
+	aperLogger "github.com/omec-project/aper/logger"
+	"github.com/omec-project/fsm"
+	fsmLogger "github.com/omec-project/fsm/logger"
+
+	// "github.com/omec-project/http2_util"
+	"github.com/lakshya-chopra/http2_util"
+	"github.com/omec-project/logger_util"
+	nasLogger "github.com/omec-project/nas/logger"
+	ngapLogger "github.com/omec-project/ngap/logger"
+	"github.com/omec-project/openapi/models"
+	"github.com/omec-project/path_util"
+	pathUtilLogger "github.com/omec-project/path_util/logger"
+	"github.com/spf13/viper"
+	// "github.com/lakshya-chopra/sctp"
+)
+
+type AMF struct{}
+
+var RocUpdateConfigChannel chan bool
+
+type (
+	// Config information.
+	Config struct {
+		amfcfg         string
+		heartBeatTimer string
+	}
+)
+
+var config Config
+
+var amfCLi = []cli.Flag{
+	cli.StringFlag{
+		Name:  "free5gccfg",
+		Usage: "common config file",
+	},
+	cli.StringFlag{
+		Name:  "amfcfg",
+		Usage: "amf config file",
+	},
+}
+
+var initLog *logrus.Entry
+
+var (
+	KeepAliveTimer      *time.Timer
+	KeepAliveTimerMutex sync.Mutex
+)
+
+func init() {
+	initLog = logger.InitLog
+	RocUpdateConfigChannel = make(chan bool)
+}
+
+func (*AMF) GetCliCmd() (flags []cli.Flag) {
+	return amfCLi
+}
+
+func (amf *AMF) Initialize(c *cli.Context) error {
+	config = Config{
+		amfcfg: c.String("amfcfg"),
+	}
+
+	if config.amfcfg != "" {
+		if err := factory.InitConfigFactory(config.amfcfg); err != nil {
+			return err
+		}
+	} else {
+		DefaultAmfConfigPath := path_util.Free5gcPath("free5gc/config/amfcfg.conf")
+		if err := factory.InitConfigFactory(DefaultAmfConfigPath); err != nil {
+			return err
+		}
+	}
+
+	amf.setLogLevel()
+
+	//Initiating a server for profiling
+	if factory.AmfConfig.Configuration.DebugProfilePort != 0 {
+		addr := fmt.Sprintf(":%d", factory.AmfConfig.Configuration.DebugProfilePort)
+		go func() {
+			http.ListenAndServe(addr, nil)
+		}()
+	}
+
+	if err := factory.CheckConfigVersion(); err != nil {
+		return err
+	}
+
+	if _, err := os.Stat("/free5gc/config/amfcfg.conf"); err == nil {
+		viper.SetConfigName("amfcfg.conf")
+		viper.SetConfigType("yaml")
+		viper.AddConfigPath("/free5gc/config")
+		err := viper.ReadInConfig() // Find and read the config file
+		if err != nil {             // Handle errors reading the config file
+			return err
+		}
+	} else if os.IsNotExist(err) {
+		fmt.Println("amfcfg does not exists in /free5gc/config")
+	}
+
+	if os.Getenv("MANAGED_BY_CONFIG_POD") == "true" {
+		factory.AmfConfig.Configuration.ServedGumaiList = nil
+		factory.AmfConfig.Configuration.SupportTAIList = nil
+		factory.AmfConfig.Configuration.PlmnSupportList = nil
+		initLog.Infoln("Reading Amf related configuration from ROC")
+		client := gClient.ConnectToConfigServer("webui:9876")
+		configChannel := client.PublishOnConfigChange(true)
+		go amf.UpdateConfig(configChannel)
+	} else {
+		go func() {
+			logger.GrpcLog.Infoln("Reading Amf Configuration from Helm")
+			//sending true to the channel for sending NFRegistration to NRF
+			RocUpdateConfigChannel <- true
+		}()
+	}
+
+	return nil
+}
+
+func (amf *AMF) WatchConfig() {
+	viper.WatchConfig()
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		fmt.Println("Config file changed:", e.Name)
+		if err := factory.UpdateAmfConfig("/free5gc/config/amfcfg.conf"); err != nil {
+			fmt.Println("error in loading updated configuration")
+		} else {
+			self := context.AMF_Self()
+			util.InitAmfContext(self)
+			fmt.Println("successfully updated configuration")
+		}
+	})
+}
+
+func (amf *AMF) setLogLevel() {
+	if factory.AmfConfig.Logger == nil {
+		initLog.Warnln("AMF config without log level setting!!!")
+		return
+	}
+
+	if factory.AmfConfig.Logger.AMF != nil {
+		if factory.AmfConfig.Logger.AMF.DebugLevel != "" {
+			if level, err := logrus.ParseLevel(factory.AmfConfig.Logger.AMF.DebugLevel); err != nil {
+				initLog.Warnf("AMF Log level [%s] is invalid, set to [info] level",
+					factory.AmfConfig.Logger.AMF.DebugLevel)
+				logger.SetLogLevel(logrus.InfoLevel)
+			} else {
+				initLog.Infof("AMF Log level is set to [%s] level", level)
+				logger.SetLogLevel(level)
+			}
+		} else {
+			initLog.Warnln("AMF Log level not set. Default set to [info] level")
+			logger.SetLogLevel(logrus.InfoLevel)
+		}
+		logger.SetReportCaller(factory.AmfConfig.Logger.AMF.ReportCaller)
+	}
+
+	if factory.AmfConfig.Logger.NAS != nil {
+		if factory.AmfConfig.Logger.NAS.DebugLevel != "" {
+			if level, err := logrus.ParseLevel(factory.AmfConfig.Logger.NAS.DebugLevel); err != nil {
+				nasLogger.NasLog.Warnf("NAS Log level [%s] is invalid, set to [info] level",
+					factory.AmfConfig.Logger.NAS.DebugLevel)
+				logger.SetLogLevel(logrus.InfoLevel)
+			} else {
+				nasLogger.SetLogLevel(level)
+			}
+		} else {
+			nasLogger.NasLog.Warnln("NAS Log level not set. Default set to [info] level")
+			nasLogger.SetLogLevel(logrus.InfoLevel)
+		}
+		nasLogger.SetReportCaller(factory.AmfConfig.Logger.NAS.ReportCaller)
+	}
+
+	if factory.AmfConfig.Logger.NGAP != nil {
+		if factory.AmfConfig.Logger.NGAP.DebugLevel != "" {
+			if level, err := logrus.ParseLevel(factory.AmfConfig.Logger.NGAP.DebugLevel); err != nil {
+				ngapLogger.NgapLog.Warnf("NGAP Log level [%s] is invalid, set to [info] level",
+					factory.AmfConfig.Logger.NGAP.DebugLevel)
+				ngapLogger.SetLogLevel(logrus.InfoLevel)
+			} else {
+				ngapLogger.SetLogLevel(level)
+			}
+		} else {
+			ngapLogger.NgapLog.Warnln("NGAP Log level not set. Default set to [info] level")
+			ngapLogger.SetLogLevel(logrus.InfoLevel)
+		}
+		ngapLogger.SetReportCaller(factory.AmfConfig.Logger.NGAP.ReportCaller)
+	}
+
+	if factory.AmfConfig.Logger.FSM != nil {
+		if factory.AmfConfig.Logger.FSM.DebugLevel != "" {
+			if level, err := logrus.ParseLevel(factory.AmfConfig.Logger.FSM.DebugLevel); err != nil {
+				fsmLogger.FsmLog.Warnf("FSM Log level [%s] is invalid, set to [info] level",
+					factory.AmfConfig.Logger.FSM.DebugLevel)
+				fsmLogger.SetLogLevel(logrus.InfoLevel)
+			} else {
+				fsmLogger.SetLogLevel(level)
+			}
+		} else {
+			fsmLogger.FsmLog.Warnln("FSM Log level not set. Default set to [info] level")
+			fsmLogger.SetLogLevel(logrus.InfoLevel)
+		}
+		fsmLogger.SetReportCaller(factory.AmfConfig.Logger.FSM.ReportCaller)
+	}
+
+	if factory.AmfConfig.Logger.Aper != nil {
+		if factory.AmfConfig.Logger.Aper.DebugLevel != "" {
+			if level, err := logrus.ParseLevel(factory.AmfConfig.Logger.Aper.DebugLevel); err != nil {
+				aperLogger.AperLog.Warnf("Aper Log level [%s] is invalid, set to [info] level",
+					factory.AmfConfig.Logger.Aper.DebugLevel)
+				aperLogger.SetLogLevel(logrus.InfoLevel)
+			} else {
+				aperLogger.SetLogLevel(level)
+			}
+		} else {
+			aperLogger.AperLog.Warnln("Aper Log level not set. Default set to [info] level")
+			aperLogger.SetLogLevel(logrus.InfoLevel)
+		}
+		aperLogger.SetReportCaller(factory.AmfConfig.Logger.Aper.ReportCaller)
+	}
+
+	if factory.AmfConfig.Logger.PathUtil != nil {
+		if factory.AmfConfig.Logger.PathUtil.DebugLevel != "" {
+			if level, err := logrus.ParseLevel(factory.AmfConfig.Logger.PathUtil.DebugLevel); err != nil {
+				pathUtilLogger.PathLog.Warnf("PathUtil Log level [%s] is invalid, set to [info] level",
+					factory.AmfConfig.Logger.PathUtil.DebugLevel)
+				pathUtilLogger.SetLogLevel(logrus.InfoLevel)
+			} else {
+				pathUtilLogger.SetLogLevel(level)
+			}
+		} else {
+			pathUtilLogger.PathLog.Warnln("PathUtil Log level not set. Default set to [info] level")
+			pathUtilLogger.SetLogLevel(logrus.InfoLevel)
+		}
+		pathUtilLogger.SetReportCaller(factory.AmfConfig.Logger.PathUtil.ReportCaller)
+	}
+}
+
+func (amf *AMF) FilterCli(c *cli.Context) (args []string) {
+	for _, flag := range amf.GetCliCmd() {
+		name := flag.GetName()
+		value := fmt.Sprint(c.Generic(name))
+		if value == "" {
+			continue
+		}
+
+		args = append(args, "--"+name, value)
+	}
+	return args
+}
+
+func PrintCertificateDetails(cert *x509.Certificate) {
+
+	sep := strings.Repeat("-", 15)
+
+	fmt.Printf("\n%s Server Certificate%s\n", sep, sep)
+
+	fmt.Printf("Subject: %s\n", cert.Subject)
+	fmt.Printf("Issuer: %s\n", cert.Issuer)
+	fmt.Printf("Serial Number: %s\n", cert.SerialNumber)
+	fmt.Printf("Not Before: %s\n", cert.NotBefore)
+	fmt.Printf("Not After: %s\n", cert.NotAfter)
+	fmt.Printf("Key Usage: %x\n", cert.KeyUsage)
+	fmt.Printf("Ext Key Usage: %v\n", cert.ExtKeyUsage)
+	fmt.Printf("DNS Names: %v\n", cert.DNSNames)
+	// fmt.Printf("Email Addresses: %v\n", cert.EmailAddresses)
+	fmt.Printf("IP Addresses: %v\n", cert.IPAddresses)
+	// fmt.Printf("URIs: %v\n", cert.URIs)
+	fmt.Printf("Signature Algorithm: %s\n", cert.SignatureAlgorithm)
+
+	fmt.Println("\nPEM Encoded Certificate:")
+	pemBlock := &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: cert.Raw,
+	}
+	pemBytes := pem.EncodeToMemory(pemBlock)
+	fmt.Println(string(pemBytes))
+
+	fmt.Printf("%s End %s", sep, sep)
+}
+
+func ReadCertificate(filename string) (*x509.Certificate, error) {
+	// Read the certificate file
+	certPEM, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read certificate file: %w", err)
+	}
+
+	// Decode the PEM block
+	block, _ := pem.Decode(certPEM)
+	if block == nil || block.Type != "CERTIFICATE" {
+		return nil, fmt.Errorf("failed to decode PEM block containing certificate")
+	}
+
+	// Parse the certificate
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse certificate: %w", err)
+	}
+
+	return cert, nil
+}
+
+// func getClientIP(r *http.Request) string {
+// 	xff := r.Header.Get("X-Forwarded-For")
+// 	if xff != "" {
+// 		ips := strings.Split(xff, ",")
+// 		return strings.TrimSpace(ips[0])
+// 	}
+// 	ip := r.RemoteAddr
+// 	if idx := strings.LastIndex(ip, ":"); idx != -1 {
+// 		return ip[:idx]
+// 	}
+// 	return ip
+// }
+
+func clientAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.TLS != nil {
+			// clientCert := c.Request.TLS.PeerCertificates[0]
+			// clientIP := getClientIP(c.Request)
+			log.Printf("Client authenticated: %s\n, clientCert.Subject.CommonName")
+			c.Next()
+		} else {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Client not authenticated"})
+			c.Abort()
+		}
+	}
+}
+
+func (amf *AMF) Start() {
+	initLog.Infoln("Server started")
+
+	router := logger_util.NewGinWithLogrus(logger.GinLog)
+	router.Use(cors.New(cors.Config{
+		AllowMethods: []string{"GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"},
+		AllowHeaders: []string{
+			"Origin", "Content-Length", "Content-Type", "User-Agent", "Referrer", "Host",
+			"Token", "X-Requested-With",
+		},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		AllowAllOrigins:  true,
+		MaxAge:           86400,
+	}))
+
+	router.Use(clientAuthMiddleware())
+
+	httpcallback.AddService(router)
+	oam.AddService(router)
+	for _, serviceName := range factory.AmfConfig.Configuration.ServiceNameList {
+		switch models.ServiceName(serviceName) {
+		case models.ServiceName_NAMF_COMM:
+			communication.AddService(router)
+		case models.ServiceName_NAMF_EVTS:
+			eventexposure.AddService(router)
+		case models.ServiceName_NAMF_MT:
+			mt.AddService(router)
+		case models.ServiceName_NAMF_LOC:
+			location.AddService(router)
+		}
+	}
+
+	go metrics.InitMetrics()
+
+	if err := metrics.InitialiseKafkaStream(factory.AmfConfig.Configuration); err != nil {
+		initLog.Errorf("initialise kafka stream failed, %v ", err.Error())
+	}
+
+	self := context.AMF_Self()
+	util.InitAmfContext(self)
+	self.Drsm, _ = util.InitDrsm()
+
+	addr := fmt.Sprintf("%s:%d", self.BindingIPv4, self.SBIPort)
+
+	ngapHandler := ngap_service.NGAPHandler{
+		HandleMessage:      ngap.Dispatch,
+		HandleNotification: ngap.HandleSCTPNotification,
+	}
+	ngap_service.Run(self.NgapIpList, self.NgapPort, ngapHandler)
+
+	go amf.SendNFProfileUpdateToNrf()
+
+	if self.EnableNrfCaching {
+		initLog.Infoln("Enable NRF caching feature")
+		nrf_cache.InitNrfCaching(self.NrfCacheEvictionInterval*time.Second, consumer.SendNfDiscoveryToNrf)
+	}
+
+	if self.EnableSctpLb {
+		go StartGrpcServer(self.SctpGrpcPort)
+	}
+
+	go context.SetupAmfCollection()
+
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-signalChannel
+		amf.Terminate()
+		os.Exit(0)
+	}()
+
+	caCert, err := ioutil.ReadFile(util.CACertPath)
+	if err != nil {
+		log.Fatalf("Failed to read CA certificate: %v", err)
+	}
+
+	// Create a new certificate pool and add the CA certificate to it
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	server_cert, err := tls.LoadX509KeyPair(util.AmfPemPath, util.AmfKeyPath)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	server, err := http2_util.NewServer(addr, util.AmfLogPath, router, server_cert)
+
+	if server == nil {
+		initLog.Errorf("Initialize HTTP server failed: %+v", err)
+		return
+	}
+
+	if err != nil {
+		initLog.Warnf("Initialize HTTP server: %+v", err)
+	}
+
+	cert, err := ReadCertificate(util.AmfPemPath)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		PrintCertificateDetails(cert)
+	}
+
+	serverScheme := factory.AmfConfig.Configuration.Sbi.Scheme
+	if serverScheme == "http" {
+		err = server.ListenAndServe()
+	} else if serverScheme == "https" {
+		log.Println("Serving PQ TLS")
+		err = server.ListenAndServeTLS(util.AmfPemPath, util.AmfKeyPath)
+	}
+
+	if err != nil {
+		initLog.Fatalf("HTTP server setup failed: %+v", err)
+	}
+}
+
+func (amf *AMF) Exec(c *cli.Context) error {
+	// AMF.Initialize(cfgPath, c)
+
+	initLog.Traceln("args:", c.String("amfcfg"))
+	args := amf.FilterCli(c)
+	initLog.Traceln("filter: ", args)
+	command := exec.Command("./amf", args...)
+
+	stdout, err := command.StdoutPipe()
+	if err != nil {
+		initLog.Fatalln(err)
+	}
+	wg := sync.WaitGroup{}
+	wg.Add(3)
+	go func() {
+		in := bufio.NewScanner(stdout)
+		for in.Scan() {
+			fmt.Println(in.Text())
+		}
+		wg.Done()
+	}()
+
+	stderr, err := command.StderrPipe()
+	if err != nil {
+		initLog.Fatalln(err)
+	}
+	go func() {
+		in := bufio.NewScanner(stderr)
+		for in.Scan() {
+			fmt.Println(in.Text())
+		}
+		wg.Done()
+	}()
+
+	go func() {
+		if err = command.Start(); err != nil {
+			initLog.Errorf("AMF Start error: %+v", err)
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	return err
+}
+
+// Used in AMF planned removal procedure
+func (amf *AMF) Terminate() {
+	logger.InitLog.Infof("Terminating AMF...")
+	amfSelf := context.AMF_Self()
+
+	// TODO: forward registered UE contexts to target AMF in the same AMF set if there is one
+
+	// deregister with NRF
+	problemDetails, err := consumer.SendDeregisterNFInstance()
+	if problemDetails != nil {
+		logger.InitLog.Errorf("Deregister NF instance Failed Problem[%+v]", problemDetails)
+	} else if err != nil {
+		logger.InitLog.Errorf("Deregister NF instance Error[%+v]", err)
+	} else {
+		logger.InitLog.Infof("[AMF] Deregister from NRF successfully")
+	}
+
+	// send AMF status indication to ran to notify ran that this AMF will be unavailable
+	logger.InitLog.Infof("Send AMF Status Indication to Notify RANs due to AMF terminating")
+	unavailableGuamiList := ngap_message.BuildUnavailableGUAMIList(amfSelf.ServedGuamiList)
+	amfSelf.AmfRanPool.Range(func(key, value interface{}) bool {
+		ran := value.(*context.AmfRan)
+		ngap_message.SendAMFStatusIndication(ran, unavailableGuamiList)
+		return true
+	})
+
+	ngap_service.Stop()
+
+	callback.SendAmfStatusChangeNotify((string)(models.StatusChange_UNAVAILABLE), amfSelf.ServedGuamiList)
+
+	amfSelf.NfStatusSubscriptions.Range(func(nfInstanceId, v interface{}) bool {
+		if subscriptionId, ok := amfSelf.NfStatusSubscriptions.Load(nfInstanceId); ok {
+			logger.InitLog.Debugf("SubscriptionId is %v", subscriptionId.(string))
+			problemDetails, err := consumer.SendRemoveSubscription(subscriptionId.(string))
+			if problemDetails != nil {
+				logger.InitLog.Errorf("Remove NF Subscription Failed Problem[%+v]", problemDetails)
+			} else if err != nil {
+				logger.InitLog.Errorf("Remove NF Subscription Error[%+v]", err)
+			} else {
+				logger.InitLog.Infoln("[AMF] Remove NF Subscription successful")
+			}
+		}
+		return true
+	})
+
+	logger.InitLog.Infof("AMF terminated")
+}
+
+func (amf *AMF) StartKeepAliveTimer(nfProfile models.NfProfile) {
+	KeepAliveTimerMutex.Lock()
+	defer KeepAliveTimerMutex.Unlock()
+	amf.StopKeepAliveTimer()
+	if nfProfile.HeartBeatTimer == 0 {
+		nfProfile.HeartBeatTimer = 60
+	}
+	logger.InitLog.Infof("Started KeepAlive Timer: %v sec", nfProfile.HeartBeatTimer)
+	//AfterFunc starts timer and waits for KeepAliveTimer to elapse and then calls amf.UpdateNF function
+	KeepAliveTimer = time.AfterFunc(time.Duration(nfProfile.HeartBeatTimer)*time.Second, amf.UpdateNF)
+}
+
+func (amf *AMF) StopKeepAliveTimer() {
+	if KeepAliveTimer != nil {
+		logger.InitLog.Infof("Stopped KeepAlive Timer.")
+		KeepAliveTimer.Stop()
+		KeepAliveTimer = nil
+	}
+}
+
+func (amf *AMF) BuildAndSendRegisterNFInstance() (models.NfProfile, error) {
+	self := context.AMF_Self()
+	profile, err := consumer.BuildNFInstance(self)
+	if err != nil {
+		initLog.Error("Build AMF Profile Error: %v", err)
+		return profile, err
+	}
+	initLog.Infof("Pcf Profile Registering to NRF: %v", profile)
+	//Indefinite attempt to register until success
+	profile, _, self.NfId, err = consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile)
+	return profile, err
+}
+
+// UpdateNF is the callback function, this is called when keepalivetimer elapsed
+func (amf *AMF) UpdateNF() {
+	KeepAliveTimerMutex.Lock()
+	defer KeepAliveTimerMutex.Unlock()
+	if KeepAliveTimer == nil {
+		initLog.Warnf("KeepAlive timer has been stopped.")
+		return
+	}
+	//setting default value 30 sec
+	var heartBeatTimer int32 = 60
+	pitem := models.PatchItem{
+		Op:    "replace",
+		Path:  "/nfStatus",
+		Value: "REGISTERED",
+	}
+	var patchItem []models.PatchItem
+	patchItem = append(patchItem, pitem)
+	nfProfile, problemDetails, err := consumer.SendUpdateNFInstance(patchItem)
+	if problemDetails != nil {
+		initLog.Errorf("AMF update to NRF ProblemDetails[%v]", problemDetails)
+		//5xx response from NRF, 404 Not Found, 400 Bad Request
+		if (problemDetails.Status/100) == 5 ||
+			problemDetails.Status == 404 || problemDetails.Status == 400 {
+			//register with NRF full profile
+			nfProfile, err = amf.BuildAndSendRegisterNFInstance()
+		}
+	} else if err != nil {
+		initLog.Errorf("AMF update to NRF Error[%s]", err.Error())
+		nfProfile, err = amf.BuildAndSendRegisterNFInstance()
+	}
+
+	if nfProfile.HeartBeatTimer != 0 {
+		// use hearbeattimer value with received timer value from NRF
+		heartBeatTimer = nfProfile.HeartBeatTimer
+	}
+	logger.InitLog.Debugf("Restarted KeepAlive Timer: %v sec", heartBeatTimer)
+	//restart timer with received HeartBeatTimer value
+	KeepAliveTimer = time.AfterFunc(time.Duration(heartBeatTimer)*time.Second, amf.UpdateNF)
+}
+
+func (amf *AMF) UpdateAmfConfiguration(plmn factory.PlmnSupportItem, taiList []models.Tai, opType protos.OpType) {
+	var plmnFound bool
+	for plmnindex, p := range factory.AmfConfig.Configuration.PlmnSupportList {
+		if p.PlmnId == plmn.PlmnId {
+			plmnFound = true
+			var found bool
+			nssai_r := plmn.SNssaiList[0]
+			for i, nssai := range p.SNssaiList {
+				if nssai_r == nssai {
+					found = true
+					if opType == protos.OpType_SLICE_DELETE {
+						factory.AmfConfig.Configuration.PlmnSupportList[plmnindex].SNssaiList =
+							append(factory.AmfConfig.Configuration.PlmnSupportList[plmnindex].SNssaiList[:i], p.SNssaiList[i+1:]...)
+						if len(factory.AmfConfig.Configuration.PlmnSupportList[plmnindex].SNssaiList) == 0 {
+							factory.AmfConfig.Configuration.PlmnSupportList =
+								append(factory.AmfConfig.Configuration.PlmnSupportList[:plmnindex],
+									factory.AmfConfig.Configuration.PlmnSupportList[plmnindex+1:]...)
+
+							factory.AmfConfig.Configuration.ServedGumaiList =
+								append(factory.AmfConfig.Configuration.ServedGumaiList[:plmnindex],
+									factory.AmfConfig.Configuration.ServedGumaiList[plmnindex+1:]...)
+						}
+					}
+					break
+				}
+			}
+
+			if !found && opType != protos.OpType_SLICE_DELETE {
+				logger.GrpcLog.Infof("plmn found but slice not found in AMF Configuration")
+				factory.AmfConfig.Configuration.PlmnSupportList[plmnindex].SNssaiList =
+					append(factory.AmfConfig.Configuration.PlmnSupportList[plmnindex].SNssaiList, nssai_r)
+			}
+			break
+		}
+	}
+
+	var guami = models.Guami{PlmnId: &plmn.PlmnId, AmfId: "cafe00"}
+	if !plmnFound && opType != protos.OpType_SLICE_DELETE {
+		factory.AmfConfig.Configuration.PlmnSupportList =
+			append(factory.AmfConfig.Configuration.PlmnSupportList, plmn)
+		factory.AmfConfig.Configuration.ServedGumaiList =
+			append(factory.AmfConfig.Configuration.ServedGumaiList, guami)
+	}
+	logger.GrpcLog.Infof("+-------------------------------------------------+")
+	logger.GrpcLog.Infof("| Recieved from ROC      | PLMN  |  SST  |   SD   |")
+	for _, nsai := range plmn.SNssaiList {
+		logger.GrpcLog.Infof("| SupportedPlmnList      | %s%s |  %d    | %s |", plmn.PlmnId.Mcc, plmn.PlmnId.Mnc, nsai.Sst, nsai.Sd)
+	}
+	// logger.GrpcLog.Infof("|%-10s|%-15s|\n", "SupportGuamiLIst :", guami.AmfId)
+	logger.GrpcLog.Infof("+-------------------------------------------------+")
+	logger.GrpcLog.Infof("| Recieved from HEXA AMF| PLMN  |  SST  |   SD   |")
+	for _, list := range factory.AmfConfig.Configuration.PlmnSupportList {
+		for _, nsai := range list.SNssaiList {
+			logger.GrpcLog.Infof("| SupportedPlmnList      | %s%s |  %d    | %s |", plmn.PlmnId.Mcc, plmn.PlmnId.Mnc, nsai.Sst, nsai.Sd)
+		}
+	}
+	logger.GrpcLog.Infof("+-------------------------------------------------+")
+	// for _, kent := range factory.AmfConfig.Configuration.ServedGumaiList {
+	// 	logger.GrpcLog.Infof(" |%-10s|%-15s|\n", "SupportGuamiLIst :", kent.AmfId)
+	// }
+
+	// logger.GrpcLog.Infof("-------------------------------------------\n")
+
+	// logger.GrpcLog.Infof("SupportedPlmnLIst: %v, SupportGuamiLIst: %v received fromRoc\n", plmn, guami)
+	// logger.GrpcLog.Infof("SupportedPlmnLIst: %v, SupportGuamiLIst: %v in AMF\n", factory.AmfConfig.Configuration.PlmnSupportList,
+	// 	factory.AmfConfig.Configuration.ServedGumaiList)
+	//same plmn received but Tacs in gnb updated
+	nssai_r := plmn.SNssaiList[0]
+	slice := strconv.FormatInt(int64(nssai_r.Sst), 10) + nssai_r.Sd
+	delete(factory.AmfConfig.Configuration.SliceTaiList, slice)
+	if opType != protos.OpType_SLICE_DELETE {
+		//maintaining slice level tai List
+		if factory.AmfConfig.Configuration.SliceTaiList == nil {
+			factory.AmfConfig.Configuration.SliceTaiList = make(map[string][]models.Tai)
+		}
+		factory.AmfConfig.Configuration.SliceTaiList[slice] = taiList
+	}
+
+	amf.UpdateSupportedTaiList()
+	logger.GrpcLog.Infoln("Gnb Updated in existing Plmn, SupportTAILIst received from Roc: ", taiList)
+	logger.GrpcLog.Infoln("SupportTAILIst in HEXA-AMF", factory.AmfConfig.Configuration.SupportTAIList)
+}
+
+func (amf *AMF) UpdateSupportedTaiList() {
+	factory.AmfConfig.Configuration.SupportTAIList = nil
+	for _, slice := range factory.AmfConfig.Configuration.SliceTaiList {
+		for _, tai := range slice {
+			logger.GrpcLog.Infoln("Tai list present in Slice", tai, factory.AmfConfig.Configuration.SupportTAIList)
+			factory.AmfConfig.Configuration.SupportTAIList =
+				append(factory.AmfConfig.Configuration.SupportTAIList, tai)
+		}
+	}
+}
+func (amf *AMF) UpdateConfig(commChannel chan *protos.NetworkSliceResponse) bool {
+	for rsp := range commChannel {
+		logger.GrpcLog.Info("Received updateConfig in the amf app :")
+		logger.GrpcLog.Info("+---------------------------------------------+")
+		logger.GrpcLog.Infof("| %-43s |\n", "Network Slice")
+		logger.GrpcLog.Infof("|---------------------------------------------|")
+		// logger.GrpcLog.Infof("| %15s | %10d |\n", "RestartCounter", rsp.RestartCounter)
+		// logger.GrpcLog.Infof("| %15s | %10d |\n", "ConfigUpdated", rsp.ConfigUpdated)
+		for _, slice := range rsp.NetworkSlice {
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Name", slice.Name)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Sst", slice.Nssai.Sst)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Sd", slice.Nssai.Sd)
+			logger.GrpcLog.Infof("|---------------------------------------------|")
+			for _, group := range slice.DeviceGroup {
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Device Group", group.Name)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "IP Domain Details", group.IpDomainDetails.Name)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "DNN Name", group.IpDomainDetails.DnnName)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "UE Pool", group.IpDomainDetails.UePool)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "DNS Primary", group.IpDomainDetails.DnsPrimary)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "MTU", group.IpDomainDetails.Mtu)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "DnnMbrUplink", group.IpDomainDetails.UeDnnQos.DnnMbrUplink)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "DnnMbrDownlink", group.IpDomainDetails.UeDnnQos.DnnMbrDownlink)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Traffic Class", group.IpDomainDetails.UeDnnQos.TrafficClass.Name)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "QCI", group.IpDomainDetails.UeDnnQos.TrafficClass.Qci)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP", group.IpDomainDetails.UeDnnQos.TrafficClass.Arp)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "PDB", group.IpDomainDetails.UeDnnQos.TrafficClass.Pdb)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "PELR", group.IpDomainDetails.UeDnnQos.TrafficClass.Pelr)
+				// for _, imdetails := range group.Imsi {
+				// 	logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "IMSI Supported", imdetails)
+				// }
+
+				for i, imdetails := range group.Imsi {
+					label := ""
+					if i == len(group.Imsi)/2 {
+						label = "IMSI_Supported"
+					}
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", label, imdetails)
+				}
+				logger.GrpcLog.Info("|---------------------------------------------|")
+			}
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Site", slice.Site.SiteName)
+			for _, gnb := range slice.Site.Gnb {
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "GNB", gnb.Name)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "TAC", gnb.Tac)
+				logger.GrpcLog.Info("|---------------------------------------------|")
+			}
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "MCC", slice.Site.Plmn.Mcc)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "MNC", slice.Site.Plmn.Mnc)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "UPF", slice.Site.Upf.UpfName)
+			for _, appfilter := range slice.AppFilters.PccRuleBase {
+				for _, flowinfo := range appfilter.FlowInfos {
+					// logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Description", flowinfo.FlowDesc)
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Traffic Class", flowinfo.TosTrafficClass)
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Direction", flowinfo.FlowDir)
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Status", flowinfo.FlowStatus)
+				}
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Rule ID", appfilter.RuleId)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "Var5qi", appfilter.Qos.Var5Qi)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PL", appfilter.Qos.Arp.PL)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PC", appfilter.Qos.Arp.PC)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PV", appfilter.Qos.Arp.PV)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "Priority", appfilter.Priority)
+			}
+			logger.GrpcLog.Info("+---------------------------------------------+")
+		}
+		var tai []models.Tai
+		var plmnList []*factory.PlmnSupportItem
+		for _, ns := range rsp.NetworkSlice {
+			var snssai *models.Snssai
+			logger.GrpcLog.Infoln("Network Slice Name ", ns.Name)
+			if ns.Nssai != nil {
+				snssai = new(models.Snssai)
+				val, _ := strconv.ParseInt(ns.Nssai.Sst, 10, 64)
+				snssai.Sst = int32(val)
+				snssai.Sd = ns.Nssai.Sd
+			}
+			//inform connected UEs with update slices
+			if len(ns.DeletedImsis) > 0 {
+				HandleImsiDeleteFromNetworkSlice(ns)
+			}
+			//TODO Inform connected UEs with update Slice
+			/*if len(ns.AddUpdatedImsis) > 0 {
+				HandleImsiAddInNetworkSlice(ns)
+			}*/
+
+			if ns.Site != nil {
+				site := ns.Site
+				logger.GrpcLog.Infoln("Network Slice has site name: ", site.SiteName)
+				if site.Plmn != nil {
+					plmn := new(factory.PlmnSupportItem)
+
+					logger.GrpcLog.Infof("%s: %s%s", "Plmn:", site.Plmn.Mcc, site.Plmn.Mnc)
+					plmn.PlmnId.Mnc = site.Plmn.Mnc
+					plmn.PlmnId.Mcc = site.Plmn.Mcc
+					plmnList = append(plmnList, plmn)
+
+					if ns.Nssai != nil {
+						plmn.SNssaiList = append(plmn.SNssaiList, *snssai)
+					}
+					if site.Gnb != nil {
+						for _, gnb := range site.Gnb {
+							var t models.Tai
+							t.PlmnId = new(models.PlmnId)
+							t.PlmnId.Mnc = site.Plmn.Mnc
+							t.PlmnId.Mcc = site.Plmn.Mcc
+							t.Tac = strconv.Itoa(int(gnb.Tac))
+							tai = append(tai, t)
+						}
+					}
+
+					amf.UpdateAmfConfiguration(*plmn, tai, ns.OperationType)
+				} else {
+					logger.GrpcLog.Infoln("Plmn not present in the message ")
+				}
+
+			}
+		} // end of network slice for loop
+
+		//Update PlmnSupportList/ServedGuamiList/ServedTAIList in Amf Config
+		//factory.AmfConfig.Configuration.ServedGumaiList = nil
+		//factory.AmfConfig.Configuration.PlmnSupportList = nil
+		if len(factory.AmfConfig.Configuration.ServedGumaiList) > 0 {
+			RocUpdateConfigChannel <- true
+		}
+	}
+	return true
+}
+
+func (amf *AMF) SendNFProfileUpdateToNrf() {
+	for rocUpdateConfig := range RocUpdateConfigChannel {
+		if rocUpdateConfig {
+			self := context.AMF_Self()
+			util.InitAmfContext(self)
+
+			// Register to NRF with Updated Profile
+			var profile models.NfProfile
+			if profileTmp, err := consumer.BuildNFInstance(self); err != nil {
+				logger.CfgLog.Errorf("Build AMF Profile Error: %v", err)
+				continue
+			} else {
+				profile = profileTmp
+			}
+
+			if prof, _, nfId, err := consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile); err != nil {
+				logger.CfgLog.Warnf("Send Register NF Instance with updated profile failed: %+v", err)
+			} else {
+				//stop keepAliveTimer if its running and start the timer
+				amf.StartKeepAliveTimer(prof)
+				self.NfId = nfId
+				logger.CfgLog.Infof("Sent Register NF Instance with updated profile")
+			}
+		}
+	}
+}
+
+func UeConfigSliceDeleteHandler(supi, sst, sd string, msg interface{}) {
+	amfSelf := context.AMF_Self()
+	ue, _ := amfSelf.AmfUeFindBySupi("imsi-" + supi)
+	logger.GmmLog.Info(ue)
+
+	// Triggers for NwInitiatedDeRegistration
+	// - Only 1 Allowed Nssai is exist and its slice information matched
+	ns := msg.(*protos.NetworkSlice)
+	if len(ue.AllowedNssai[models.AccessType__3_GPP_ACCESS]) == 1 {
+		st, _ := strconv.Atoi(ns.Nssai.Sst)
+		if ue.AllowedNssai[models.AccessType__3_GPP_ACCESS][0].AllowedSnssai.Sst == int32(st) &&
+			ue.AllowedNssai[models.AccessType__3_GPP_ACCESS][0].AllowedSnssai.Sd == ns.Nssai.Sd {
+			gmm.GmmFSM.SendEvent(ue.State[models.AccessType__3_GPP_ACCESS], gmm.NwInitiatedDeregistrationEvent, fsm.ArgsType{
+				gmm.ArgAmfUe:      ue,
+				gmm.ArgAccessType: models.AccessType__3_GPP_ACCESS,
+			})
+		} else {
+			logger.CfgLog.Infof("Deleted slice not matched with slice info in UEContext")
+		}
+	} else {
+		var Nssai models.Snssai
+		st, _ := strconv.Atoi(ns.Nssai.Sst)
+		Nssai.Sst = int32(st)
+		Nssai.Sd = ns.Nssai.Sd
+		gmm.GmmFSM.SendEvent(ue.State[models.AccessType__3_GPP_ACCESS], gmm.SliceInfoDeleteEvent, fsm.ArgsType{
+			gmm.ArgAmfUe:      ue,
+			gmm.ArgAccessType: models.AccessType__3_GPP_ACCESS,
+			gmm.ArgNssai:      Nssai,
+		})
+	}
+}
+
+func UeConfigSliceAddHandler(supi, sst, sd string, msg interface{}) {
+	amfSelf := context.AMF_Self()
+	ue, _ := amfSelf.AmfUeFindBySupi("imsi-" + supi)
+	logger.GmmLog.Info(ue)
+
+	ns := msg.(*protos.NetworkSlice)
+	var Nssai models.Snssai
+	st, _ := strconv.Atoi(ns.Nssai.Sst)
+	Nssai.Sst = int32(st)
+	Nssai.Sd = ns.Nssai.Sd
+	gmm.GmmFSM.SendEvent(ue.State[models.AccessType__3_GPP_ACCESS], gmm.SliceInfoAddEvent, fsm.ArgsType{
+		gmm.ArgAmfUe:      ue,
+		gmm.ArgAccessType: models.AccessType__3_GPP_ACCESS,
+		gmm.ArgNssai:      Nssai,
+	})
+}
+
+func HandleImsiDeleteFromNetworkSlice(slice *protos.NetworkSlice) {
+	var ue *context.AmfUe
+	var ok bool
+	logger.CfgLog.Infof("[AMF] Handle Subscribers Delete From Network Slice [sst:%v sd:%v]", slice.Nssai.Sst, slice.Nssai.Sd)
+
+	for _, supi := range slice.DeletedImsis {
+		amfSelf := context.AMF_Self()
+		ue, ok = amfSelf.AmfUeFindBySupi("imsi-" + supi)
+		logger.GmmLog.Info(ue)
+		if !ok {
+			logger.CfgLog.Infof("the UE [%v] is not Registered with the 5G-Core", supi)
+			continue
+		}
+		//publish the event to ue channel
+		configMsg := context.ConfigMsg{
+			Supi: supi,
+			Msg:  slice,
+			Sst:  slice.Nssai.Sst,
+			Sd:   slice.Nssai.Sd,
+		}
+		ue.SetEventChannel(nil)
+		ue.EventChannel.UpdateConfigHandler(UeConfigSliceDeleteHandler)
+		ue.EventChannel.SubmitMessage(configMsg)
+	}
+}
+
+func HandleImsiAddInNetworkSlice(slice *protos.NetworkSlice) {
+	var ue *context.AmfUe
+	var ok bool
+	logger.CfgLog.Infof("[AMF] Handle Subscribers Added in Network Slice [sst:%v sd:%v]", slice.Nssai.Sst, slice.Nssai.Sd)
+
+	for _, supi := range slice.AddUpdatedImsis {
+		amfSelf := context.AMF_Self()
+		ue, ok = amfSelf.AmfUeFindBySupi("imsi-" + supi)
+		logger.GmmLog.Info(ue)
+
+		if !ok {
+			logger.CfgLog.Infof("the UE [%v] is not Registered with the 5G-Core", supi)
+			continue
+		}
+		//publish the event to ue channel
+		configMsg := context.ConfigMsg{
+			Supi: supi,
+			Msg:  slice,
+			Sst:  slice.Nssai.Sst,
+			Sd:   slice.Nssai.Sd,
+		}
+
+		ue.EventChannel.UpdateConfigHandler(UeConfigSliceAddHandler)
+		ue.EventChannel.SubmitMessage(configMsg)
+	}
+}

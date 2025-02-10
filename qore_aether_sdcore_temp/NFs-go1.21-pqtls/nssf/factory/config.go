@@ -1,0 +1,246 @@
+// SPDX-FileCopyrightText: 2021 Open Networking Foundation <info@opennetworking.org>
+// Copyright 2019 free5GC.org
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+/*
+ * NSSF Configuration Factory
+ */
+
+package factory
+
+import (
+	"strconv"
+
+	protos "github.com/Nikhil690/connsert/proto/sdcoreConfig"
+	"github.com/omec-project/logger_util"
+	"github.com/omec-project/nssf/logger"
+	"github.com/omec-project/openapi/models"
+)
+
+const (
+	NSSF_EXPECTED_CONFIG_VERSION = "1.0.0"
+)
+
+type Config struct {
+	Info          *Info               `yaml:"info"`
+	Configuration *Configuration      `yaml:"configuration"`
+	Subscriptions []Subscription      `yaml:"subscriptions,omitempty"`
+	Logger        *logger_util.Logger `yaml:"logger"`
+}
+
+type Info struct {
+	Version     string `yaml:"version"`
+	Description string `yaml:"description,omitempty"`
+}
+
+const (
+	NSSF_DEFAULT_IPV4     = "127.0.0.31"
+	NSSF_DEFAULT_PORT     = "8000"
+	NSSF_DEFAULT_PORT_INT = 8000
+)
+
+type Configuration struct {
+	NssfName                 string                  `yaml:"nssfName,omitempty"`
+	Sbi                      *Sbi                    `yaml:"sbi"`
+	ServiceNameList          []models.ServiceName    `yaml:"serviceNameList"`
+	NrfUri                   string                  `yaml:"nrfUri"`
+	SupportedPlmnList        []models.PlmnId         `yaml:"supportedPlmnList,omitempty"`
+	SupportedNssaiInPlmnList []SupportedNssaiInPlmn  `yaml:"supportedNssaiInPlmnList"`
+	NsiList                  []NsiConfig             `yaml:"nsiList,omitempty"`
+	AmfSetList               []AmfSetConfig          `yaml:"amfSetList"`
+	AmfList                  []AmfConfig             `yaml:"amfList"`
+	TaList                   []TaConfig              `yaml:"taList"`
+	MappingListFromPlmn      []MappingFromPlmnConfig `yaml:"mappingListFromPlmn"`
+}
+
+type Sbi struct {
+	Scheme models.UriScheme `yaml:"scheme"`
+	// Currently only support IPv4 and thus `Ipv4Addr` field shall not be empty
+	RegisterIPv4 string `yaml:"registerIPv4,omitempty"` // IP that is registered at NRF.
+	// IPv6Addr string `yaml:"ipv6Addr,omitempty"`
+	BindingIPv4 string `yaml:"bindingIPv4,omitempty"` // IP used to run the server in the node.
+	Port        int    `yaml:"port"`
+}
+
+type AmfConfig struct {
+	NfId                           string                                  `yaml:"nfId"`
+	SupportedNssaiAvailabilityData []models.SupportedNssaiAvailabilityData `yaml:"supportedNssaiAvailabilityData"`
+}
+
+type TaConfig struct {
+	Tai                  *models.Tai               `yaml:"tai"`
+	AccessType           *models.AccessType        `yaml:"accessType"`
+	SupportedSnssaiList  []models.Snssai           `yaml:"supportedSnssaiList"`
+	RestrictedSnssaiList []models.RestrictedSnssai `yaml:"restrictedSnssaiList,omitempty"`
+}
+
+type SupportedNssaiInPlmn struct {
+	PlmnId              *models.PlmnId  `yaml:"plmnId"`
+	SupportedSnssaiList []models.Snssai `yaml:"supportedSnssaiList"`
+}
+
+type NsiConfig struct {
+	Snssai             *models.Snssai          `yaml:"snssai"`
+	NsiInformationList []models.NsiInformation `yaml:"nsiInformationList"`
+}
+
+type AmfSetConfig struct {
+	AmfSetId                       string                                  `yaml:"amfSetId"`
+	AmfList                        []string                                `yaml:"amfList,omitempty"`
+	NrfAmfSet                      string                                  `yaml:"nrfAmfSet,omitempty"`
+	SupportedNssaiAvailabilityData []models.SupportedNssaiAvailabilityData `yaml:"supportedNssaiAvailabilityData"`
+}
+
+type MappingFromPlmnConfig struct {
+	OperatorName    string                   `yaml:"operatorName,omitempty"`
+	HomePlmnId      *models.PlmnId           `yaml:"homePlmnId"`
+	MappingOfSnssai []models.MappingOfSnssai `yaml:"mappingOfSnssai"`
+}
+
+type Subscription struct {
+	SubscriptionId   string                                  `yaml:"subscriptionId"`
+	SubscriptionData *models.NssfEventSubscriptionCreateData `yaml:"subscriptionData"`
+}
+
+var ConfigPodTrigger chan bool
+
+func init() {
+	ConfigPodTrigger = make(chan bool)
+}
+
+func (c *Config) updateConfig(commChannel chan *protos.NetworkSliceResponse) bool {
+	var minConfig bool
+	for rsp := range commChannel {
+		logger.GrpcLog.Infoln("Received updateConfig in the nssf app : ")
+		logger.GrpcLog.Info("+---------------------------------------------+")
+		logger.GrpcLog.Infof("| %-43s |\n", "Network Slice")
+		logger.GrpcLog.Infof("|---------------------------------------------|")
+		// logger.GrpcLog.Infof("| %15s | %10d |\n", "RestartCounter", rsp.RestartCounter)
+		// logger.GrpcLog.Infof("| %15s | %10d |\n", "ConfigUpdated", rsp.ConfigUpdated)
+		for _, slice := range rsp.NetworkSlice {
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Name", slice.Name)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Sst", slice.Nssai.Sst)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Sd", slice.Nssai.Sd)
+			logger.GrpcLog.Infof("|---------------------------------------------|")
+			for _, group := range slice.DeviceGroup {
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Device Group", group.Name)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "IP Domain Details", group.IpDomainDetails.Name)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "DNN Name", group.IpDomainDetails.DnnName)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "UE Pool", group.IpDomainDetails.UePool)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "DNS Primary", group.IpDomainDetails.DnsPrimary)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "MTU", group.IpDomainDetails.Mtu)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "DnnMbrUplink", group.IpDomainDetails.UeDnnQos.DnnMbrUplink)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "DnnMbrDownlink", group.IpDomainDetails.UeDnnQos.DnnMbrDownlink)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Traffic Class", group.IpDomainDetails.UeDnnQos.TrafficClass.Name)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "QCI", group.IpDomainDetails.UeDnnQos.TrafficClass.Qci)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP", group.IpDomainDetails.UeDnnQos.TrafficClass.Arp)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "PDB", group.IpDomainDetails.UeDnnQos.TrafficClass.Pdb)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "PELR", group.IpDomainDetails.UeDnnQos.TrafficClass.Pelr)
+				// for _, imdetails := range group.Imsi {
+				// 	logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "IMSI Supported", imdetails)
+				// }
+
+				for i, imdetails := range group.Imsi {
+					label := ""
+					if i == len(group.Imsi)/2 {
+						label = "IMSI_Supported"
+					}
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", label, imdetails)
+				}
+				logger.GrpcLog.Info("|---------------------------------------------|")
+			}
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Site", slice.Site.SiteName)
+			for _, gnb := range slice.Site.Gnb {
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "GNB", gnb.Name)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "TAC", gnb.Tac)
+				logger.GrpcLog.Info("|---------------------------------------------|")
+			}
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "MCC", slice.Site.Plmn.Mcc)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "MNC", slice.Site.Plmn.Mnc)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "UPF", slice.Site.Upf.UpfName)
+			for _, appfilter := range slice.AppFilters.PccRuleBase {
+				for _, flowinfo := range appfilter.FlowInfos {
+					// logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Description", flowinfo.FlowDesc)
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Traffic Class", flowinfo.TosTrafficClass)
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Direction", flowinfo.FlowDir)
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Status", flowinfo.FlowStatus)
+				}
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Rule ID", appfilter.RuleId)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "Var5qi", appfilter.Qos.Var5Qi)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PL", appfilter.Qos.Arp.PL)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PC", appfilter.Qos.Arp.PC)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PV", appfilter.Qos.Arp.PV)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "Priority", appfilter.Priority)
+			}
+			logger.GrpcLog.Info("+---------------------------------------------+")
+		}
+		for _, ns := range rsp.NetworkSlice {
+			logger.GrpcLog.Infoln("Network Slice Name ", ns.Name)
+			if ns.Site != nil {
+				logger.GrpcLog.Infoln("Network Slice has site name present ")
+				site := ns.Site
+				logger.GrpcLog.Infoln("Site name ", site.SiteName)
+				if site.Plmn != nil {
+					logger.GrpcLog.Infoln("Plmn mcc ", site.Plmn.Mcc)
+					logger.GrpcLog.Infoln("Plmn mnc ", site.Plmn.Mnc)
+					plmn := new(models.PlmnId)
+					plmn.Mnc = site.Plmn.Mnc
+					plmn.Mcc = site.Plmn.Mcc
+					sNssaiInPlmns := SupportedNssaiInPlmn{}
+					sNssaiInPlmns.PlmnId = plmn
+					nssai := new(models.Snssai)
+					val, _ := strconv.ParseInt(ns.Nssai.Sst, 10, 64)
+					nssai.Sst = int32(val)
+					nssai.Sd = ns.Nssai.Sd
+					logger.GrpcLog.Infoln("Slice Sst ", ns.Nssai.Sst)
+					logger.GrpcLog.Infoln("Slice Sd ", ns.Nssai.Sd)
+					sNssaiInPlmns.SupportedSnssaiList = append(sNssaiInPlmns.SupportedSnssaiList, *nssai)
+					var found bool = false
+					for _, cplmn := range NssfConfig.Configuration.SupportedPlmnList {
+						if (cplmn.Mnc == plmn.Mnc) && (cplmn.Mcc == plmn.Mcc) {
+							found = true
+							break
+						}
+					}
+					if found == false {
+						NssfConfig.Configuration.SupportedPlmnList = append(NssfConfig.Configuration.SupportedPlmnList, *plmn)
+						NssfConfig.Configuration.SupportedNssaiInPlmnList = append(NssfConfig.Configuration.SupportedNssaiInPlmnList, sNssaiInPlmns)
+					}
+				} else {
+					logger.GrpcLog.Infoln("Plmn not present in the message ")
+				}
+
+			}
+		}
+		if minConfig == false {
+			// first slice Created
+			if (len(NssfConfig.Configuration.SupportedPlmnList) > 0) &&
+				(len(NssfConfig.Configuration.SupportedNssaiInPlmnList) > 0) {
+				minConfig = true
+				ConfigPodTrigger <- true
+				logger.GrpcLog.Infoln("Send config trigger to main routine")
+			}
+		} else {
+			// all slices deleted
+			if (len(NssfConfig.Configuration.SupportedPlmnList) > 0) &&
+				(len(NssfConfig.Configuration.SupportedNssaiInPlmnList) > 0) {
+				minConfig = false
+				ConfigPodTrigger <- false
+				logger.GrpcLog.Infoln("Send config trigger to main routine")
+			} else {
+				ConfigPodTrigger <- true
+				logger.GrpcLog.Infoln("Send config trigger to main routine")
+			}
+		}
+	}
+	return true
+}
+
+func (c *Config) GetVersion() string {
+	if c.Info != nil && c.Info.Version != "" {
+		return c.Info.Version
+	}
+	return ""
+}
