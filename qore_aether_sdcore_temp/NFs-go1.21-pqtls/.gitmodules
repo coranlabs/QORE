@@ -1,0 +1,9 @@
+[submodule "amf/vendor/github.com/lakshya-chopra/dtls-cgo"]
+	path = amf/vendor/github.com/lakshya-chopra/dtls-cgo
+	url = https://github.com/lakshya-chopra/dtls-cgo.git
+[submodule "amf/vendor/github.com/lakshya-chopra/sctp"]
+	path = amf/vendor/github.com/lakshya-chopra/sctp
+	url = https://github.com/lakshya-chopra/sctp.git
+[submodule "udm"]
+	path = udm
+	url = https://github.com/lakshya-chopra/udm-suci.git

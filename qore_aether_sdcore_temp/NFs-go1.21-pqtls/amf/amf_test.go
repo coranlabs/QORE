@@ -1,0 +1,150 @@
+// SPDX-FileCopyrightText: 2021 Open Networking Foundation <info@opennetworking.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+/*
+ * AMF Unit Testcases
+ *
+ */
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"testing"
+	"time"
+
+	protos "github.com/Nikhil690/connsert/proto/sdcoreConfig"
+	"github.com/omec-project/amf/consumer"
+	"github.com/omec-project/amf/factory"
+	"github.com/omec-project/openapi/Nnrf_NFDiscovery"
+	"github.com/omec-project/openapi/models"
+	"github.com/stretchr/testify/require"
+)
+
+//var AMF = &service.AMF{}
+
+func init() {
+	factory.InitConfigFactory("amfTest/amfcfg.yaml")
+}
+
+func GetNetworkSliceConfig() *protos.NetworkSliceResponse {
+	var rsp protos.NetworkSliceResponse
+
+	rsp.NetworkSlice = make([]*protos.NetworkSlice, 0)
+
+	ns := protos.NetworkSlice{}
+	slice := protos.NSSAI{Sst: "1", Sd: "010203"}
+	ns.Nssai = &slice
+
+	site := protos.SiteInfo{SiteName: "siteOne", Gnb: make([]*protos.GNodeB, 0), Plmn: new(protos.PlmnId)}
+	gNb := protos.GNodeB{Name: "gnb", Tac: 1}
+	site.Gnb = append(site.Gnb, &gNb)
+	site.Plmn.Mcc = "208"
+	site.Plmn.Mnc = "93"
+	ns.Site = &site
+
+	rsp.NetworkSlice = append(rsp.NetworkSlice, &ns)
+	return &rsp
+}
+
+func TestInitialConfig(t *testing.T) {
+	factory.AmfConfig.Configuration.PlmnSupportList = nil
+	factory.AmfConfig.Configuration.ServedGumaiList = nil
+	factory.AmfConfig.Configuration.SupportTAIList = nil
+	var Rsp chan *protos.NetworkSliceResponse
+	Rsp = make(chan *protos.NetworkSliceResponse)
+	go func() {
+		Rsp <- GetNetworkSliceConfig()
+	}()
+	go func() {
+		AMF.UpdateConfig(Rsp)
+	}()
+
+	time.Sleep(2 * time.Second)
+	if factory.AmfConfig.Configuration.PlmnSupportList != nil &&
+		factory.AmfConfig.Configuration.ServedGumaiList != nil &&
+		factory.AmfConfig.Configuration.SupportTAIList != nil {
+		fmt.Printf("test passed")
+	} else {
+		t.Errorf("test failed")
+	}
+}
+
+// data in JSON format which
+// is to be decoded
+var Data = []byte(`{
+	"NetworkSlice": [
+		{
+		 "Name": "siteOne",
+		 "Nssai": {"Sst": "1", "Sd": "010203"},
+		 "Site": {
+			"SiteName": "siteOne",
+			"Gnb": [
+				{"Name": "gnb1", "Tac": 1}, 
+				{"Name": "gnb2", "Tac": 2}
+			],
+			"Plmn": {"mcc": "208", "mnc": "93"}
+		  }
+		}
+		]}`)
+
+func TestUpdateConfig(t *testing.T) {
+	var nrp protos.NetworkSliceResponse
+	err := json.Unmarshal(Data, &nrp)
+	if err != nil {
+		panic(err)
+	}
+	var Rsp chan *protos.NetworkSliceResponse
+	Rsp = make(chan *protos.NetworkSliceResponse)
+	go func() {
+		Rsp <- &nrp
+	}()
+	go func() {
+		AMF.UpdateConfig(Rsp)
+	}()
+
+	time.Sleep(2 * time.Second)
+	if factory.AmfConfig.Configuration.SupportTAIList != nil &&
+		len(factory.AmfConfig.Configuration.SupportTAIList) == 2 {
+		fmt.Printf("test passed")
+	} else {
+		t.Errorf("test failed")
+	}
+}
+
+func TestRegisterNF(t *testing.T) {
+	// Save current function and restore at the end:
+	origRegisterNFInstance := consumer.SendRegisterNFInstance
+	origSearchNFInstances := consumer.SendSearchNFInstances
+	origUpdateNFInstance := consumer.SendUpdateNFInstance
+	defer func() {
+		consumer.SendRegisterNFInstance = origRegisterNFInstance
+		consumer.SendSearchNFInstances = origSearchNFInstances
+		consumer.SendUpdateNFInstance = origUpdateNFInstance
+	}()
+	fmt.Printf("test case TestRegisterNF \n")
+	var prof models.NfProfile
+	consumer.SendRegisterNFInstance = func(nrfUri string, nfInstanceId string, profile models.NfProfile) (models.NfProfile, string, string, error) {
+		prof = profile
+		prof.HeartBeatTimer = 1
+		fmt.Printf("Test RegisterNFInstance called\n")
+		return prof, "", "", nil
+	}
+	consumer.SendSearchNFInstances = func(nrfUri string, targetNfType, requestNfType models.NfType, param Nnrf_NFDiscovery.SearchNFInstancesParamOpts) (*models.SearchResult, error) {
+		fmt.Printf("Test SearchNFInstance called\n")
+		return &models.SearchResult{}, nil
+	}
+	consumer.SendUpdateNFInstance = func(patchItem []models.PatchItem) (nfProfile models.NfProfile, problemDetails *models.ProblemDetails, err error) {
+		return prof, nil, nil
+	}
+	go AMFTest.RegisterNF()
+	service.ConfigPodTrigger <- true
+	time.Sleep(5 * time.Second)
+	require.Equal(t, service.KeepAliveTimer != nil, true)
+
+	service.ConfigPodTrigger <- false
+	time.Sleep(1 * time.Second)
+	require.Equal(t, service.KeepAliveTimer == nil, true)
+}
