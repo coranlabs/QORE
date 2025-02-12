@@ -4,42 +4,25 @@ package http2_util
 
 import (
 	"crypto/tls"
-	"fmt"
+	"github.com/pkg/errors"
 	"net/http"
 	"os"
-	"time"
-
-	"github.com/pkg/errors"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 )
 
-// NewServer returns a server instance with HTTP/2.0 and HTTP/2.0 cleartext support
-// If this function cannot open or create the secret log file,
-// **it still returns server instance** but without the secret log and error indication
-func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Handler) (server *http.Server, err error) {
-	if handler == nil {
-		return nil, errors.New("server needs handler to handle request")
+func NewServer(bindAddr string, tlskeylog string, handler http.Handler) (server *http.Server, err error) {
+	keylogFile, err := os.OpenFile(tlskeylog, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return nil, err
 	}
-
-	h2Server := &http2.Server{
-		// TODO: extends the idle time after re-use openapi client
-		IdleTimeout: 1 * time.Millisecond,
+	if handler == nil {
+		return nil, errors.New("server need handler")
 	}
 	server = &http.Server{
-		Addr:    bindAddr,
-		Handler: h2c.NewHandler(handler, h2Server),
+		Addr: bindAddr,
+		TLSConfig: &tls.Config{
+			KeyLogWriter: keylogFile,
+		},
+		Handler: handler,
 	}
-
-	if preMasterSecretLogPath != "" {
-		preMasterSecretFile, err := os.OpenFile(preMasterSecretLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-		if err != nil {
-			return server, fmt.Errorf("create pre-master-secret log [%s] fail: %s", preMasterSecretLogPath, err)
-		}
-		server.TLSConfig = &tls.Config{
-			KeyLogWriter: preMasterSecretFile,
-		}
-	}
-
 	return
 }
