@@ -1,11 +1,9 @@
 package version_test
 
 import (
-	"testing"
-
+	"free5gc/lib/http2_util/version"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/free5gc/http2_util/version"
+	"testing"
 )
 
 func TestVersion(t *testing.T) {
