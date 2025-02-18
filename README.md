@@ -10,7 +10,7 @@
     </td>
     <td style="border-collapse: collapse; border: none; vertical-align: center;">
       <b><h1>QORE: QUANTUMIZED CORE SOLUTION</h1></b>
-      <b><h2>Beyond 5G Core integrated with Post Quantum Cryptography and QRNG</h2></b>
+      <b><h2>Beyond 5G Core integrated with Post Quantum Cryptography</h2></b>
     </td>
   </tr>
 </table>
@@ -26,16 +26,16 @@
    - [SBI Protection](#sbi-protection)
    - [Subscriber's identity concealment: SUPI to SUCI conversion](#subscribers-identity-concealment-supi-to-suci-conversion)
    - [Post-Quantum Signatures and Certificates](#post-quantum-signatures-and-certificates)
-   - [QRNG implementations in Core Network](#qrng-implementations-in-core-network)
    - [BackHaul Security](#backhaul-security)
-   - [Longer Symmetric Keys](#longer-symmetric-keys)
+   - [QRNG integration in Core Network](#qrng-integration-in-core-network)
+   - [Larger Symmetric Keys](#larger-symmetric-keys)
 5. [QORE Video](#qore-video)
 
 
 
 ## Introduction
 
-**QORE** integrates **Post-Quantum Cryptography** and **Quantum Random Number Generator (QRNG)** into the Core network. Developed by [CoRan Labs](https://www.coranlabs.com/), QORE represents a significant advancement in ensuring robust security for core network against the impending threat of **Quantum Attacks**. By migrating classical cryptographic techniques used in the Core to Post-Quantum Cryptographic techniques, QORE offers enhanced security and reliability.
+**QORE** integrates **Post-Quantum Cryptography** (and **Quantum Random Number Generator (QRNG)**) into the Core network. Developed by [CoRan Labs](https://www.coranlabs.com/), QORE represents a significant advancement in ensuring robust security for core network against the impending threat of **Quantum Attacks**. By migrating classical cryptographic techniques used in the Core to Post-Quantum Cryptographic techniques, QORE offers enhanced security and reliability.
 
 
 ## Need for QORE?
@@ -51,38 +51,45 @@ QORE addresses these needs by integrating the following post-quantum techniques:
 
 * `ML-DSA`: Module-Lattice-Based Digital Signature Algorithm, a lattice-based digital signature scheme offering strong security guarantees against quantum computing threats.
 
-* `QRNG seeds`: Utilizes Quantum Random Number Generators to produce truly random seeds, enhancing key security.
-
-* `PQ-mTLS`: Post-Quantum Mutual Transport Layer Security to secure communication channels.
-
-* `AES256`: Advanced Encryption Standard with 256-bit keys to ensure robust encryption.
+* `PQ-mTLS1.3`: Post-Quantum Mutual Transport Layer Security to secure communication channels.
 
 * `PQ-IPSec`: Post-Quantum IPSec for securing Internet Protocol Security communications.
 
-* `PQ-DTLS`: Post-Quantum Datagram Transport Layer Security for securing datagram communications.
+* `PQ-DTLS1.3`: Post-Quantum Datagram Transport Layer Security for securing datagram communications.
+
+* `PQ-PKI`: Post-Quantum Public Key Infrastructure with Post Quantum Certificate Authority.
+
+* `QRNG seeds`: Utilizes Quantum Random Number Generators to produce truly random seeds, enhancing key security.
+
+* `AES256`: Advanced Encryption Standard with 256-bit keys to ensure robust encryption.
+
 
 
 ## Migration to Post-Quantum Core using QORE
 
 | **Feature**               | **Classical Core**                                  | **Qore (Post-Quantum Core)**          | **Status**  |
 |---------------------------|-----------------------------------------------------|---------------------------------------|-------------|
-| **SUPI to SUCI**          | ECIES (Elliptic Curve Integrated Encryption Scheme) | PQ-IES(ML-KEM)                        | ✅ Done     |
+| **SBI Communication**     | mTLS                                                | PQ-mTLS1.3(mTLS1.3 with PQ)                              | ✅ Done     |
+| **SUPI to SUCI**          | ECIES                                               | PQ-IES(ML-KEM)                        | ✅ Done     |
 |                           |                                                     | PQ-IES(Hybrid ML-KEM)                 | ✅ Done     |  
-| **Random Number**         | PRNG (Pseudo Random Number Generator)               | QRNG (Quantum Random Number Generator)| ✅ Done     |
-| **SBI Communication**     | mTLS                                                | PQ-mTLS                               | ✅ Done     |
-| **Digital Certificates**  | Classical cryptographic algorithm                   | ML-DSA                                | ✅ Done     |
-| **Symmetric Key**         | AES128                                              | AES256                                | ✅ Done     |
-| **N2 User Data**          | DTLS                                                | PQ-DTLS                               | ✅ Done     |
-| **N2 User Data**          | IPSec                                               | PQ-IPSec                              | 🟡Ongoing   |
-| **N3 User Data**          | IPSec                                               | PQ-IPSec                              | 🟡Ongoing   |
-| **N4 User Data**          | IPSec                                               | PQ-IPSec                              | 🟡Ongoing   |
+| **Digital Certificates**  | Classical Certificates                   | ML-DSA                                | ✅ Done     |
+| **N2 User Data**          | DTLS                                                | PQ-DTLS1.3(DTLS1.3 with PQ)                              | ✅ Done     |
+| **N2 User Data**          | IPSec                                               | PQ-IPSec (IKEv2 with PQ)                             | ✅ Done   |
+| **N3 User Data**          | IPSec                                               | PQ-IPSec (IKEv2 with PQ)                             | ✅ Done   |
+| **N4 User Data**          | IPSec                                               | PQ-IPSec (IKEv2 with PQ)                              | ✅ Done   |
+| **PKI**         | Classical PKI/Private CA                | PQ-PKI/Private PQ-CA                                | 🟡Ongoing     |
+| **Symmetric Key**         | AES128                                              | AES256*                                | ✅ Done     |
+| **Random Number**         | PRNG                | QRNG*                                 | ✅ Done     |
 
+
+
+> **Note**: **"*"** represents "suggestions"(not mandate) to improve the security. Symmetric Cryptography seems not to be affected much by quantum attacks(although people have mixed opinion on this) still 3GPP is moving towards 256-bits symmetric based cryptography. Similarly QRNG is used to generate truly random seeds in order to generate truly random cryptographic keys. AES256 & QRNG will provide higher level of security(even if they seem irrelevant to quantum attacks).
 
 ## Current Scenario of QORE
 
 ### SBI Protection
 
-Communication between NFs currently uses mTLS which is not secure against quantum attacks. To address this vulnerability, PQ-mTLS can be implemented for secure and quantum-safe communication across the network.
+Communication between NFs currently uses mTLS which is not secure against quantum attacks. To address this vulnerability, PQ-mTLS 1.3 can be implemented for secure and quantum-safe communication across the network.
 
 <img src="./docs/v3_pq_mtls.png" alt="Architecture Diagram" style="width: 700px;">
 
@@ -105,19 +112,21 @@ The process of certificate verification is crucial for ensuring secure and trust
 
 <img src="./docs/signature_pq.png" alt="Architecture Diagram" style="width: 800px;">
 
-### QRNG implementations in Core Network
+### BackHaul Security
+
+PQ-DTLS1.3 is  designed to secure N2 interface against quantum attacks, utilizing post-quantum cryptographic algorithms to ensure that data transmitted over SCTP  remains confidential and tamper-resistant.
+
+<img src="./docs/DTLS-N2.png" alt="Architecture Diagram" style="width: 500px;">
+
+
+### QRNG integration in Core Network
 
 QRNGs leverage quantum processes to produce truly random numbers, ensuring high unpredictability and entropy. This level of randomness is crucial for cryptographic key generation, as it significantly enhances security by making it nearly impossible for attackers to predict or reproduce keys. In a post-quantum world, QRNGs become essential for maintaining robust security in telecom networks.
 
 <img src="./docs/QRNG_int.png" alt="Architecture Diagram" style="width: 700px;">
 
-### BackHaul Security
 
-PQ-DTLS is  designed to secure N2 interface against quantum attacks, utilizing post-quantum cryptographic algorithms to ensure that data transmitted over SCTP  remains confidential and tamper-resistant.
-
-<img src="./docs/DTLS-N2.png" alt="Architecture Diagram" style="width: 500px;">
-
-### Longer Symmetric Keys
+### Larger Symmetric Keys
 
 Upgrading from AES-128 to AES-256 allows telecom networks to substantially enhance their symmetric encryption,
 
@@ -125,6 +134,6 @@ Upgrading from AES-128 to AES-256 allows telecom networks to substantially enhan
 
 ## QORE Video
 
-1. [QORE: Implementing PQ-mTLS in 5G/B5G Core](https://youtu.be/W5AgYsJQySw?si=Wct89_Gb7YqbeiDv)
+1. [QORE: Implementing PQ-mTLS 1.3 in 5G/B5G Core](https://youtu.be/W5AgYsJQySw?si=Wct89_Gb7YqbeiDv)
 2. [5G QORE: 5G Core with Post-Quantum Cryptography](https://youtu.be/rZCRh8JKKN8?si=UzkhHaLbAOznBGr1)
 3. [QORE: Quatumized 5G Core](https://youtu.be/w1ac3SMiGmM?si=yOtkogSB39Neu1eb)
