@@ -9,7 +9,7 @@
       </a>
     </td>
     <td style="border-collapse: collapse; border: none; vertical-align: center;">
-      <b><h1>QORE: QUANTUMIZED CORE SOLUTION</h1></b>
+      <b><h1>QORE: Quantum Secure Core</h1></b>
       <b><h2>Beyond 5G Core integrated with Post Quantum Cryptography</h2></b>
     </td>
   </tr>
@@ -35,7 +35,7 @@
 
 ## Introduction
 
-**QORE** integrates **Post-Quantum Cryptography** (and **Quantum Random Number Generator (QRNG)**) into the Core network. Developed by [CoRan Labs](https://www.coranlabs.com/), QORE represents a significant advancement in ensuring robust security for core network against the impending threat of **Quantum Attacks**. By migrating classical cryptographic techniques used in the Core to Post-Quantum Cryptographic techniques, QORE offers enhanced security and reliability.
+**QORE: Quantum Secure Core** integrates **Post-Quantum Cryptography** (and **Quantum Random Number Generator (QRNG)**) into the Core network. Developed by [CoRan Labs](https://www.coranlabs.com/), QORE represents a significant advancement in ensuring robust security for core network against the impending threat of **Quantum Attacks**. By migrating classical cryptographic techniques used in the Core to Post-Quantum Cryptographic techniques, QORE offers enhanced security and reliability.
 
 
 ## Need for QORE?
