@@ -12,7 +12,6 @@ package service
 
 import (
 	"bufio"
-	"crypto/tls"
 	"fmt"
 	"os"
 	"os/exec"
@@ -25,7 +24,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
-	"github.com/lakshya-chopra/http2_util"
+	"github.com/omec-project/http2_util"
 	"github.com/omec-project/logger_util"
 	"github.com/omec-project/nssf/consumer"
 	"github.com/omec-project/nssf/context"
@@ -86,7 +85,7 @@ func (nssf *NSSF) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultNssfConfigPath := path_util.Free5gcPath("free5gc/config/nssfcfg.conf")
+		DefaultNssfConfigPath := path_util.Free5gcPath("free5gc/config/nssfcfg.yaml")
 		if err := factory.InitConfigFactory(DefaultNssfConfigPath); err != nil {
 			return err
 		}
@@ -178,9 +177,7 @@ func (nssf *NSSF) Start() {
 
 	go nssf.registerNF()
 
-	server_cert, err := tls.LoadX509KeyPair(util.NSSF_PEM_PATH, util.NSSF_KEY_PATH)
-
-	server, err := http2_util.NewServer(addr, util.NSSF_LOG_PATH, router, server_cert)
+	server, err := http2_util.NewServer(addr, util.NSSF_LOG_PATH, router)
 
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)
@@ -295,7 +292,7 @@ func (nssf *NSSF) BuildAndSendRegisterNFInstance() (models.NfProfile, error) {
 	return profile, err
 }
 
-// UpdateNF is the callback function, this is called when keepalivetimer elapsed
+//UpdateNF is the callback function, this is called when keepalivetimer elapsed
 func (nssf *NSSF) UpdateNF() {
 	KeepAliveTimerMutex.Lock()
 	defer KeepAliveTimerMutex.Unlock()

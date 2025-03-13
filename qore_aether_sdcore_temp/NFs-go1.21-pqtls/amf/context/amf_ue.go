@@ -12,8 +12,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-
-	// "fmt"
+	"fmt"
 	"os"
 	"reflect"
 	"regexp"
@@ -23,9 +22,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/omec-project/nas/nasMessage"
-	"github.com/omec-project/nas/nasType"
-	"github.com/omec-project/nas/security"
 	"github.com/omec-project/UeauCommon"
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/amf/metrics"
@@ -33,6 +29,9 @@ import (
 	"github.com/omec-project/fsm"
 	"github.com/omec-project/idgenerator"
 	mi "github.com/omec-project/metricfunc/pkg/metricinfo"
+	"github.com/omec-project/nas/nasMessage"
+	"github.com/omec-project/nas/nasType"
+	"github.com/omec-project/nas/security"
 	"github.com/omec-project/ngap/ngapType"
 	"github.com/omec-project/openapi/models"
 )
@@ -321,8 +320,7 @@ func (ue *AmfUe) UnmarshalJSON(data []byte) error {
 		}
 		ue.RanUe[index].RanUeNgapId = aux.RanUeNgapId
 		ue.RanUe[index].AmfUeNgapId = aux.AmfUeNgapId
-		// ue.RanUe[index].Log = logger.NgapLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ue.RanUe[index].AmfUeNgapId))
-		ue.RanUe[index].Log = logger.NgapLog
+		ue.RanUe[index].Log = logger.NgapLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ue.RanUe[index].AmfUeNgapId))
 		if ran != nil {
 			//ran.RanUeList = append(ran.RanUeList, ue.RanUe[index])
 			ue.RanUe[index].Ran = ran
@@ -517,12 +515,9 @@ func (ue *AmfUe) AttachRanUe(ranUe *RanUe) {
 	ranUe.AmfUe = ue
 
 	// set log information
-	// ue.NASLog = logger.NasLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
-	// ue.GmmLog = logger.GmmLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
-	// ue.TxLog = logger.GmmLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
-	ue.NASLog = logger.NasLog
-	ue.GmmLog = logger.GmmLog
-	ue.TxLog = logger.GmmLog
+	ue.NASLog = logger.NasLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
+	ue.GmmLog = logger.GmmLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
+	ue.TxLog = logger.GmmLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
 }
 
 func (ue *AmfUe) GetAnType() models.AccessType {
@@ -756,7 +751,7 @@ func (ue *AmfUe) SelectSecurityAlg(intOrder, encOrder []uint8) {
 	}
 }
 
-// this is clearing the transient data of registration request, this is called entrypoint of Deregistration and Registration state
+//this is clearing the transient data of registration request, this is called entrypoint of Deregistration and Registration state
 func (ue *AmfUe) ClearRegistrationRequestData(accessType models.AccessType) {
 	ue.RegistrationRequest = nil
 	ue.RegistrationType5GS = 0
@@ -772,7 +767,7 @@ func (ue *AmfUe) ClearRegistrationRequestData(accessType models.AccessType) {
 	ue.onGoing[accessType].Procedure = OnGoingProcedureNothing
 }
 
-// this method called when we are reusing the same uecontext during the registration procedure
+//this method called when we are reusing the same uecontext during the registration procedure
 func (ue *AmfUe) ClearRegistrationData() {
 	//Allowed Nssai should be cleared first as it is a new Registration
 	ue.SubscribedNssai = nil
@@ -1051,7 +1046,7 @@ func getPublishUeCtxtInfoOp(state fsm.StateType) mi.SubscriberOp {
 	}
 }
 
-// Collect Ctxt info and publish on Kafka stream
+//Collect Ctxt info and publish on Kafka stream
 func (ueContext *AmfUe) PublishUeCtxtInfo() {
 	op := getPublishUeCtxtInfoOp(ueContext.State[models.AccessType__3_GPP_ACCESS].Current())
 	kafkaSmCtxt := mi.CoreSubscriber{}

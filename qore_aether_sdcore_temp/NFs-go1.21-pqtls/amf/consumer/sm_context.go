@@ -16,9 +16,9 @@ import (
 
 	"github.com/antihax/optional"
 
-	"github.com/omec-project/nas/nasMessage"
 	amf_context "github.com/omec-project/amf/context"
 	"github.com/omec-project/amf/util"
+	"github.com/omec-project/nas/nasMessage"
 	"github.com/omec-project/openapi"
 	"github.com/omec-project/openapi/Nnrf_NFDiscovery"
 	"github.com/omec-project/openapi/Nsmf_PDUSession"
@@ -87,7 +87,7 @@ func SelectSmf(
 	dnn string) (*amf_context.SmContext, uint8, error) {
 	var smfUri string
 
-	// ue.GmmLog.Infof("Select SMF [snssai: %+v, dnn: %+v]", snssai, dnn)
+	ue.GmmLog.Infof("Select SMF [snssai: %+v, dnn: %+v]", snssai, dnn)
 
 	nrfUri := ue.ServingAMF().NrfUri // default NRF URI is pre-configured by AMF
 

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-FROM golang:1.21-bullseye AS builder
+FROM golang:1.19-bullseye AS builder
 
 LABEL maintainer="ONF <omec-dev@opennetworking.org>"
 
@@ -13,20 +13,8 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg > pubkey.gpg
 RUN apt-key add pubkey.gpg
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" |  tee /etc/apt/sources.list.d/yarn.list
-RUN apt-get update && apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev  nodejs yarn git
-
-RUN git clone https://github.com/lakshya-chopra/go /cloudflare-go
-WORKDIR /cloudflare-go/src
-RUN ./make.bash
+RUN apt-get update && apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev  nodejs yarn
 RUN apt-get clean
-
-
-ENV GOROOT /cloudflare-go
-# ENV GOPATH /cloudflare-go
-ENV PATH $GOROOT/bin:$GOPATH/bin:$PATH
-    
-    # or use GOPATH/src
-ENV go /cloudflare-go/bin/go
 
 
 RUN cd $GOPATH/src && mkdir -p pcf
@@ -39,8 +27,6 @@ FROM alpine:3.16 as pcf
 LABEL description="ONF open source 5G Core Network" \
     version="Stage 3"
 
-ENV ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.22
-
 ARG DEBUG_TOOLS
 
 # Install debug tools ~ 100MB (if DEBUG_TOOLS is set to true)
@@ -52,5 +38,4 @@ RUN mkdir -p pcf/
 
 # Copy executable and default certs
 COPY --from=builder /go/src/pcf/bin/* ./pcf
-COPY --from=builder /go/src/pcf/cert/* /free5gc/support/TLS/
 WORKDIR /free5gc/pcf

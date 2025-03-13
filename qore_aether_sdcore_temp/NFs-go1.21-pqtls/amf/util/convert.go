@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/omec-project/nas/nasMessage"
 	"github.com/omec-project/amf/logger"
+	"github.com/omec-project/nas/nasMessage"
 	"github.com/omec-project/openapi/models"
 )
 
@@ -27,7 +27,6 @@ func SnssaiHexToModels(hexString string) (*models.Snssai, error) {
 	}
 	return &sNssai, nil
 }
-
 
 func SnssaiModelsToHex(snssai models.Snssai) string {
 	sst := fmt.Sprintf("%02x", snssai.Sst)

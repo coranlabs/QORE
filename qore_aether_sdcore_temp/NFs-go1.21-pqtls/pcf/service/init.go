@@ -8,12 +8,7 @@ package service
 
 import (
 	"bufio"
-	"crypto/tls"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"math"
 	"os"
 	"os/exec"
@@ -31,7 +26,7 @@ import (
 
 	"github.com/Nikhil690/connsert/proto/client"
 	protos "github.com/Nikhil690/connsert/proto/sdcoreConfig"
-	"github.com/lakshya-chopra/http2_util"
+	"github.com/omec-project/http2_util"
 	"github.com/omec-project/idgenerator"
 	"github.com/omec-project/logger_util"
 	"github.com/omec-project/openapi/Nnrf_NFDiscovery"
@@ -105,7 +100,7 @@ func (pcf *PCF) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultPcfConfigPath := path_util.Free5gcPath("free5gc/config/pcfcfg.conf")
+		DefaultPcfConfigPath := path_util.Free5gcPath("free5gc/config/pcfcfg.yaml")
 		if err := factory.InitConfigFactory(DefaultPcfConfigPath); err != nil {
 			return err
 		}
@@ -201,58 +196,6 @@ func (pcf *PCF) FilterCli(c *cli.Context) (args []string) {
 	return args
 }
 
-func PrintCertificateDetails(cert *x509.Certificate) {
-
-	sep := strings.Repeat("-", 15)
-
-	fmt.Printf("\n%s Server Certificate%s\n", sep, sep)
-
-	fmt.Printf("Subject: %s\n", cert.Subject)
-	fmt.Printf("Issuer: %s\n", cert.Issuer)
-	fmt.Printf("Serial Number: %s\n", cert.SerialNumber)
-	fmt.Printf("Not Before: %s\n", cert.NotBefore)
-	fmt.Printf("Not After: %s\n", cert.NotAfter)
-	fmt.Printf("Key Usage: %x\n", cert.KeyUsage)
-	fmt.Printf("Ext Key Usage: %v\n", cert.ExtKeyUsage)
-	fmt.Printf("DNS Names: %v\n", cert.DNSNames)
-	// fmt.Printf("Email Addresses: %v\n", cert.EmailAddresses)
-	fmt.Printf("IP Addresses: %v\n", cert.IPAddresses)
-	// fmt.Printf("URIs: %v\n", cert.URIs)
-	fmt.Printf("Signature Algorithm: %s\n", cert.SignatureAlgorithm)
-
-	fmt.Println("\nPEM Encoded Certificate:")
-	pemBlock := &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: cert.Raw,
-	}
-	pemBytes := pem.EncodeToMemory(pemBlock)
-	fmt.Println(string(pemBytes))
-
-	fmt.Printf("%s\n End %s\n", sep, sep)
-}
-
-func ReadCertificate(filename string) (*x509.Certificate, error) {
-	// Read the certificate file
-	certPEM, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read certificate file: %w", err)
-	}
-
-	// Decode the PEM block
-	block, _ := pem.Decode(certPEM)
-	if block == nil || block.Type != "CERTIFICATE" {
-		return nil, fmt.Errorf("failed to decode PEM block containing certificate")
-	}
-
-	// Parse the certificate
-	cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse certificate: %w", err)
-	}
-
-	return cert, nil
-}
-
 func (pcf *PCF) Start() {
 	initLog.Infoln("Server started")
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
@@ -297,20 +240,7 @@ func (pcf *PCF) Start() {
 		os.Exit(0)
 	}()
 
-	cert, err := tls.LoadX509KeyPair(util.PCF_PEM_PATH, util.PCF_KEY_PATH)
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		log.Println("Certificate loaded")
-	}
-	x509_cert, err := ReadCertificate(util.PCF_PEM_PATH)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	PrintCertificateDetails(x509_cert)
-
-	server, err := http2_util.NewServer(addr, util.PCF_LOG_PATH, router, cert)
+	server, err := http2_util.NewServer(addr, util.PCF_LOG_PATH, router)
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)
 		return
@@ -918,69 +848,7 @@ func (pcf *PCF) updateConfig(commChannel chan *protos.NetworkSliceResponse) bool
 	var minConfig bool
 	pcfContext := context.PCF_Self()
 	for rsp := range commChannel {
-		logger.GrpcLog.Infoln("Received updateConfig in the pcf app : ")
-		logger.GrpcLog.Info("+---------------------------------------------+")
-		logger.GrpcLog.Infof("| %-43s |\n", "Network Slice")
-		logger.GrpcLog.Infof("|---------------------------------------------|")
-		// logger.GrpcLog.Infof("| %15s | %10d |\n", "RestartCounter", rsp.RestartCounter)
-		// logger.GrpcLog.Infof("| %15s | %10d |\n", "ConfigUpdated", rsp.ConfigUpdated)
-		for _, slice := range rsp.NetworkSlice {
-			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Name", slice.Name)
-			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Sst", slice.Nssai.Sst)
-			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Sd", slice.Nssai.Sd)
-			logger.GrpcLog.Infof("|---------------------------------------------|")
-			for _, group := range slice.DeviceGroup {
-				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Device Group", group.Name)
-				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "IP Domain Details", group.IpDomainDetails.Name)
-				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "DNN Name", group.IpDomainDetails.DnnName)
-				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "UE Pool", group.IpDomainDetails.UePool)
-				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "DNS Primary", group.IpDomainDetails.DnsPrimary)
-				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "MTU", group.IpDomainDetails.Mtu)
-				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "DnnMbrUplink", group.IpDomainDetails.UeDnnQos.DnnMbrUplink)
-				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "DnnMbrDownlink", group.IpDomainDetails.UeDnnQos.DnnMbrDownlink)
-				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Traffic Class", group.IpDomainDetails.UeDnnQos.TrafficClass.Name)
-				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "QCI", group.IpDomainDetails.UeDnnQos.TrafficClass.Qci)
-				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP", group.IpDomainDetails.UeDnnQos.TrafficClass.Arp)
-				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "PDB", group.IpDomainDetails.UeDnnQos.TrafficClass.Pdb)
-				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "PELR", group.IpDomainDetails.UeDnnQos.TrafficClass.Pelr)
-				// for _, imdetails := range group.Imsi {
-				// 	logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "IMSI Supported", imdetails)
-				// }
-
-				for i, imdetails := range group.Imsi {
-					label := ""
-					if i == len(group.Imsi)/2 {
-						label = "IMSI_Supported"
-					}
-					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", label, imdetails)
-				}
-				logger.GrpcLog.Info("|---------------------------------------------|")
-			}
-			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Site", slice.Site.SiteName)
-			for _, gnb := range slice.Site.Gnb {
-				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "GNB", gnb.Name)
-				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "TAC", gnb.Tac)
-				logger.GrpcLog.Info("|---------------------------------------------|")
-			}
-			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "MCC", slice.Site.Plmn.Mcc)
-			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "MNC", slice.Site.Plmn.Mnc)
-			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "UPF", slice.Site.Upf.UpfName)
-			for _, appfilter := range slice.AppFilters.PccRuleBase {
-				for _, flowinfo := range appfilter.FlowInfos {
-					// logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Description", flowinfo.FlowDesc)
-					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Traffic Class", flowinfo.TosTrafficClass)
-					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Direction", flowinfo.FlowDir)
-					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Status", flowinfo.FlowStatus)
-				}
-				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Rule ID", appfilter.RuleId)
-				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "Var5qi", appfilter.Qos.Var5Qi)
-				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PL", appfilter.Qos.Arp.PL)
-				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PC", appfilter.Qos.Arp.PC)
-				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PV", appfilter.Qos.Arp.PV)
-				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "Priority", appfilter.Priority)
-			}
-			logger.GrpcLog.Info("+---------------------------------------------+")
-		}
+		logger.GrpcLog.Infoln("Received updateConfig in the pcf app : ", rsp)
 		for _, ns := range rsp.NetworkSlice {
 			logger.GrpcLog.Infoln("Network Slice Name ", ns.Name)
 

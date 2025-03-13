@@ -8,7 +8,6 @@ package service
 
 import (
 	"bufio"
-	"crypto/tls"
 	"fmt"
 	"os"
 	"os/exec"
@@ -23,13 +22,13 @@ import (
 
 	"github.com/Nikhil690/connsert/proto/client"
 	protos "github.com/Nikhil690/connsert/proto/sdcoreConfig"
-	"github.com/lakshya-chopra/http2_util"
 	"github.com/omec-project/ausf/consumer"
 	ausf_context "github.com/omec-project/ausf/context"
 	"github.com/omec-project/ausf/factory"
 	"github.com/omec-project/ausf/logger"
 	"github.com/omec-project/ausf/ueauthentication"
 	"github.com/omec-project/ausf/util"
+	"github.com/omec-project/http2_util"
 	"github.com/omec-project/logger_util"
 	"github.com/omec-project/openapi/models"
 	"github.com/omec-project/path_util"
@@ -90,7 +89,7 @@ func (ausf *AUSF) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultAusfConfigPath := path_util.Free5gcPath("free5gc/config/ausfcfg.conf")
+		DefaultAusfConfigPath := path_util.Free5gcPath("free5gc/config/ausfcfg.yaml")
 		if err := factory.InitConfigFactory(DefaultAusfConfigPath); err != nil {
 			return err
 		}
@@ -247,8 +246,7 @@ func (ausf *AUSF) Start() {
 		os.Exit(0)
 	}()
 
-	server_cert, err := tls.LoadX509KeyPair(util.AusfPemPath, util.AusfKeyPath)
-	server, err := http2_util.NewServer(addr, ausfLogPath, router, server_cert)
+	server, err := http2_util.NewServer(addr, ausfLogPath, router)
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)
 		return

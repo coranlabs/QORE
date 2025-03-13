@@ -53,7 +53,7 @@ $(GO_BIN_PATH)/%: %.go $(NF_GO_FILES)
 # $(@F): The file-within-directory part of the file name of the target.
 	@echo "Start building $(@F)...."
 	cd $(GO_SRC_PATH)/ && \
-	CGO_ENABLED=0 go build -mod=readonly -o $(ROOT_PATH)/$@ $(@F).go
+	CGO_ENABLED=0 go build -o $(ROOT_PATH)/$@ $(@F).go
 
 vpath %.go $(addprefix $(GO_SRC_PATH)/, $(GO_NF))
 

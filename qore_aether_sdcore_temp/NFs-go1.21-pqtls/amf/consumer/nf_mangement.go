@@ -80,7 +80,6 @@ var SendRegisterNFInstance = func(nrfUri, nfInstanceId string, profile models.Nf
 	// Set client and set url
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	configuration.SetBasePath(nrfUri)
-
 	client := Nnrf_NFManagement.NewAPIClient(configuration)
 
 	var res *http.Response

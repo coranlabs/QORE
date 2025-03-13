@@ -7,21 +7,11 @@
 
 package context
 
-/*
-#include <stdlib.h>
-#include <stdio.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/bio.h>
-*/
-import "C"
-
 import (
 	"fmt"
 	"net"
 	"strings"
 
-	"github.com/lakshya-chopra/dtls-cgo"
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/amf/metrics"
 	"github.com/omec-project/amf/protos/sdcoreAmfServer"
@@ -49,8 +39,6 @@ type AmfRan struct {
 	GnbId      string // RanId in string format, i.e.,mcc:mnc:gnbid
 	/* socket Connect*/
 	Conn net.Conn `json:"-"`
-	/*SSL object*/
-	SSLConn *dtls.SSLConn
 	/* Supported TA List */
 	SupportedTAList []SupportedTAI //TODO SupportedTaList store and recover from DB
 
@@ -106,7 +94,7 @@ func (ran *AmfRan) NewRanUe(ranUeNgapID int64) (*RanUe, error) {
 	ranUe.AmfUeNgapId = amfUeNgapID
 	ranUe.RanUeNgapId = ranUeNgapID
 	ranUe.Ran = ran
-	ranUe.Log = ran.Log
+	ranUe.Log = ran.Log.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
 	ran.RanUeList = append(ran.RanUeList, &ranUe)
 	self.RanUePool.Store(ranUe.AmfUeNgapId, &ranUe)
 	return &ranUe, nil
@@ -127,7 +115,6 @@ func (ran *AmfRan) RanUeFindByRanUeNgapIDLocal(ranUeNgapID int64) *RanUe {
 			return ranUe
 		}
 	}
-
 	ran.Log.Infof("RanUe is not exist")
 	return nil
 }

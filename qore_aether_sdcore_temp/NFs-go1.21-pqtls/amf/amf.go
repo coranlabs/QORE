@@ -15,7 +15,6 @@ import (
 
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/amf/service"
-	loget "github.com/omec-project/util/logger"
 )
 
 var AMF = &service.AMF{}
@@ -27,12 +26,9 @@ func init() {
 }
 
 func main() {
-	loget.SetLogLevel(logrus.InfoLevel)
 	app := cli.NewApp()
-	app.Name = "HEXA AMF"
-	appLog.Infof("========================================")
-	appLog.Infof("##############|HEXA AMF|###############")
-	appLog.Infof("========================================")
+	app.Name = "Neura_amf"
+	appLog.Infoln(app.Name)
 	app.Usage = "-free5gccfg common configuration file -amfcfg amf configuration file"
 	app.Action = action
 	app.Flags = AMF.GetCliCmd()

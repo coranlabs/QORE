@@ -12,7 +12,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/omec-project/nas/nasMessage"
 	"github.com/omec-project/amf/consumer"
 	"github.com/omec-project/amf/context"
 	gmm_message "github.com/omec-project/amf/gmm/message"
@@ -24,6 +23,7 @@ import (
 	"github.com/omec-project/amf/util"
 	"github.com/omec-project/aper"
 	mi "github.com/omec-project/metricfunc/pkg/metricinfo"
+	"github.com/omec-project/nas/nasMessage"
 	libngap "github.com/omec-project/ngap"
 	"github.com/omec-project/ngap/ngapConvert"
 	"github.com/omec-project/ngap/ngapType"
@@ -616,7 +616,7 @@ func HandleNGSetupRequest(ran *context.AmfRan, message *ngapType.NGAPPDU) {
 		copy(taiList, context.AMF_Self().SupportTaiLists)
 		for i := range taiList {
 			taiList[i].Tac = util.TACConfigToModels(taiList[i].Tac)
-			ran.Log.Infof("Supported Tai List in HEXA-AMF Plmn: %v, Tac: 0x%v Tac: %v", taiList[i].PlmnId, taiList[i].Tac, context.AMF_Self().SupportTaiLists[i].Tac)
+			ran.Log.Infof("Supported Tai List in AMF Plmn: %v, Tac: 0x%v Tac: %v", taiList[i].PlmnId, taiList[i].Tac, context.AMF_Self().SupportTaiLists[i].Tac)
 		}
 
 		for i, tai := range ran.SupportedTAList {
@@ -1419,9 +1419,7 @@ func HandleInitialUEMessage(ran *context.AmfRan, message *ngapType.NGAPPDU, sctp
 			return
 		}
 	}
-	ran.Log.Infof("===============================================")
-	ran.Log.Infof("################|UE DETECTED|##################")
-	ran.Log.Infof("===============================================")
+
 	ran.Log.Info("Handle Initial UE Message")
 
 	for _, ie := range initialUEMessage.ProtocolIEs.List {
