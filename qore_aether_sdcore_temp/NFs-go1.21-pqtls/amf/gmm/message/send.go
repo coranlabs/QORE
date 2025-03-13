@@ -7,12 +7,12 @@
 package message
 
 import (
-	"github.com/omec-project/nas/nasMessage"
-	"github.com/omec-project/nas/nasType"
 	"github.com/omec-project/amf/context"
 	"github.com/omec-project/amf/logger"
 	ngap_message "github.com/omec-project/amf/ngap/message"
 	"github.com/omec-project/amf/producer/callback"
+	"github.com/omec-project/nas/nasMessage"
+	"github.com/omec-project/nas/nasType"
 	"github.com/omec-project/ngap/ngapType"
 	"github.com/omec-project/openapi/models"
 )

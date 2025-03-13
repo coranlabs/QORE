@@ -7,7 +7,7 @@ package context
 
 import (
 	"encoding/json"
-	// "fmt"
+	"fmt"
 	"os"
 	"sync"
 
@@ -74,7 +74,7 @@ func SetupAmfCollection() {
 		mongoDbUrl = factory.AmfConfig.Configuration.Mongodb.Url
 	}
 
-	logger.ContextLog.Infof("MondbName: %s, Url: %v", "hexa-amf", mongoDbUrl)
+	logger.ContextLog.Infof("MondbName: %v, Url: %v", factory.AmfConfig.Configuration.AmfDBName, mongoDbUrl)
 
 	if Namespace != "" {
 		AmfUeDataColl = Namespace + "." + AmfUeDataColl
@@ -169,10 +169,11 @@ func DbFetch(collName string, filter bson.M) *AmfUe {
 	AMF_Self().RanUePool.Store(ue.RanUe[models.AccessType__3_GPP_ACCESS].AmfUeNgapId, ue.RanUe[models.AccessType__3_GPP_ACCESS])
 	AMF_Self().UePool.Store(ue.Supi, ue)
 	ue.EventChannel = nil
-	ue.NASLog = logger.NasLog
-	ue.GmmLog = logger.GmmLog
-	ue.TxLog = logger.GmmLog
-	ue.ProducerLog = logger.ProducerLog
+	ue.NASLog = logger.NasLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ue.RanUe[models.AccessType__3_GPP_ACCESS].AmfUeNgapId))
+	ue.GmmLog = logger.GmmLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ue.RanUe[models.AccessType__3_GPP_ACCESS].AmfUeNgapId))
+	ue.TxLog = logger.GmmLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ue.RanUe[models.AccessType__3_GPP_ACCESS].AmfUeNgapId))
+	ue.ProducerLog = logger.ProducerLog.WithField(logger.FieldSupi, fmt.Sprintf("SUPI:%s", ue.Supi))
+	ue.AmfInstanceName = os.Getenv("HOSTNAME")
 	ue.AmfInstanceIp = os.Getenv("POD_IP")
 	return ue
 }

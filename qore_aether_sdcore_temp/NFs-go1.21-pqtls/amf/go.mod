@@ -1,36 +1,35 @@
 module github.com/omec-project/amf
 
-go 1.22.2
+go 1.19
 
 require (
-	github.com/Nikhil690/connsert v1.3.7
+	git.cs.nctu.edu.tw/calee/sctp v1.1.0
+	github.com/Nikhil690/connsert v1.1.4
 	github.com/antihax/optional v1.0.0
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.6.0
-	github.com/lakshya-chopra/dtls-cgo v0.1.2
-	github.com/lakshya-chopra/http2_util v1.1.3
-	github.com/lakshya-chopra/sctp v0.0.1
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/omec-project/MongoDBLibrary v1.1.3
 	github.com/omec-project/UeauCommon v1.1.0
 	github.com/omec-project/aper v1.1.0
 	github.com/omec-project/fsm v1.1.0
+	github.com/omec-project/http2_util v1.1.0
 	github.com/omec-project/http_wrapper v1.1.0
 	github.com/omec-project/idgenerator v1.1.0
 	github.com/omec-project/logger_util v1.2.0
-	github.com/omec-project/nas v1.3.0
+	github.com/omec-project/nas v1.1.4
 	github.com/omec-project/ngap v1.1.0
-	github.com/omec-project/openapi v1.2.0
+	github.com/omec-project/openapi v1.1.0
 	github.com/omec-project/path_util v1.1.0
-	github.com/omec-project/util v1.1.0
+	github.com/omec-project/util v1.0.13
 	github.com/prometheus/client_golang v1.14.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.8.3
 	github.com/urfave/cli v1.22.10
 	go.mongodb.org/mongo-driver v1.11.0
 	google.golang.org/grpc v1.62.1
@@ -46,7 +45,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
-	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240123012728-ef4313101c80 // indirect
@@ -90,6 +88,7 @@ require (
 	github.com/omec-project/logger_conf v1.1.1 // indirect
 	github.com/omec-project/metricfunc v1.1.1
 	github.com/omec-project/nrf v1.0.1
+	github.com/omec-project/util_3gpp v1.1.1 // indirect
 	github.com/pelletier/go-toml v1.7.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -117,12 +116,12 @@ require (
 	go.uber.org/zap v1.23.0 // indirect
 	go4.org/intern v0.0.0-20220617035311-6925f38cc365 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
-	golang.org/x/crypto v0.25.0 // indirect
-	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/oauth2 v0.16.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240123012728-ef4313101c80 // indirect
 	gopkg.in/h2non/gock.v1 v1.1.2 // indirect

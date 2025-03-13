@@ -1,17 +1,17 @@
 module github.com/omec-project/ausf
 
-go 1.21
+go 1.19
 
 require (
-	github.com/Nikhil690/connsert v1.3.5
+	github.com/Nikhil690/connsert v1.1.4
 	github.com/antihax/optional v1.0.0
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/bronze1man/radius v0.0.0-20190516032554-afd8baec892d
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/gopacket v1.1.19
 	github.com/google/uuid v1.6.0
-	github.com/lakshya-chopra/http2_util v1.0.8
 	github.com/omec-project/UeauCommon v1.1.0
+	github.com/omec-project/http2_util v1.1.0
 	github.com/omec-project/http_wrapper v1.1.0
 	github.com/omec-project/logger_util v1.2.0
 	github.com/omec-project/openapi v1.1.0

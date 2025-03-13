@@ -35,7 +35,7 @@ func init() {
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "HEXA_smf"
+	app.Name = "Neura_smf"
 	fmt.Print(app.Name, "\n")
 	//appLog.Infoln("SMF version: ", version.GetVersion())
 	app.Usage = "-cfg common configuration file -smfcfg smf_configuration_file"

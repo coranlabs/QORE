@@ -7,9 +7,7 @@
 package service
 
 import (
-	"crypto/tls"
 	"fmt"
-	"log"
 	"net/http"
 	_ "net/http/pprof" //Using package only for invoking initialization.
 	"os"
@@ -22,8 +20,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
-	"github.com/lakshya-chopra/http2_util"
 	aperLogger "github.com/omec-project/aper/logger"
+	"github.com/omec-project/http2_util"
 	"github.com/omec-project/logger_util"
 	nasLogger "github.com/omec-project/nas/logger"
 	ngapLogger "github.com/omec-project/ngap/logger"
@@ -113,7 +111,7 @@ func (smf *SMF) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultSmfConfigPath := path_util.Free5gcPath("omec-project/smf/config/smfcfg.conf")
+		DefaultSmfConfigPath := path_util.Free5gcPath("omec-project/smf/config/smfcfg.yaml")
 		if err := factory.InitConfigFactory(DefaultSmfConfigPath); err != nil {
 			return err
 		}
@@ -374,13 +372,7 @@ func (smf *SMF) Start() {
 	time.Sleep(1000 * time.Millisecond)
 
 	HTTPAddr := fmt.Sprintf("%s:%d", context.SMF_Self().BindingIPv4, context.SMF_Self().SBIPort)
-
-	server_cert, err := tls.LoadX509KeyPair(util.SmfPemPath, util.SmfKeyPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	server, err := http2_util.NewServer(HTTPAddr, util.SmfLogPath, router, server_cert)
+	server, err := http2_util.NewServer(HTTPAddr, util.SmfLogPath, router)
 
 	if server == nil {
 		initLog.Error("Initialize HTTP server failed:", err)

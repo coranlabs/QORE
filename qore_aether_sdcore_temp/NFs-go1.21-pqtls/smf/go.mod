@@ -4,41 +4,38 @@
 
 module github.com/omec-project/smf
 
-go 1.21
-
-// toolchain go1.21.1
+go 1.19
 
 require (
-	github.com/Nikhil690/connsert v1.0.3
+	github.com/Nikhil690/connsert v1.1.4
 	github.com/antihax/optional v1.0.0
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.6.0
-	github.com/lakshya-chopra/http2_util v1.0.8
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/omec-project/MongoDBLibrary v1.1.3
 	github.com/omec-project/aper v1.1.0
 	github.com/omec-project/flowdesc v1.1.0
+	github.com/omec-project/http2_util v1.1.0
 	github.com/omec-project/http_wrapper v1.1.0
 	github.com/omec-project/idgenerator v1.1.0
 	github.com/omec-project/logger_util v1.2.0
-	github.com/omec-project/nas v1.3.0 // indirect
+	github.com/omec-project/nas v1.1.4
 	github.com/omec-project/ngap v1.1.0
-	github.com/omec-project/openapi v1.2.0
+	github.com/omec-project/openapi v1.1.0
 	github.com/omec-project/path_util v1.1.0
 	github.com/omec-project/pfcp v1.1.3
-	github.com/omec-project/util v1.1.0
+	github.com/omec-project/util v1.0.13
 	github.com/omec-project/util_3gpp v1.1.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.13.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli v1.22.9
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	github.com/omec-project/nas v0.0.1
 	github.com/omec-project/metricfunc v1.1.1
 	github.com/omec-project/nrf v1.0.1
 	github.com/segmentio/kafka-go v0.4.38
@@ -107,11 +104,11 @@ require (
 	go4.org/intern v0.0.0-20220617035311-6925f38cc365 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240123012728-ef4313101c80 // indirect

@@ -12,7 +12,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -415,10 +414,6 @@ func HandleRegistrationRequest(ue *context.AmfUe, anType models.AccessType, proc
 		// TS 24.501 4.4.6: When the UE sends a REGISTRATION REQUEST or SERVICE REQUEST message that includes a NAS
 		// message container IE, the UE shall set the security header type of the initial NAS message to
 		// "integrity protected"; then the AMF shall decipher the value part of the NAS message container IE
-
-		log.Printf("Encrypt NAS message (algorithm: %+v, DLCount: 0x%0x)\n", ue.CipheringAlg, ue.DLCount.Get())
-		log.Printf("NAS ciphering key: %0x\n", ue.KnasEnc)
-
 		err := security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.ULCount.Get(), security.Bearer3GPP,
 			security.DirectionUplink, contents)
 		if err != nil {
@@ -1619,7 +1614,7 @@ func NetworkInitiatedDeregistrationProcedure(ue *context.AmfUe, accessType model
 	return err
 }
 
-// TODO: to be implemented
+//TODO: to be implemented
 func HandleUeSliceInfoDelete(ue *context.AmfUe, accessType models.AccessType, nssai models.Snssai) (err error) {
 
 	//TODO send configuration update to update allowed nssai list with re-registration required to UE
@@ -1657,7 +1652,7 @@ func HandleUeSliceInfoDelete(ue *context.AmfUe, accessType models.AccessType, ns
 	return err
 }
 
-// TODO: to be implemented
+//TODO: to be implemented
 func HandleUeSliceInfoAdd(ue *context.AmfUe, accessType models.AccessType, nssai models.Snssai) (err error) {
 
 	//TODO send configuration update to update allowed nssai list with re-registration required to UE
@@ -1727,8 +1722,6 @@ func HandleServiceRequest(ue *context.AmfUe, anType models.AccessType,
 		// TS 24.501 4.4.6: When the UE sends a REGISTRATION REQUEST or SERVICE REQUEST message that includes a NAS
 		// message container IE, the UE shall set the security header type of the initial NAS message to
 		// "integrity protected"; then the AMF shall decipher the value part of the NAS message container IE
-		log.Printf("Encrypt NAS message (algorithm: %+v, DLCount: 0x%0x)\n", ue.CipheringAlg, ue.DLCount.Get())
-		log.Printf("NAS ciphering key: %0x\n", ue.KnasEnc)
 		err := security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.ULCount.Get(), security.Bearer3GPP,
 			security.DirectionUplink, contents)
 

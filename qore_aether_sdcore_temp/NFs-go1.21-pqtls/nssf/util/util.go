@@ -32,7 +32,7 @@ const (
 var (
 	NSSF_LOG_PATH = path_util.Free5gcPath("omec-project/nssfsslkey.log")
 	NSSF_PEM_PATH = path_util.Free5gcPath("free5gc/support/TLS/nssf.pem")
-	NSSF_KEY_PATH = path_util.Free5gcPath("free5gc/support/TLS/key.pem")
+	NSSF_KEY_PATH = path_util.Free5gcPath("free5gc/support/TLS/nssf.key")
 )
 
 // Default configuration file

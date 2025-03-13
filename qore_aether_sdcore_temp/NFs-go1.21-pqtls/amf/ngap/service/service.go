@@ -6,33 +6,21 @@
 
 package service
 
-/*
-#include <stdlib.h>
-#include <stdio.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/bio.h>
-*/
-import "C"
-
 import (
 	"encoding/hex"
 	"io"
-	"log"
 	"net"
 	"sync"
 	"syscall"
 
-	"github.com/lakshya-chopra/sctp"
+	"git.cs.nctu.edu.tw/calee/sctp"
 
-	"github.com/lakshya-chopra/dtls-cgo"
 	"github.com/omec-project/amf/logger"
-	"github.com/omec-project/amf/util"
 	"github.com/omec-project/ngap"
 )
 
 type NGAPHandler struct {
-	HandleMessage      func(conn net.Conn, msg []byte, sslConn *dtls.SSLConn)
+	HandleMessage      func(conn net.Conn, msg []byte)
 	HandleNotification func(conn net.Conn, notification sctp.Notification)
 }
 
@@ -82,8 +70,6 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 
 	logger.NgapLog.Infof("Listen on %s", sctpListener.Addr())
 
-	ctx := dtls.Init_ssl_ctx(dtls.SSLMODE_SERVER, util.AmfRSAPemPath, util.AmfRSAKeyPath)
-
 	for {
 		newConn, err := sctpListener.AcceptSCTP()
 		if err != nil {
@@ -94,20 +80,6 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 				logger.NgapLog.Errorf("Failed to accept: %+v", err)
 			}
 			continue
-		}
-
-		//Perform SSL handshake after SCTP handshake.
-
-		ssl := dtls.New_ssl_conn(ctx, newConn.Fd(), dtls.SSLMODE_SERVER)
-		for {
-			ret := dtls.Do_ssl_handshake(ssl)
-			if ret == 0 {
-				log.Println("Handshake successful")
-				break
-			} else {
-				log.Println(ret)
-				continue
-			}
 		}
 
 		var info *sctp.SndRcvInfo
@@ -163,14 +135,11 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 		} else {
 			logger.NgapLog.Debugf("Set read timeout: %+v", readTimeout)
 		}
-		logger.NgapLog.Infof("=============================================== ")
-		logger.NgapLog.Infof("################|GNB DETECTED|################# ")
-		logger.NgapLog.Infof("=============================================== ")
 
-		logger.NgapLog.Infof("SCTP Accept from: | %s |", newConn.RemoteAddr().String())
+		logger.NgapLog.Infof("[AMF] SCTP Accept from: %s", newConn.RemoteAddr().String())
 		connections.Store(newConn, newConn)
 
-		go handleConnection(newConn, readBufSize, handler, ssl)
+		go handleConnection(newConn, readBufSize, handler)
 	}
 }
 
@@ -192,7 +161,7 @@ func Stop() {
 	logger.NgapLog.Infof("SCTP server closed")
 }
 
-func handleConnection(conn *sctp.SCTPConn, bufsize uint32, handler NGAPHandler, ssl *dtls.SSLConn) {
+func handleConnection(conn *sctp.SCTPConn, bufsize uint32, handler NGAPHandler) {
 	defer func() {
 		// if AMF call Stop(), then conn.Close() will return EBADF because conn has been closed inside Stop()
 		if err := conn.Close(); err != nil && err != syscall.EBADF {
@@ -205,8 +174,6 @@ func handleConnection(conn *sctp.SCTPConn, bufsize uint32, handler NGAPHandler, 
 		buf := make([]byte, bufsize)
 
 		n, info, notification, err := conn.SCTPRead(buf)
-		// log.Printf("number of enc bytes received: %d\n", n)
-
 		if err != nil {
 			switch err {
 			case io.EOF, io.ErrUnexpectedEOF:
@@ -224,33 +191,23 @@ func handleConnection(conn *sctp.SCTPConn, bufsize uint32, handler NGAPHandler, 
 			}
 		}
 
-		if n != -1 && n != 0 {
-
-			//decrypt buf -> only buffer is encrypted, no other component of the sctp msghdr.
-			dec_buf := make([]byte, bufsize)
-			n2 := dtls.New_message_decrypt(ssl, buf, dec_buf)
-			log.Printf("Length of decrypted bytes: %d\n", n)
-
-			if notification != nil {
-				if handler.HandleNotification != nil {
-					handler.HandleNotification(conn, notification)
-				} else {
-					logger.NgapLog.Warnf("Received sctp notification[type 0x%x] but not handled", notification.Type())
-				}
+		if notification != nil {
+			if handler.HandleNotification != nil {
+				handler.HandleNotification(conn, notification)
 			} else {
-				if info == nil || info.PPID != ngap.PPID {
-					logger.NgapLog.Warnln("Received SCTP PPID != 60, discard this packet")
-					continue
-				}
-
-				logger.NgapLog.Printf("Read %d bytes\n", n)
-				logger.NgapLog.Printf("Packet content:\n%+v\n", hex.Dump(buf[:n]))
-
-				// TODO: concurrent on per-UE message
-				if n2 != -1 {
-					handler.HandleMessage(conn, dec_buf[:n2], ssl)
-				}
+				logger.NgapLog.Warnf("Received sctp notification[type 0x%x] but not handled", notification.Type())
 			}
+		} else {
+			if info == nil || info.PPID != ngap.PPID {
+				logger.NgapLog.Warnln("Received SCTP PPID != 60, discard this packet")
+				continue
+			}
+
+			logger.NgapLog.Tracef("Read %d bytes", n)
+			logger.NgapLog.Tracef("Packet content:\n%+v", hex.Dump(buf[:n]))
+
+			// TODO: concurrent on per-UE message
+			handler.HandleMessage(conn, buf[:n])
 		}
 	}
 }

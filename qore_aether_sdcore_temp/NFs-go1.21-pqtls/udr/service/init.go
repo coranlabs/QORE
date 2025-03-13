@@ -8,10 +8,8 @@ package service
 
 import (
 	"bufio"
-	"crypto/tls"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -23,9 +21,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
-	"github.com/lakshya-chopra/http2_util"
 	"github.com/omec-project/MongoDBLibrary"
 	mongoDBLibLogger "github.com/omec-project/MongoDBLibrary/logger"
+	"github.com/omec-project/http2_util"
 	"github.com/omec-project/logger_util"
 	"github.com/omec-project/path_util"
 	pathUtilLogger "github.com/omec-project/path_util/logger"
@@ -87,7 +85,7 @@ func (udr *UDR) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultUdrConfigPath := path_util.Free5gcPath("free5gc/config/udrcfg.conf")
+		DefaultUdrConfigPath := path_util.Free5gcPath("free5gc/config/udrcfg.yaml")
 		if err := factory.InitConfigFactory(DefaultUdrConfigPath); err != nil {
 			return err
 		}
@@ -208,13 +206,7 @@ func (udr *UDR) Start() {
 	go udr.registerNF()
 	go udr.configUpdateDb()
 
-	server_cert, err := tls.LoadX509KeyPair(util.UdrPemPath, util.UdrKeyPath)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	server, err := http2_util.NewServer(addr, udrLogPath, router, server_cert)
+	server, err := http2_util.NewServer(addr, udrLogPath, router)
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)
 		return
@@ -349,7 +341,7 @@ func (udr *UDR) BuildAndSendRegisterNFInstance() (prof models.NfProfile, err err
 	return profile, err
 }
 
-// UpdateNF is the callback function, this is called when keepalivetimer elapsed
+//UpdateNF is the callback function, this is called when keepalivetimer elapsed
 func (udr *UDR) UpdateNF() {
 	KeepAliveTimerMutex.Lock()
 	defer KeepAliveTimerMutex.Unlock()
