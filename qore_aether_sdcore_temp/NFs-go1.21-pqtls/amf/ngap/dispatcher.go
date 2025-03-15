@@ -119,7 +119,9 @@ func Dispatch(conn net.Conn, msg []byte) {
 
 	ran, ok := amfSelf.AmfRanFindByConn(conn)
 	if !ok {
-		logger.NgapLog.Infof("Create a new NG connection for: %s", conn.RemoteAddr().String())
+		// logger.NgapLog.Infof("-------------------------------------------------")
+		logger.NgapLog.Infof("Create a new NG connection for: | %s |", conn.RemoteAddr().String())
+		// logger.NgapLog.Infof("-------------------------------------------------")
 		ran = amfSelf.NewAmfRan(conn)
 	}
 

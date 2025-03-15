@@ -87,7 +87,7 @@ func SelectSmf(
 	dnn string) (*amf_context.SmContext, uint8, error) {
 	var smfUri string
 
-	ue.GmmLog.Infof("Select SMF [snssai: %+v, dnn: %+v]", snssai, dnn)
+	// ue.GmmLog.Infof("Select SMF [snssai: %+v, dnn: %+v]", snssai, dnn)
 
 	nrfUri := ue.ServingAMF().NrfUri // default NRF URI is pre-configured by AMF
 
