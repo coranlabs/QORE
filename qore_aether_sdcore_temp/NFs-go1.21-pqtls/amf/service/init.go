@@ -595,9 +595,29 @@ func (amf *AMF) UpdateAmfConfiguration(plmn factory.PlmnSupportItem, taiList []m
 		factory.AmfConfig.Configuration.ServedGumaiList =
 			append(factory.AmfConfig.Configuration.ServedGumaiList, guami)
 	}
-	logger.GrpcLog.Infof("SupportedPlmnLIst: %v, SupportGuamiLIst: %v received fromRoc\n", plmn, guami)
-	logger.GrpcLog.Infof("SupportedPlmnLIst: %v, SupportGuamiLIst: %v in AMF\n", factory.AmfConfig.Configuration.PlmnSupportList,
-		factory.AmfConfig.Configuration.ServedGumaiList)
+	logger.GrpcLog.Infof("+-------------------------------------------------+")
+	logger.GrpcLog.Infof("| Recieved from ROC      | PLMN  |  SST  |   SD   |")
+	for _, nsai := range plmn.SNssaiList {
+		logger.GrpcLog.Infof("| SupportedPlmnList      | %s%s |  %d    | %s |", plmn.PlmnId.Mcc, plmn.PlmnId.Mnc, nsai.Sst, nsai.Sd)
+	}
+	// logger.GrpcLog.Infof("|%-10s|%-15s|\n", "SupportGuamiLIst :", guami.AmfId)
+	logger.GrpcLog.Infof("+-------------------------------------------------+")
+	logger.GrpcLog.Infof("| Recieved from NEURA AMF| PLMN  |  SST  |   SD   |")
+	for _, list := range factory.AmfConfig.Configuration.PlmnSupportList {
+		for _, nsai := range list.SNssaiList {
+			logger.GrpcLog.Infof("| SupportedPlmnList      | %s%s |  %d    | %s |", plmn.PlmnId.Mcc, plmn.PlmnId.Mnc, nsai.Sst, nsai.Sd)
+		}
+	}
+	logger.GrpcLog.Infof("+-------------------------------------------------+")
+	// for _, kent := range factory.AmfConfig.Configuration.ServedGumaiList {
+	// 	logger.GrpcLog.Infof(" |%-10s|%-15s|\n", "SupportGuamiLIst :", kent.AmfId)
+	// }
+
+	// logger.GrpcLog.Infof("-------------------------------------------\n")
+
+	// logger.GrpcLog.Infof("SupportedPlmnLIst: %v, SupportGuamiLIst: %v received fromRoc\n", plmn, guami)
+	// logger.GrpcLog.Infof("SupportedPlmnLIst: %v, SupportGuamiLIst: %v in AMF\n", factory.AmfConfig.Configuration.PlmnSupportList,
+	// 	factory.AmfConfig.Configuration.ServedGumaiList)
 	//same plmn received but Tacs in gnb updated
 	nssai_r := plmn.SNssaiList[0]
 	slice := strconv.FormatInt(int64(nssai_r.Sst), 10) + nssai_r.Sd
@@ -612,16 +632,14 @@ func (amf *AMF) UpdateAmfConfiguration(plmn factory.PlmnSupportItem, taiList []m
 
 	amf.UpdateSupportedTaiList()
 	logger.GrpcLog.Infoln("Gnb Updated in existing Plmn, SupportTAILIst received from Roc: ", taiList)
-	logger.GrpcLog.Infoln("SupportTAILIst in AMF", factory.AmfConfig.Configuration.SupportTAIList)
+	logger.GrpcLog.Infoln("SupportTAILIst in NEURA-AMF", factory.AmfConfig.Configuration.SupportTAIList)
 }
 
 func (amf *AMF) UpdateSupportedTaiList() {
 	factory.AmfConfig.Configuration.SupportTAIList = nil
 	for _, slice := range factory.AmfConfig.Configuration.SliceTaiList {
 		for _, tai := range slice {
-			// logger.GrpcLog.Info("-----------------------------------------------\n")
-			logger.GrpcLog.Infoln("|Tai list present in Slice : |", tai, "       |\n", factory.AmfConfig.Configuration.SupportTAIList)
-			logger.GrpcLog.Infof("|-----------------------------------------------|")
+			logger.GrpcLog.Infoln("Tai list present in Slice", tai, factory.AmfConfig.Configuration.SupportTAIList)
 			factory.AmfConfig.Configuration.SupportTAIList =
 				append(factory.AmfConfig.Configuration.SupportTAIList, tai)
 		}
@@ -629,7 +647,61 @@ func (amf *AMF) UpdateSupportedTaiList() {
 }
 func (amf *AMF) UpdateConfig(commChannel chan *protos.NetworkSliceResponse) bool {
 	for rsp := range commChannel {
-		logger.GrpcLog.Infof("Received updateConfig in the amf app : %v", rsp)
+		logger.GrpcLog.Info("Received updateConfig in the amf app :")
+		logger.GrpcLog.Info("+---------------------------------------------+")
+		logger.GrpcLog.Infof("| %-43s |\n", "Network Slice")
+		logger.GrpcLog.Infof("|---------------------------------------------|")
+		// logger.GrpcLog.Infof("| %15s | %10d |\n", "RestartCounter", rsp.RestartCounter)
+		// logger.GrpcLog.Infof("| %15s | %10d |\n", "ConfigUpdated", rsp.ConfigUpdated)
+		for _, slice := range rsp.NetworkSlice {
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Name", slice.Name)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Sst", slice.Nssai.Sst)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Sd", slice.Nssai.Sd)
+			logger.GrpcLog.Infof("|---------------------------------------------|")
+			for _, group := range slice.DeviceGroup {
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Device Group", group.Name)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "IP Domain Details", group.IpDomainDetails.Name)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "DNN Name", group.IpDomainDetails.DnnName)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "UE Pool", group.IpDomainDetails.UePool)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "DNS Primary", group.IpDomainDetails.DnsPrimary)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "MTU", group.IpDomainDetails.Mtu)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "DnnMbrUplink", group.IpDomainDetails.UeDnnQos.DnnMbrUplink)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "DnnMbrDownlink", group.IpDomainDetails.UeDnnQos.DnnMbrDownlink)
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Traffic Class", group.IpDomainDetails.UeDnnQos.TrafficClass.Name)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "QCI", group.IpDomainDetails.UeDnnQos.TrafficClass.Qci)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP", group.IpDomainDetails.UeDnnQos.TrafficClass.Arp)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "PDB", group.IpDomainDetails.UeDnnQos.TrafficClass.Pdb)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "PELR", group.IpDomainDetails.UeDnnQos.TrafficClass.Pelr)
+				for _, imdetails := range group.Imsi {
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "IMSI Supported", imdetails)
+				}
+				logger.GrpcLog.Info("|---------------------------------------------|")
+			}
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Site", slice.Site.SiteName)
+			for _, gnb := range slice.Site.Gnb {
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "GNB", gnb.Name)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "TAC", gnb.Tac)
+				logger.GrpcLog.Info("|---------------------------------------------|")
+			}
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "MCC", slice.Site.Plmn.Mcc)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "MNC", slice.Site.Plmn.Mnc)
+			logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "UPF", slice.Site.Upf.UpfName)
+			for _, appfilter := range slice.AppFilters.PccRuleBase {
+				for _, flowinfo := range appfilter.FlowInfos {
+					// logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Description", flowinfo.FlowDesc)
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Traffic Class", flowinfo.TosTrafficClass)
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Direction", flowinfo.FlowDir)
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Flow Status", flowinfo.FlowStatus)
+				}
+				logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "Rule ID", appfilter.RuleId)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "Var5qi", appfilter.Qos.Var5Qi)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PL", appfilter.Qos.Arp.PL)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PC", appfilter.Qos.Arp.PC)
+				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP:PV", appfilter.Qos.Arp.PV)
+				logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "Priority", appfilter.Priority)
+			}
+			logger.GrpcLog.Info("+---------------------------------------------+")
+		}
 		var tai []models.Tai
 		var plmnList []*factory.PlmnSupportItem
 		for _, ns := range rsp.NetworkSlice {
@@ -656,7 +728,7 @@ func (amf *AMF) UpdateConfig(commChannel chan *protos.NetworkSliceResponse) bool
 				if site.Plmn != nil {
 					plmn := new(factory.PlmnSupportItem)
 
-					logger.GrpcLog.Infoln("Plmn mcc ", site.Plmn.Mcc)
+					logger.GrpcLog.Infof("%s: %s%s", "Plmn:", site.Plmn.Mcc, site.Plmn.Mnc)
 					plmn.PlmnId.Mnc = site.Plmn.Mnc
 					plmn.PlmnId.Mcc = site.Plmn.Mcc
 					plmnList = append(plmnList, plmn)
@@ -723,6 +795,7 @@ func (amf *AMF) SendNFProfileUpdateToNrf() {
 func UeConfigSliceDeleteHandler(supi, sst, sd string, msg interface{}) {
 	amfSelf := context.AMF_Self()
 	ue, _ := amfSelf.AmfUeFindBySupi("imsi-" + supi)
+	logger.GmmLog.Info(ue)
 
 	// Triggers for NwInitiatedDeRegistration
 	// - Only 1 Allowed Nssai is exist and its slice information matched
@@ -754,6 +827,7 @@ func UeConfigSliceDeleteHandler(supi, sst, sd string, msg interface{}) {
 func UeConfigSliceAddHandler(supi, sst, sd string, msg interface{}) {
 	amfSelf := context.AMF_Self()
 	ue, _ := amfSelf.AmfUeFindBySupi("imsi-" + supi)
+	logger.GmmLog.Info(ue)
 
 	ns := msg.(*protos.NetworkSlice)
 	var Nssai models.Snssai
@@ -775,6 +849,7 @@ func HandleImsiDeleteFromNetworkSlice(slice *protos.NetworkSlice) {
 	for _, supi := range slice.DeletedImsis {
 		amfSelf := context.AMF_Self()
 		ue, ok = amfSelf.AmfUeFindBySupi("imsi-" + supi)
+		logger.GmmLog.Info(ue)
 		if !ok {
 			logger.CfgLog.Infof("the UE [%v] is not Registered with the 5G-Core", supi)
 			continue
@@ -800,6 +875,8 @@ func HandleImsiAddInNetworkSlice(slice *protos.NetworkSlice) {
 	for _, supi := range slice.AddUpdatedImsis {
 		amfSelf := context.AMF_Self()
 		ue, ok = amfSelf.AmfUeFindBySupi("imsi-" + supi)
+		logger.GmmLog.Info(ue)
+
 		if !ok {
 			logger.CfgLog.Infof("the UE [%v] is not Registered with the 5G-Core", supi)
 			continue

@@ -9,12 +9,17 @@ import (
 	"os"
 
 	"github.com/omec-project/amf/context"
+	// ngapf "github.com/omec-project/amf/context"
+	// gmms "github.com/omec-project/amf/gmm"
+	
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/amf/producer/callback"
 	"github.com/omec-project/amf/protos/sdcoreAmfServer"
 	"github.com/omec-project/aper"
 	"github.com/omec-project/ngap/ngapType"
 	"github.com/omec-project/openapi/models"
+	// "git.cs.nctu.edu.tw/calee/sctp"
+	// "github.com/omec-project/util_3gpp/suci"
 )
 
 func SendToRan(ran *context.AmfRan, packet []byte) {
@@ -281,7 +286,15 @@ func SendPDUSessionResourceSetupRequest(ue *context.RanUe, nasPdu []byte,
 	}
 
 	ue.Log.Info("Send PDU Session Resource Setup Request")
-
+	logger.NgapLog.Infof("+--------------------+---------------------------+")
+	logger.NgapLog.Infof("|%-16s|%-31d|", "AMF_UE_NGAP_ID", ue.AmfUeNgapId)
+	// logger.NgapLog.Infof("|%-16s|1-37s|", "GNB_IP", ue.Ran.GnbIp)
+	logger.NgapLog.Infof("|%-16s|%-31s|", "IMSI", ue.AmfUe.Supi)
+	logger.NgapLog.Infof("|%-16s|%-31s|", "MCC", ue.AmfUe.PlmnId.Mcc)
+	logger.NgapLog.Infof("|%-16s|%-31s|", "MNC", ue.AmfUe.PlmnId.Mnc)
+	// logger.NgapLog.Infof("|%-16s|1-37s|", "SUCI", ue.AmfUe.Suci)
+	logger.NgapLog.Infof("|%-16s|%-31s|", "TAC", ue.AmfUe.Tai.Tac)
+	logger.NgapLog.Infof("+--------------------+---------------------------+")                 
 	if len(pduSessionResourceSetupRequestList.List) > context.MaxNumOfPDUSessions {
 		ue.Log.Error("Pdu List out of range")
 		return

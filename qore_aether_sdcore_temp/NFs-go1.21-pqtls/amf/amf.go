@@ -27,8 +27,10 @@ func init() {
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "Neura_amf"
-	appLog.Infoln(app.Name)
+	app.Name = "NEURA AMF"
+	appLog.Infof("========================================")
+	appLog.Infof("##############|NEURA AMF|###############")
+	appLog.Infof("========================================")
 	app.Usage = "-free5gccfg common configuration file -amfcfg amf configuration file"
 	app.Action = action
 	app.Flags = AMF.GetCliCmd()

@@ -135,8 +135,11 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 		} else {
 			logger.NgapLog.Debugf("Set read timeout: %+v", readTimeout)
 		}
+		logger.NgapLog.Infof("=============================================== ")
+		logger.NgapLog.Infof("################|UE DETECTED|################## ")
+		logger.NgapLog.Infof("=============================================== ")
 
-		logger.NgapLog.Infof("[AMF] SCTP Accept from: %s", newConn.RemoteAddr().String())
+		logger.NgapLog.Infof("SCTP Accept from: | %s |", newConn.RemoteAddr().String())
 		connections.Store(newConn, newConn)
 
 		go handleConnection(newConn, readBufSize, handler)

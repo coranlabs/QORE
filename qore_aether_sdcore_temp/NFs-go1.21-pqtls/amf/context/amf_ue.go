@@ -12,7 +12,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
+	// "fmt"
 	"os"
 	"reflect"
 	"regexp"
@@ -320,7 +320,8 @@ func (ue *AmfUe) UnmarshalJSON(data []byte) error {
 		}
 		ue.RanUe[index].RanUeNgapId = aux.RanUeNgapId
 		ue.RanUe[index].AmfUeNgapId = aux.AmfUeNgapId
-		ue.RanUe[index].Log = logger.NgapLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ue.RanUe[index].AmfUeNgapId))
+		// ue.RanUe[index].Log = logger.NgapLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ue.RanUe[index].AmfUeNgapId))
+		ue.RanUe[index].Log = logger.NgapLog
 		if ran != nil {
 			//ran.RanUeList = append(ran.RanUeList, ue.RanUe[index])
 			ue.RanUe[index].Ran = ran
@@ -515,9 +516,12 @@ func (ue *AmfUe) AttachRanUe(ranUe *RanUe) {
 	ranUe.AmfUe = ue
 
 	// set log information
-	ue.NASLog = logger.NasLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
-	ue.GmmLog = logger.GmmLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
-	ue.TxLog = logger.GmmLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
+	// ue.NASLog = logger.NasLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
+	// ue.GmmLog = logger.GmmLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
+	// ue.TxLog = logger.GmmLog.WithField(logger.FieldAmfUeNgapID, fmt.Sprintf("AMF_UE_NGAP_ID:%d", ranUe.AmfUeNgapId))
+	ue.NASLog = logger.NasLog
+	ue.GmmLog = logger.GmmLog
+	ue.TxLog = logger.GmmLog
 }
 
 func (ue *AmfUe) GetAnType() models.AccessType {

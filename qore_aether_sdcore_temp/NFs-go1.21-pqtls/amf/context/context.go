@@ -170,7 +170,11 @@ func (context *AMFContext) AllocateRegistrationArea(ue *AmfUe, anType models.Acc
 	for i := range taiList {
 		tmp, _ := strconv.ParseUint(taiList[i].Tac, 10, 32)
 		taiList[i].Tac = fmt.Sprintf("%06x", tmp)
-		logger.ContextLog.Infof("Supported Tai List in AMF Plmn: %v, Tac: %v", taiList[i].PlmnId, taiList[i].Tac)
+		// logger.ContextLog.Infof("Supported Tai List in AMF Plmn: %v, Tac: %v", taiList[i].PlmnId, taiList[i].Tac)
+		logger.NasLog.Info("+---------+---------+")
+		logger.NasLog.Infof("| PLMN ID |   TAC   |")
+		logger.NasLog.Infof("|  %s%s  |  %s |", ue.Tai.PlmnId.Mcc, ue.Tai.PlmnId.Mnc, ue.Tai.Tac)
+		logger.NasLog.Info("+---------+---------+")
 	}
 	for _, supportTai := range taiList {
 		if reflect.DeepEqual(supportTai, ue.Tai) {
@@ -333,7 +337,7 @@ func (context *AMFContext) NewAmfRan(conn net.Conn) *AmfRan {
 	ran.SupportedTAList = NewSupportedTAIList()
 	ran.Conn = conn
 	ran.GnbIp = conn.RemoteAddr().String()
-	ran.Log = logger.NgapLog.WithField(logger.FieldRanAddr, conn.RemoteAddr().String())
+	ran.Log = logger.NgapLog
 	context.AmfRanPool.Store(conn, &ran)
 	return &ran
 }
@@ -350,7 +354,7 @@ func (context *AMFContext) NewAmfRanAddr(remoteAddr string) *AmfRan {
 	ran := AmfRan{}
 	ran.SupportedTAList = NewSupportedTAIList()
 	ran.GnbIp = remoteAddr
-	ran.Log = logger.NgapLog.WithField(logger.FieldRanAddr, remoteAddr)
+	ran.Log = logger.NgapLog
 	context.AmfRanPool.Store(remoteAddr, &ran)
 	return &ran
 }
@@ -359,7 +363,7 @@ func (context *AMFContext) NewAmfRanId(GnbId string) *AmfRan {
 	ran := AmfRan{}
 	ran.SupportedTAList = NewSupportedTAIList()
 	ran.GnbId = GnbId
-	ran.Log = logger.NgapLog.WithField(logger.FieldRanId, GnbId)
+	ran.Log = logger.NgapLog
 	context.AmfRanPool.Store(GnbId, &ran)
 	return &ran
 }
