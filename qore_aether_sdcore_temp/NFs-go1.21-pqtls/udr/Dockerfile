@@ -39,4 +39,4 @@ RUN mkdir -p udr/
 
 # Copy executable and default certs
 COPY --from=builder /go/src/udr/bin/* ./udr
-WORKDIR /omec-project/udr
+WORKDIR /free5gc/udr
