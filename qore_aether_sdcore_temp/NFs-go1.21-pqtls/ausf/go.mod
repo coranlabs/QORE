@@ -3,7 +3,7 @@ module github.com/omec-project/ausf
 go 1.19
 
 require (
-	github.com/Nikhil690/connsert v1.1.4
+	github.com/Nikhil690/connsert v1.3.4
 	github.com/antihax/optional v1.0.0
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/bronze1man/radius v0.0.0-20190516032554-afd8baec892d

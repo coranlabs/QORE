@@ -5,7 +5,7 @@ go 1.19
 replace github.com/omec-project/nrf => ./
 
 require (
-	github.com/Nikhil690/connsert v1.1.5
+	github.com/Nikhil690/connsert v1.3.4
 	github.com/antihax/optional v1.0.0
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/gin-gonic/gin v1.9.1

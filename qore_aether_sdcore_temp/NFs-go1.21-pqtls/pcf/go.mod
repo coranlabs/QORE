@@ -3,7 +3,7 @@ module github.com/omec-project/pcf
 go 1.19
 
 require (
-	github.com/Nikhil690/connsert v1.1.4
+	github.com/Nikhil690/connsert v1.3.4
 	github.com/antihax/optional v1.0.0
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/cydev/zero v0.0.0-20160322155811-4a4535dd56e7
