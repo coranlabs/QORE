@@ -34,7 +34,7 @@ func init() {
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "NEURA_AUSF"
+	app.Name = "HEXA_AUSF"
 	fmt.Print(app.Name, "\n")
 	app.Usage = "-free5gccfg common configuration file -ausfcfg ausf configuration file"
 	app.Action = action

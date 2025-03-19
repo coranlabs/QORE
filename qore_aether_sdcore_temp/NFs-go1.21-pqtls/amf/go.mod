@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	git.cs.nctu.edu.tw/calee/sctp v1.1.0
-	github.com/Nikhil690/connsert v1.1.4
+	github.com/Nikhil690/connsert v1.3.7
 	github.com/antihax/optional v1.0.0
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/fsnotify/fsnotify v1.4.9

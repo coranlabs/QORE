@@ -35,7 +35,7 @@ func init() {
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "Neura_nssf"
+	app.Name = "HEXA_nssf"
 	fmt.Print(app.Name, "\n")
 	app.Usage = "-free5gccfg common configuration file -nssfcfg nssf configuration file"
 	app.Action = action
