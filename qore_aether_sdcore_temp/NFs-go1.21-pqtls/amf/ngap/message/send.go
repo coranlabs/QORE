@@ -11,7 +11,7 @@ import (
 	"github.com/omec-project/amf/context"
 	// ngapf "github.com/omec-project/amf/context"
 	// gmms "github.com/omec-project/amf/gmm"
-	
+
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/amf/producer/callback"
 	"github.com/omec-project/amf/protos/sdcoreAmfServer"
@@ -284,7 +284,9 @@ func SendPDUSessionResourceSetupRequest(ue *context.RanUe, nasPdu []byte,
 		logger.NgapLog.Error("RanUe is nil")
 		return
 	}
-
+	ue.Log.Infof("===============================================")
+	ue.Log.Infof("################|PDU CREATED|##################")
+	ue.Log.Infof("===============================================")
 	ue.Log.Info("Send PDU Session Resource Setup Request")
 	logger.NgapLog.Infof("+--------------------+---------------------------+")
 	logger.NgapLog.Infof("|%-16s|%-31d|", "AMF_UE_NGAP_ID", ue.AmfUeNgapId)
@@ -294,7 +296,7 @@ func SendPDUSessionResourceSetupRequest(ue *context.RanUe, nasPdu []byte,
 	logger.NgapLog.Infof("|%-16s|%-31s|", "MNC", ue.AmfUe.PlmnId.Mnc)
 	// logger.NgapLog.Infof("|%-16s|1-37s|", "SUCI", ue.AmfUe.Suci)
 	logger.NgapLog.Infof("|%-16s|%-31s|", "TAC", ue.AmfUe.Tai.Tac)
-	logger.NgapLog.Infof("+--------------------+---------------------------+")                 
+	logger.NgapLog.Infof("+--------------------+---------------------------+")
 	if len(pduSessionResourceSetupRequestList.List) > context.MaxNumOfPDUSessions {
 		ue.Log.Error("Pdu List out of range")
 		return

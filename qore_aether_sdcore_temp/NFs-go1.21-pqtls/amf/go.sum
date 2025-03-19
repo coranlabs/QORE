@@ -40,8 +40,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/Microsoft/go-winio v0.5.2 h1:a9IhgEQBCUEk6QCdml9CiJGhAws+YwffDHEMp1VMrpA=
 github.com/Microsoft/hcsshim v0.9.4 h1:mnUj0ivWy6UzbB1uLFqKR6F+ZyiDc7j4iGgHTpO+5+I=
-github.com/Nikhil690/connsert v1.1.4 h1:V7pzuZb3ASePvpOLSAGjqAphoxtX5o6ymxGwxj9yffc=
-github.com/Nikhil690/connsert v1.1.4/go.mod h1:7whEDot7nGA+cDMGXq+MV67wDJHkSN/g6lyL+eUaM2M=
+github.com/Nikhil690/connsert v1.3.7 h1:ykj9qzwJ17s9UguimfZ76+V3GcigFO99M+h95OJT2jI=
+github.com/Nikhil690/connsert v1.3.7/go.mod h1:7whEDot7nGA+cDMGXq+MV67wDJHkSN/g6lyL+eUaM2M=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1 h1:+JkXLHME8vLJafGhOH4aoV2Iu8bR55nU6iKMVfYVLjY=
 github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1/go.mod h1:nuudZmJhzWtx2212z+pkuy7B6nkBqa+xwNXZHL1j8cg=
