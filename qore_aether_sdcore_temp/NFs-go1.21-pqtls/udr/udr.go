@@ -26,7 +26,7 @@ func init() {
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "HEXA_udr"
+	app.Name = "Neura_udr"
 	appLog.Infoln(app.Name)
 	app.Usage = "-free5gccfg common configuration file -udrcfg udr configuration file"
 	app.Action = action
