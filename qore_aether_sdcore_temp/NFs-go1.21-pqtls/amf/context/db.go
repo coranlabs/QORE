@@ -74,7 +74,7 @@ func SetupAmfCollection() {
 		mongoDbUrl = factory.AmfConfig.Configuration.Mongodb.Url
 	}
 
-	logger.ContextLog.Infof("MondbName: %v, Url: %v", factory.AmfConfig.Configuration.AmfDBName, mongoDbUrl)
+	logger.ContextLog.Infof("MondbName: %s, Url: %v", "hexa-amf", mongoDbUrl)
 
 	if Namespace != "" {
 		AmfUeDataColl = Namespace + "." + AmfUeDataColl

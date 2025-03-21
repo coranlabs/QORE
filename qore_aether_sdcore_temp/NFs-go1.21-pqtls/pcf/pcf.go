@@ -71,7 +71,7 @@ func init() {
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "HEXA_pcf"
+	app.Name = "Neura_pcf"
 	fmt.Print(app.Name, "\n")
 	appLog.Infoln("PCF version: ", GetVersion())
 	app.Usage = "-free5gccfg common configuration file -pcfcfg pcf configuration file"
