@@ -29,9 +29,9 @@ func init() {
 func main() {
 	loget.SetLogLevel(logrus.InfoLevel)
 	app := cli.NewApp()
-	app.Name = "NEURA AMF"
+	app.Name = "HEXA AMF"
 	appLog.Infof("========================================")
-	appLog.Infof("##############|NEURA AMF|###############")
+	appLog.Infof("##############|HEXA AMF|###############")
 	appLog.Infof("========================================")
 	app.Usage = "-free5gccfg common configuration file -amfcfg amf configuration file"
 	app.Action = action
