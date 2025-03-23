@@ -115,6 +115,7 @@ func (ran *AmfRan) RanUeFindByRanUeNgapIDLocal(ranUeNgapID int64) *RanUe {
 			return ranUe
 		}
 	}
+
 	ran.Log.Infof("RanUe is not exist")
 	return nil
 }

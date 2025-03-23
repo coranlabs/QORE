@@ -602,7 +602,7 @@ func (amf *AMF) UpdateAmfConfiguration(plmn factory.PlmnSupportItem, taiList []m
 	}
 	// logger.GrpcLog.Infof("|%-10s|%-15s|\n", "SupportGuamiLIst :", guami.AmfId)
 	logger.GrpcLog.Infof("+-------------------------------------------------+")
-	logger.GrpcLog.Infof("| Recieved from NEURA AMF| PLMN  |  SST  |   SD   |")
+	logger.GrpcLog.Infof("| Recieved from HEXA AMF| PLMN  |  SST  |   SD   |")
 	for _, list := range factory.AmfConfig.Configuration.PlmnSupportList {
 		for _, nsai := range list.SNssaiList {
 			logger.GrpcLog.Infof("| SupportedPlmnList      | %s%s |  %d    | %s |", plmn.PlmnId.Mcc, plmn.PlmnId.Mnc, nsai.Sst, nsai.Sd)
@@ -632,7 +632,7 @@ func (amf *AMF) UpdateAmfConfiguration(plmn factory.PlmnSupportItem, taiList []m
 
 	amf.UpdateSupportedTaiList()
 	logger.GrpcLog.Infoln("Gnb Updated in existing Plmn, SupportTAILIst received from Roc: ", taiList)
-	logger.GrpcLog.Infoln("SupportTAILIst in NEURA-AMF", factory.AmfConfig.Configuration.SupportTAIList)
+	logger.GrpcLog.Infoln("SupportTAILIst in HEXA-AMF", factory.AmfConfig.Configuration.SupportTAIList)
 }
 
 func (amf *AMF) UpdateSupportedTaiList() {
@@ -672,8 +672,16 @@ func (amf *AMF) UpdateConfig(commChannel chan *protos.NetworkSliceResponse) bool
 				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "ARP", group.IpDomainDetails.UeDnnQos.TrafficClass.Arp)
 				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "PDB", group.IpDomainDetails.UeDnnQos.TrafficClass.Pdb)
 				// logger.GrpcLog.Infof("| %-18s  | %-21d |\n", "PELR", group.IpDomainDetails.UeDnnQos.TrafficClass.Pelr)
-				for _, imdetails := range group.Imsi {
-					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "IMSI Supported", imdetails)
+				// for _, imdetails := range group.Imsi {
+				// 	logger.GrpcLog.Infof("| %-18s  | %-21s |\n", "IMSI Supported", imdetails)
+				// }
+
+				for i, imdetails := range group.Imsi {
+					label := ""
+					if i == len(group.Imsi)/2 {
+						label = "IMSI_Supported"
+					}
+					logger.GrpcLog.Infof("| %-18s  | %-21s |\n", label, imdetails)
 				}
 				logger.GrpcLog.Info("|---------------------------------------------|")
 			}
