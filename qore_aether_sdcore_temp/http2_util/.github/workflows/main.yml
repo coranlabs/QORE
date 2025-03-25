@@ -1,13 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2024 Canonical Ltd.
+# Copyright 2024 Intel Corporation
 
 name: Main workflow
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
-  pull_request:
 
 jobs:
   build:
@@ -23,7 +26,6 @@ jobs:
         run: go build
 
   lint:
-    name: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,3 +57,15 @@ jobs:
         uses: fossa-contrib/fossa-action@v3
         with:
           fossa-api-key: 0c3bbcdf20e157bbd487dae173751b28
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Unit tests
+        run: go test ./...
