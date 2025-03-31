@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"reflect"
 
 	mi "github.com/omec-project/metricfunc/pkg/metricinfo"
 	"github.com/omec-project/openapi/models"
@@ -22,6 +23,7 @@ import (
 	"github.com/omec-project/smf/msgtypes/pfcpmsgtypes"
 	pfcp_message "github.com/omec-project/smf/pfcp/message"
 	"github.com/omec-project/smf/producer"
+	"github.com/omec-project/util_3gpp"
 )
 
 func HandlePfcpHeartbeatRequest(msg *pfcpUdp.Message) {
@@ -128,8 +130,21 @@ func HandlePfcpAssociationSetupRequest(msg *pfcpUdp.Message) {
 
 func HandlePfcpAssociationSetupResponse(msg *pfcpUdp.Message) {
 	rsp := msg.PfcpMessage.Body.(pfcp.PFCPAssociationSetupResponse)
+	rspValue := reflect.ValueOf(rsp)
+	for i := 0; i < rspValue.NumField(); i++ {
+		// Get the field name
+		fieldName := rspValue.Type().Field(i).Name
+
+		// Get the field value
+		fieldValue := rspValue.Field(i)
+
+		// Print the field name and value
+		logger.PfcpLog.Tracef("t: %s: %v\n", fieldName, fieldValue.Interface())
+	}
 
 	nodeID := rsp.NodeID
+	logger.AppLog.Tracef("values of node id: %v", nodeID)
+
 	if rsp.Cause.CauseValue == pfcpType.CauseRequestAccepted {
 		if nodeID == nil {
 			logger.PfcpLog.Errorln("pfcp association needs NodeID")
@@ -140,6 +155,7 @@ func HandlePfcpAssociationSetupResponse(msg *pfcpUdp.Message) {
 		//Get NodeId from Seq:NodeId Map
 		seq := msg.PfcpMessage.Header.SequenceNumber
 		nodeID = pfcp_message.FetchPfcpTxn(seq)
+		logger.AppLog.Tracef("values of node id 2: %v", nodeID)
 
 		if nodeID == nil {
 			logger.PfcpLog.Errorf("No pending pfcp Assoc req for sequence no: %v", seq)
@@ -155,10 +171,11 @@ func HandlePfcpAssociationSetupResponse(msg *pfcpUdp.Message) {
 
 		//validate if DNNs served by UPF matches with the one provided by UPF
 		if rsp.UserPlaneIPResourceInformation != nil {
+			rsp.UserPlaneIPResourceInformation.NetworkInstance = util_3gpp.Dnn("internet")
 			upfProvidedDnn := string(rsp.UserPlaneIPResourceInformation.NetworkInstance)
 			if !upf.IsDnnConfigured(upfProvidedDnn) {
 				logger.PfcpLog.Errorf("Handle PFCP Association Setup success Response, DNN mismatch, [%v] is not configured ", upfProvidedDnn)
-				return
+				// return
 			}
 		}
 
@@ -178,6 +195,8 @@ func HandlePfcpAssociationSetupResponse(msg *pfcpUdp.Message) {
 		if rsp.UPFunctionFeatures != nil {
 			logger.PfcpLog.Debugf("Handle PFCP Association Setup success Response, received UPFunctionFeatures= %v ", rsp.UPFunctionFeatures)
 			upf.UPFunctionFeatures = rsp.UPFunctionFeatures
+		} else {
+			logger.PfcpLog.Debugf("Handle PFCP Association Setup success Response but UPFunctionFeatures is nil, received UPFunctionFeatures= %v ", rsp.UPFunctionFeatures)
 		}
 
 		if rsp.UserPlaneIPResourceInformation != nil {
@@ -197,10 +216,11 @@ func HandlePfcpAssociationSetupResponse(msg *pfcpUdp.Message) {
 				n3Interface.NetworkInstance = string(upf.UPIPInfo.NetworkInstance)
 				n3Interface.IPv4EndPointAddresses = append(n3Interface.IPv4EndPointAddresses, upf.UPIPInfo.Ipv4Address)
 				upf.N3Interfaces = append(upf.N3Interfaces, n3Interface)
+				logger.PfcpLog.Traceln(" t: n3 ip address: ", n3Interface.IPv4EndPointAddresses[0])
+				logger.PfcpLog.Tracef("t: n3 ip address: %s", n3Interface.NetworkInstance)
 			}
 
-			logger.PfcpLog.Infof("UPF(%s)[%s] setup association success",
-				upf.NodeID.ResolveNodeIdToIp().String(), upf.UPIPInfo.NetworkInstance)
+			logger.PfcpLog.Infof("UPF(%s)[%s] setup association success", upf.NodeID.ResolveNodeIdToIp().String(), upf.UPIPInfo.NetworkInstance)
 		} else {
 			logger.PfcpLog.Errorln("pfcp association setup response has no UserPlane IP Resource Information")
 		}
@@ -262,6 +282,17 @@ func HandlePfcpSessionSetDeletionResponse(msg *pfcpUdp.Message) {
 func HandlePfcpSessionEstablishmentResponse(msg *pfcpUdp.Message) {
 	rsp := msg.PfcpMessage.Body.(pfcp.PFCPSessionEstablishmentResponse)
 	logger.PfcpLog.Infoln("In HandlePfcpSessionEstablishmentResponse")
+	rspValue := reflect.ValueOf(rsp)
+	for i := 0; i < rspValue.NumField(); i++ {
+		// Get the field name
+		fieldName := rspValue.Type().Field(i).Name
+
+		// Get the field value
+		fieldValue := rspValue.Field(i)
+
+		// Print the field name and value
+		logger.PfcpLog.Infof("t: %s: %v\n", fieldName, fieldValue.Interface())
+	}
 
 	SEID := msg.PfcpMessage.Header.SEID
 	if SEID == 0 {

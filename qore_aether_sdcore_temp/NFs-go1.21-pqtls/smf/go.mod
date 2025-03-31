@@ -4,10 +4,12 @@
 
 module github.com/omec-project/smf
 
-go 1.19
+go 1.21
+
+// toolchain go1.21.1
 
 require (
-	github.com/Nikhil690/connsert v1.3.4
+	github.com/Nikhil690/connsert v1.0.3
 	github.com/antihax/optional v1.0.0
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/gin-gonic/gin v1.9.1
