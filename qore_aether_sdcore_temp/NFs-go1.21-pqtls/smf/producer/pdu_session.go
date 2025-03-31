@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	// "reflect"
 
 	"github.com/antihax/optional"
 	"github.com/omec-project/nas/nasMessage"
@@ -77,6 +78,7 @@ func HandlePduSessionContextReplacement(smCtxtRef string) error {
 func HandlePDUSessionSMContextCreate(eventData interface{}) error {
 
 	txn := eventData.(*transaction.Transaction)
+	logger.PfcpLog.Tracef("t: %d", txn.TxnId)
 	request := txn.Req.(models.PostSmContextsRequest)
 	smContext := txn.Ctxt.(*smf_context.SMContext)
 
