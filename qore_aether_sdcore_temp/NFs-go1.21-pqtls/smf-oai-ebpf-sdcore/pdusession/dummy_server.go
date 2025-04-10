@@ -5,11 +5,10 @@
 package pdusession
 
 import (
-	"crypto/tls"
 	"log"
 	"net/http"
 
-	"github.com/lakshya-chopra/http2_util"
+	"github.com/omec-project/http2_util"
 	"github.com/omec-project/logger_util"
 	"github.com/omec-project/path_util"
 	"github.com/omec-project/smf/logger"
@@ -26,15 +25,10 @@ func DummyServer() {
 
 	smfKeyLogPath := path_util.Free5gcPath("free5gc/smfsslkey.log")
 	smfPemPath := path_util.Free5gcPath("free5gc/support/TLS/smf.pem")
-	smfkeyPath := path_util.Free5gcPath("free5gc/support/TLS/key.pem")
+	smfkeyPath := path_util.Free5gcPath("free5gc/support/TLS/smf.key")
 
 	var server *http.Server
-
-	server_cert, err := tls.LoadX509KeyPair(smfPemPath, smfkeyPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if srv, err := http2_util.NewServer(":29502", smfKeyLogPath, router, server_cert); err != nil {
+	if srv, err := http2_util.NewServer(":29502", smfKeyLogPath, router); err != nil {
 	} else {
 		server = srv
 	}
