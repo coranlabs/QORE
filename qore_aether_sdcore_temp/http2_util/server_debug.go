@@ -2,15 +2,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//+build debug
+//go:build debug
+// +build debug
 
 package http2_util
 
 import (
 	"crypto/tls"
-	"github.com/pkg/errors"
 	"net/http"
 	"os"
+
+	"github.com/pkg/errors"
 )
 
 type ZeroSource struct{}
@@ -33,8 +35,11 @@ func NewServer(bindAddr string, tlskeylog string, handler http.Handler) (server 
 	server = &http.Server{
 		Addr: bindAddr,
 		TLSConfig: &tls.Config{
-			KeyLogWriter: keylogFile,
-			Rand:         ZeroSource{},
+			KeyLogWriter:              keylogFile,
+			Rand:                      ZeroSource{},
+			PQSignatureSchemesEnabled: true,
+			MinVersion:                tls.VersionTLS13,
+			ClientAuth:                tls.NoClientCert,
 		},
 		Handler: handler,
 	}
