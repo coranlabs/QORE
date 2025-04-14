@@ -42,7 +42,11 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 			return server, fmt.Errorf("create pre-master-secret log [%s] fail: %s", preMasterSecretLogPath, err)
 		}
 		server.TLSConfig = &tls.Config{
-			KeyLogWriter: preMasterSecretFile,
+			KeyLogWriter:              preMasterSecretFile,
+			PQSignatureSchemesEnabled: true,
+			// PreferServerCipherSuites:  true, // deprecated - has no effect
+			MinVersion: tls.VersionTLS13,
+			ClientAuth: tls.NoClientCert,
 		}
 	}
 
