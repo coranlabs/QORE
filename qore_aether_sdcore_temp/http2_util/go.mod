@@ -1,4 +1,4 @@
-module github.com/omec-project/http2_util
+module github.com/lakshya-chopra/http2_util
 
 go 1.21
 
