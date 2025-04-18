@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-FROM golang:1.19-bullseye AS builder
+FROM golang:1.21-bullseye AS builder
 
 LABEL maintainer="ONF <omec-dev@opennetworking.org>"
 
@@ -39,4 +39,5 @@ RUN mkdir -p udr/
 
 # Copy executable and default certs
 COPY --from=builder /go/src/udr/bin/* ./udr
+COPY --from=builder /go/src/udr/cert/* /free5gc/support/TLS/
 WORKDIR /free5gc/udr
