@@ -1,6 +1,6 @@
 module github.com/omec-project/udm
 
-go 1.19
+go 1.21
 
 require (
 	github.com/Nikhil690/connsert v1.3.4

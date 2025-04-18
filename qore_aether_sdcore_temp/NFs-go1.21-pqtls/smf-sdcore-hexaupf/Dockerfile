@@ -56,6 +56,7 @@ RUN mkdir -p bin/
 
 # Copy executable and default certs
 COPY --from=builder /go/src/smf/bin/* ./smf
+COPY --from=builder /go/src/smf/cert/* /free5gc/support/TLS/
 
 # copy upf-adapter image
 COPY --from=builder /go/src/smf/upfadapter/upf-adapter ./bin

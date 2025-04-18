@@ -1,6 +1,6 @@
 module github.com/omec-project/amf
 
-go 1.19
+go 1.21
 
 require (
 	git.cs.nctu.edu.tw/calee/sctp v1.1.0
