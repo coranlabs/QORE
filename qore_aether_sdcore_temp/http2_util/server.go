@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -47,6 +48,28 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 			// PreferServerCipherSuites:  true, // deprecated - has no effect
 			MinVersion: tls.VersionTLS13,
 			ClientAuth: tls.NoClientCert,
+			GetConfigForClient: func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
+
+				fmt.Println(strings.Repeat("-", 30))
+				fmt.Println("Client Details:\n")
+				fmt.Printf("\tServer connected to: %s\n", chi.ServerName)
+
+				fmt.Print("\tSupported Signature Schemes: ")
+				for _, sigScheme := range chi.SignatureSchemes {
+					fmt.Printf("\t\t%v ", sigScheme)
+				}
+				fmt.Println()
+
+				// Print the supported curves
+				fmt.Println("\tSupported Curves: ")
+				for _, curve := range chi.SupportedCurves {
+					fmt.Printf("\t\t%v ", curve)
+				}
+				fmt.Println()
+
+				return &tls.Config{}, nil
+
+			},
 		}
 	}
 
