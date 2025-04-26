@@ -20,8 +20,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
+	"github.com/lakshya-chopra/http2_util"
 	aperLogger "github.com/omec-project/aper/logger"
-	"github.com/omec-project/http2_util"
 	"github.com/omec-project/logger_util"
 	nasLogger "github.com/omec-project/nas/logger"
 	ngapLogger "github.com/omec-project/ngap/logger"

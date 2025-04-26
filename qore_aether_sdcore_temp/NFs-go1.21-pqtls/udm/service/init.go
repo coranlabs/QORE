@@ -22,7 +22,7 @@ import (
 
 	"github.com/Nikhil690/connsert/proto/client"
 	protos "github.com/Nikhil690/connsert/proto/sdcoreConfig"
-	"github.com/omec-project/http2_util"
+	"github.com/lakshya-chopra/http2_util"
 	"github.com/omec-project/logger_util"
 	"github.com/omec-project/path_util"
 	pathUtilLogger "github.com/omec-project/path_util/logger"
@@ -195,7 +195,7 @@ func (udm *UDM) Start() {
 
 	udmLogPath := path_util.Free5gcPath("omec-project/udmsslkey.log")
 	udmPemPath := path_util.Free5gcPath("free5gc/support/TLS/udm.pem")
-	udmKeyPath := path_util.Free5gcPath("free5gc/support/TLS/udm.key")
+	udmKeyPath := path_util.Free5gcPath("free5gc/support/TLS/key.pem")
 	if sbi.Tls != nil {
 		udmLogPath = path_util.Free5gcPath(sbi.Tls.Log)
 		udmPemPath = path_util.Free5gcPath(sbi.Tls.Pem)

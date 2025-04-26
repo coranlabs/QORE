@@ -58,7 +58,7 @@ $(GO_BIN_PATH)/%: %.go $(NF_GO_FILES)
 # $(@F): The file-within-directory part of the file name of the target.
 	@echo "Start building $(@F)...."
 	cd $(GO_SRC_PATH)/ && \
-	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(ROOT_PATH)/$@ $(@F).go
+	CGO_ENABLED=0 go build -mod=readonly -ldflags "$(LDFLAGS)" -o $(ROOT_PATH)/$@ $(@F).go
 
 test: $(NF_GO_FILES_ALL)
 	@echo "Start building $(@F)...."

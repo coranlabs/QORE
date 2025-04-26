@@ -58,7 +58,7 @@ $(GO_BIN_PATH)/%: %.go $(NF_GO_FILES)
 	export GRPC_GO_LOG_SEVERITY_LEVEL=error
 	@echo "Start building $(@F)...."
 	cd $(GO_SRC_PATH)/ && \
-	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(ROOT_PATH)/$@ $(@F).go
+	CGO_ENABLED=0 go build -mod=readonly -ldflags "$(LDFLAGS)" -o $(ROOT_PATH)/$@ $(@F).go
 
 vpath %.go $(addprefix $(GO_SRC_PATH)/, $(GO_NF))
 

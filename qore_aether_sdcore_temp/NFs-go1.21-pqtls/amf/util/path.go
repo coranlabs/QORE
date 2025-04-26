@@ -15,6 +15,6 @@ import (
 var (
 	AmfLogPath           = path_util.Free5gcPath("free5gc/amfsslkey.log")
 	AmfPemPath           = path_util.Free5gcPath("free5gc/support/TLS/amf.pem")
-	AmfKeyPath           = path_util.Free5gcPath("free5gc/support/TLS/amf.key")
+	AmfKeyPath           = path_util.Free5gcPath("free5gc/support/TLS/key.pem")
 	DefaultAmfConfigPath = path_util.Free5gcPath("free5gc/config/amfcfg.yaml")
 )

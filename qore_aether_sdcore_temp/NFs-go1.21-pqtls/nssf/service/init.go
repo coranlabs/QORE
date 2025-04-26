@@ -24,7 +24,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
-	"github.com/omec-project/http2_util"
+	"github.com/lakshya-chopra/http2_util"
 	"github.com/omec-project/logger_util"
 	"github.com/omec-project/nssf/consumer"
 	"github.com/omec-project/nssf/context"
@@ -292,7 +292,7 @@ func (nssf *NSSF) BuildAndSendRegisterNFInstance() (models.NfProfile, error) {
 	return profile, err
 }
 
-//UpdateNF is the callback function, this is called when keepalivetimer elapsed
+// UpdateNF is the callback function, this is called when keepalivetimer elapsed
 func (nssf *NSSF) UpdateNF() {
 	KeepAliveTimerMutex.Lock()
 	defer KeepAliveTimerMutex.Unlock()

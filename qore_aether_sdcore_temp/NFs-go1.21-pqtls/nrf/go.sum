@@ -205,6 +205,10 @@ github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORN
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/lakshya-chopra/http2_util v1.0.0 h1:PLO92C9LwdvVh4CvX3KBMEwn9kcTvKxVWj3shIdn92E=
+github.com/lakshya-chopra/http2_util v1.0.0/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
+github.com/lakshya-chopra/http2_util v1.0.2 h1:kLTaFaif058heY0gswyoWxfqcEhu7xhBn+ywOAHWI2A=
+github.com/lakshya-chopra/http2_util v1.0.2/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
 github.com/leodido/go-urn v1.2.4 h1:XlAE/cm/ms7TE/VMVoduSpNBoyc2dOxHs5MZSwAN63Q=
 github.com/leodido/go-urn v1.2.4/go.mod h1:7ZrI8mTSeBSHl/UaRyKQW1qZeMgak41ANeCNaVckg+4=
@@ -231,8 +235,6 @@ github.com/omec-project/MongoDBLibrary v1.1.3 h1:3/2Luxl4YBe9cP2cRNtPruroBGonmiQ
 github.com/omec-project/MongoDBLibrary v1.1.3/go.mod h1:bchS8sexPvTzgcA+fGzGeMyQk2Ji2xyAYgXDg6wOg1I=
 github.com/omec-project/TimeDecode v1.1.0 h1:1vXQhaYeOkKwWC8x+kPsOrbnFkiZi8e9U5c4IbAI3tM=
 github.com/omec-project/TimeDecode v1.1.0/go.mod h1:yqMSNEIvj60RA9vGmwqsemuSA4+J23NVg91Xy+1Dfcs=
-github.com/omec-project/http2_util v1.1.0 h1:8H2NME/V8iONth8TlyK/3w4pguAzaeUnEv9pmeAocwQ=
-github.com/omec-project/http2_util v1.1.0/go.mod h1:QwoZRaUyhEp/kTEqXvf0gCYtfQrNHBdkVw939vsMjZY=
 github.com/omec-project/http_wrapper v1.1.0 h1:2hD8RUaR/VVg3tUUfuxsuo1/JNpZLiAE8IvATGqDME4=
 github.com/omec-project/http_wrapper v1.1.0/go.mod h1:mc045fjVVJ0/q0g4QG4nuSC0N1BIqGR/ZoK76XgifVU=
 github.com/omec-project/logger_conf v1.1.0/go.mod h1:2+SOX9OFbPZ+UNv8k+tvPnaWHo4CuX5G/x12dz5sWUE=

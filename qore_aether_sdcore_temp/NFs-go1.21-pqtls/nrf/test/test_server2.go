@@ -12,7 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/omec-project/http2_util"
+	"github.com/lakshya-chopra/http2_util"
 	"github.com/omec-project/logger_util"
 	"github.com/omec-project/nrf/logger"
 	. "github.com/omec-project/openapi/models"
