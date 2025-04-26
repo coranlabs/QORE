@@ -14,9 +14,20 @@ RUN apt-key add pubkey.gpg
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" |  tee /etc/apt/sources.list.d/yarn.list
 RUN apt-get update
-RUN apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev  nodejs yarn
+RUN apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev  nodejs yarn git
+
+RUN git clone https://github.com/cloudflare/go /cloudflare-go
+WORKDIR /cloudflare-go/src
+RUN ./make.bash
 RUN apt-get clean
 
+#imp
+ENV GOROOT /cloudflare-go 
+# ENV GOPATH /cloudflare-go
+ENV PATH $GOROOT/bin:$GOPATH/bin:$PATH
+    
+    # or use GOPATH/src
+ENV go /cloudflare-go/src
 
 RUN cd $GOPATH/src && mkdir -p ausf
 COPY . $GOPATH/src/ausf
@@ -27,6 +38,8 @@ FROM alpine:3.16 as ausf
 
 LABEL description="ONF open source 5G Core Network" \
     version="Stage 3"
+ENV ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.22
+
 
 ARG DEBUG_TOOLS
 

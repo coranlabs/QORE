@@ -18,7 +18,7 @@ require (
 	github.com/omec-project/MongoDBLibrary v1.1.3
 	github.com/omec-project/aper v1.1.0
 	github.com/omec-project/flowdesc v1.1.0
-	github.com/omec-project/http2_util v1.1.0
+	github.com/lakshya-chopra/http2_util v1.0.0
 	github.com/omec-project/http_wrapper v1.1.0
 	github.com/omec-project/idgenerator v1.1.0
 	github.com/omec-project/logger_util v1.2.0

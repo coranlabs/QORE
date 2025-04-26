@@ -26,7 +26,7 @@ import (
 
 	"github.com/Nikhil690/connsert/proto/client"
 	protos "github.com/Nikhil690/connsert/proto/sdcoreConfig"
-	"github.com/omec-project/http2_util"
+	"github.com/lakshya-chopra/http2_util"
 	"github.com/omec-project/idgenerator"
 	"github.com/omec-project/logger_util"
 	"github.com/omec-project/openapi/Nnrf_NFDiscovery"

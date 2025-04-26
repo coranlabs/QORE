@@ -10,8 +10,8 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/gopacket v1.1.19
 	github.com/google/uuid v1.6.0
+	github.com/lakshya-chopra/http2_util v1.0.2
 	github.com/omec-project/UeauCommon v1.1.0
-	github.com/omec-project/http2_util v1.1.0
 	github.com/omec-project/http_wrapper v1.1.0
 	github.com/omec-project/logger_util v1.2.0
 	github.com/omec-project/openapi v1.1.0

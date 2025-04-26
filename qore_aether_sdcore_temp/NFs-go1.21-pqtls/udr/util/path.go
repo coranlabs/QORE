@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-//+build !debug
+//go:build !debug
+// +build !debug
 
 package util
 
@@ -14,6 +15,6 @@ import (
 var (
 	UdrLogPath           = path_util.Free5gcPath("omec-project/udrsslkey.log")
 	UdrPemPath           = path_util.Free5gcPath("free5gc/support/TLS/udr.pem")
-	UdrKeyPath           = path_util.Free5gcPath("free5gc/support/TLS/udr.key")
+	UdrKeyPath           = path_util.Free5gcPath("free5gc/support/TLS/key.pem")
 	DefaultUdrConfigPath = path_util.Free5gcPath("free5gc/config/udrcfg.yaml")
 )

@@ -21,9 +21,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
+	"github.com/lakshya-chopra/http2_util"
 	"github.com/omec-project/MongoDBLibrary"
 	mongoDBLibLogger "github.com/omec-project/MongoDBLibrary/logger"
-	"github.com/omec-project/http2_util"
 	"github.com/omec-project/logger_util"
 	"github.com/omec-project/path_util"
 	pathUtilLogger "github.com/omec-project/path_util/logger"
@@ -341,7 +341,7 @@ func (udr *UDR) BuildAndSendRegisterNFInstance() (prof models.NfProfile, err err
 	return profile, err
 }
 
-//UpdateNF is the callback function, this is called when keepalivetimer elapsed
+// UpdateNF is the callback function, this is called when keepalivetimer elapsed
 func (udr *UDR) UpdateNF() {
 	KeepAliveTimerMutex.Lock()
 	defer KeepAliveTimerMutex.Unlock()

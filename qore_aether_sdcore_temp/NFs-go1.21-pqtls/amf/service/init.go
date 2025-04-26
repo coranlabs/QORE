@@ -9,17 +9,23 @@ package service
 
 import (
 	"bufio"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	_ "net/http/pprof" //Using package only for invoking initialization.
 	"os"
 	"os/exec"
 	"os/signal"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	nrf_cache "github.com/omec-project/nrf/nrfcache"
 
 	"github.com/gin-contrib/cors"
@@ -29,6 +35,7 @@ import (
 	gClient "github.com/Nikhil690/connsert/proto/client"
 	protos "github.com/Nikhil690/connsert/proto/sdcoreConfig"
 	"github.com/fsnotify/fsnotify"
+	"github.com/lakshya-chopra/http2_util"
 	"github.com/omec-project/amf/communication"
 	"github.com/omec-project/amf/consumer"
 	"github.com/omec-project/amf/context"
@@ -49,7 +56,6 @@ import (
 	aperLogger "github.com/omec-project/aper/logger"
 	"github.com/omec-project/fsm"
 	fsmLogger "github.com/omec-project/fsm/logger"
-	"github.com/omec-project/http2_util"
 	"github.com/omec-project/logger_util"
 	nasLogger "github.com/omec-project/nas/logger"
 	ngapLogger "github.com/omec-project/ngap/logger"
@@ -292,6 +298,77 @@ func (amf *AMF) FilterCli(c *cli.Context) (args []string) {
 	return args
 }
 
+func PrintCertificateDetails(cert *x509.Certificate) {
+
+	sep := strings.Repeat("-", 15)
+
+	fmt.Printf("\n%s Server Certificate%s\n", sep, sep)
+
+	fmt.Printf("Subject: %s\n", cert.Subject)
+	fmt.Printf("Issuer: %s\n", cert.Issuer)
+	fmt.Printf("Serial Number: %s\n", cert.SerialNumber)
+	fmt.Printf("Not Before: %s\n", cert.NotBefore)
+	fmt.Printf("Not After: %s\n", cert.NotAfter)
+	fmt.Printf("Key Usage: %x\n", cert.KeyUsage)
+	fmt.Printf("Ext Key Usage: %v\n", cert.ExtKeyUsage)
+	fmt.Printf("DNS Names: %v\n", cert.DNSNames)
+	// fmt.Printf("Email Addresses: %v\n", cert.EmailAddresses)
+	fmt.Printf("IP Addresses: %v\n", cert.IPAddresses)
+	// fmt.Printf("URIs: %v\n", cert.URIs)
+	fmt.Printf("Signature Algorithm: %s\n", cert.SignatureAlgorithm)
+
+	fmt.Printf("%s End %s", sep, sep)
+}
+
+func ReadCertificate(filename string) (*x509.Certificate, error) {
+	// Read the certificate file
+	certPEM, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read certificate file: %w", err)
+	}
+
+	// Decode the PEM block
+	block, _ := pem.Decode(certPEM)
+	if block == nil || block.Type != "CERTIFICATE" {
+		return nil, fmt.Errorf("failed to decode PEM block containing certificate")
+	}
+
+	// Parse the certificate
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse certificate: %w", err)
+	}
+
+	return cert, nil
+}
+
+// func getClientIP(r *http.Request) string {
+// 	xff := r.Header.Get("X-Forwarded-For")
+// 	if xff != "" {
+// 		ips := strings.Split(xff, ",")
+// 		return strings.TrimSpace(ips[0])
+// 	}
+// 	ip := r.RemoteAddr
+// 	if idx := strings.LastIndex(ip, ":"); idx != -1 {
+// 		return ip[:idx]
+// 	}
+// 	return ip
+// }
+
+func clientAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.TLS != nil {
+			// clientCert := c.Request.TLS.PeerCertificates[0]
+			// clientIP := getClientIP(c.Request)
+			log.Printf("Client authenticated: %s\n, clientCert.Subject.CommonName")
+			c.Next()
+		} else {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Client not authenticated"})
+			c.Abort()
+		}
+	}
+}
+
 func (amf *AMF) Start() {
 	initLog.Infoln("Server started")
 
@@ -307,6 +384,8 @@ func (amf *AMF) Start() {
 		AllowAllOrigins:  true,
 		MaxAge:           86400,
 	}))
+
+	router.Use(clientAuthMiddleware())
 
 	httpcallback.AddService(router)
 	oam.AddService(router)
@@ -371,6 +450,13 @@ func (amf *AMF) Start() {
 
 	if err != nil {
 		initLog.Warnf("Initialize HTTP server: %+v", err)
+	}
+
+	cert, err := ReadCertificate(util.AmfPemPath)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		PrintCertificateDetails(cert)
 	}
 
 	serverScheme := factory.AmfConfig.Configuration.Sbi.Scheme
