@@ -15,7 +15,11 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" |  tee /etc/apt/sources.list.d/yarn.list
 RUN apt-get update
 RUN apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev nodejs yarn git
-RUN apt-get clean
+
+#due to git clone issues
+RUN git config --global core.compression 9
+
+
 
 RUN git clone https://github.com/cloudflare/go /cloudflare-go
 WORKDIR /cloudflare-go/src
