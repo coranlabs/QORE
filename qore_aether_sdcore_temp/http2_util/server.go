@@ -40,7 +40,7 @@ func curveIDToString(id tls.CurveID) string {
 // NewServer returns a server instance with HTTP/2.0 and HTTP/2.0 cleartext support
 // If this function cannot open or create the secret log file,
 // **it still returns server instance** but without the secret log and error indication
-func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Handler) (server *http.Server, err error) {
+func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Handler, cert tls.Certificate) (server *http.Server, err error) {
 	if handler == nil {
 		return nil, errors.New("server needs handler to handle request")
 	}
@@ -62,6 +62,7 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 		server.TLSConfig = &tls.Config{
 			KeyLogWriter:              preMasterSecretFile,
 			PQSignatureSchemesEnabled: true,
+			Certificates:              []tls.Certificate{cert},
 			// PreferServerCipherSuites:  true, // deprecated - has no effect
 			// MinVersion: tls.VersionTLS13,
 			ClientAuth: tls.NoClientCert,
@@ -71,7 +72,7 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 
 				fmt.Println(strings.Repeat("-", 30))
 				fmt.Println("Client Details:\n")
-				fmt.Printf("\tServer connected to: %s\n", chi.ServerName)
+				fmt.Printf("\tClient connected to: %s\n", chi.ServerName)
 
 				fmt.Print("\tSupported Signature Schemes: ")
 				for _, sigScheme := range chi.SignatureSchemes {
