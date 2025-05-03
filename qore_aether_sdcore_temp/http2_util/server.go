@@ -10,6 +10,7 @@ package http2_util
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -66,6 +67,15 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 			// PreferServerCipherSuites:  true, // deprecated - has no effect
 			// MinVersion: tls.VersionTLS13,
 			ClientAuth: tls.NoClientCert,
+			GetCertificate: func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
+
+				if len(server.TLSConfig.Certificates) == 0 {
+					log.Fatal("No certs")
+					return nil, err
+				}
+				return &server.TLSConfig.Certificates[0], nil
+
+			},
 			CurvePreferences: []tls.CurveID{
 				tls.X25519Kyber768Draft00, tls.X25519, tls.CurveP256},
 			GetConfigForClient: func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
