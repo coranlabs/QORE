@@ -73,6 +73,7 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 					log.Fatal("No certs")
 					return nil, err
 				}
+				log.Println("Cert found!")
 				return &server.TLSConfig.Certificates[0], nil
 
 			},
