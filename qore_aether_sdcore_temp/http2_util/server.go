@@ -10,7 +10,6 @@ package http2_util
 import (
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -70,10 +69,10 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 			GetCertificate: func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
 
 				if len(server.TLSConfig.Certificates) == 0 {
-					log.Fatal("No certs")
+					fmt.Println("No certs")
 					return nil, err
 				}
-				log.Println("Cert found!")
+				fmt.Println("Cert found!")
 				return &server.TLSConfig.Certificates[0], nil
 
 			},
@@ -102,7 +101,7 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 				for _, curve := range server.TLSConfig.CurvePreferences {
 					fmt.Printf("\t\t%s\n", curveIDToString(curve))
 				}
-				fmt.Println()
+				fmt.Printf("\nServer Certificates: %d\n", len(server.TLSConfig.Certificates))
 
 				return &tls.Config{}, nil
 
