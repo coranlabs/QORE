@@ -65,7 +65,7 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 			Certificates:              []tls.Certificate{cert},
 			// PreferServerCipherSuites:  true, // deprecated - has no effect
 			// MinVersion: tls.VersionTLS13,
-			ClientAuth: tls.NoClientCert,
+			// ClientAuth: tls.NoClientCert,
 			GetCertificate: func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
 
 				if len(server.TLSConfig.Certificates) == 0 {
@@ -103,7 +103,7 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 				}
 				fmt.Printf("\nServer Certificates: %d\n", len(server.TLSConfig.Certificates))
 
-				return &tls.Config{}, nil
+				return server.TLSConfig, nil
 
 			},
 		}
