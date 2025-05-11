@@ -8,7 +8,9 @@ package service
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"os/exec"
@@ -100,7 +102,7 @@ func (pcf *PCF) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultPcfConfigPath := path_util.Free5gcPath("free5gc/config/pcfcfg.yaml")
+		DefaultPcfConfigPath := path_util.Free5gcPath("free5gc/config/pcfcfg.conf")
 		if err := factory.InitConfigFactory(DefaultPcfConfigPath); err != nil {
 			return err
 		}
@@ -240,7 +242,12 @@ func (pcf *PCF) Start() {
 		os.Exit(0)
 	}()
 
-	server, err := http2_util.NewServer(addr, util.PCF_LOG_PATH, router)
+	cert, err := tls.LoadX509KeyPair(util.PCF_PEM_PATH, util.PCF_KEY_PATH)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	server, err := http2_util.NewServer(addr, util.PCF_LOG_PATH, router, cert)
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)
 		return
