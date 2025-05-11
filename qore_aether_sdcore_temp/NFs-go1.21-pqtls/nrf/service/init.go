@@ -7,10 +7,16 @@ package service
 
 import (
 	"bufio"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -75,7 +81,7 @@ func (nrf *NRF) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultNrfConfigPath := path_util.Free5gcPath("free5gc/config/nrfcfg.yaml")
+		DefaultNrfConfigPath := path_util.Free5gcPath("free5gc/config/nrfcfg.conf")
 		if err := factory.InitConfigFactory(DefaultNrfConfigPath); err != nil {
 			return err
 		}
@@ -172,6 +178,50 @@ func (nrf *NRF) FilterCli(c *cli.Context) (args []string) {
 	return args
 }
 
+func PrintCertificateDetails(cert *x509.Certificate) {
+
+	sep := strings.Repeat("-", 15)
+
+	fmt.Printf("\n%s Server Certificate%s\n", sep, sep)
+
+	fmt.Printf("Subject: %s\n", cert.Subject)
+	fmt.Printf("Issuer: %s\n", cert.Issuer)
+	fmt.Printf("Serial Number: %s\n", cert.SerialNumber)
+	fmt.Printf("Not Before: %s\n", cert.NotBefore)
+	fmt.Printf("Not After: %s\n", cert.NotAfter)
+	fmt.Printf("Key Usage: %x\n", cert.KeyUsage)
+	fmt.Printf("Ext Key Usage: %v\n", cert.ExtKeyUsage)
+	fmt.Printf("DNS Names: %v\n", cert.DNSNames)
+	// fmt.Printf("Email Addresses: %v\n", cert.EmailAddresses)
+	fmt.Printf("IP Addresses: %v\n", cert.IPAddresses)
+	// fmt.Printf("URIs: %v\n", cert.URIs)
+	fmt.Printf("Signature Algorithm: %s\n", cert.SignatureAlgorithm)
+
+	fmt.Printf("%s End %s\n", sep, sep)
+}
+
+func ReadCertificate(filename string) (*x509.Certificate, error) {
+	// Read the certificate file
+	certPEM, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read certificate file: %w", err)
+	}
+
+	// Decode the PEM block
+	block, _ := pem.Decode(certPEM)
+	if block == nil || block.Type != "CERTIFICATE" {
+		return nil, fmt.Errorf("failed to decode PEM block containing certificate")
+	}
+
+	// Parse the certificate
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse certificate: %w", err)
+	}
+
+	return cert, nil
+}
+
 func (nrf *NRF) Start() {
 	initLog.Infoln("Server started")
 	dbadapter.ConnectToDBClient(factory.NrfConfig.Configuration.MongoDBName, factory.NrfConfig.Configuration.MongoDBUrl,
@@ -203,7 +253,17 @@ func (nrf *NRF) Start() {
 	}
 	bindAddr := factory.NrfConfig.GetSbiBindingAddr()
 	initLog.Infof("Binding addr: [%s]", bindAddr)
-	server, err := http2_util.NewServer(bindAddr, util.NrfLogPath, router)
+
+	cert, err := tls.LoadX509KeyPair(util.NrfPemPath, util.NrfKeyPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//print
+	cert_x509, _ := ReadCertificate(util.NrfPemPath)
+	PrintCertificateDetails(cert_x509)
+
+	server, err := http2_util.NewServer(bindAddr, util.NrfLogPath, router, cert)
 
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)
@@ -215,10 +275,11 @@ func (nrf *NRF) Start() {
 	}
 
 	serverScheme := factory.NrfConfig.GetSbiScheme()
+	fmt.Printf("\nServer scheme: %s\n", serverScheme)
 	if serverScheme == "http" {
 		err = server.ListenAndServe()
 	} else if serverScheme == "https" {
-		err = server.ListenAndServeTLS(util.NrfPemPath, util.NrfKeyPath)
+		err = server.ListenAndServeTLS("", "")
 	}
 
 	if err != nil {

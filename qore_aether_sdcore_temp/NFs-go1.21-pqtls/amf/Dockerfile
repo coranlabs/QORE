@@ -17,7 +17,7 @@ RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" |  tee /etc/apt/source
 RUN apt-get update
 RUN apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev  nodejs yarn git
 
-RUN git clone https://github.com/cloudflare/go /cloudflare-go
+RUN git clone https://github.com/lakshya-chopra/go /cloudflare-go
 WORKDIR /cloudflare-go/src
 RUN ./make.bash
 RUN apt-get clean
