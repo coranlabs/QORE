@@ -8,7 +8,9 @@ package service
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -93,7 +95,7 @@ func (udm *UDM) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultUdmConfigPath := path_util.Free5gcPath("free5gc/config/udmcfg.yaml")
+		DefaultUdmConfigPath := path_util.Free5gcPath("free5gc/config/udmcfg.conf")
 		if err := factory.InitConfigFactory(DefaultUdmConfigPath); err != nil {
 			return err
 		}
@@ -218,7 +220,11 @@ func (udm *UDM) Start() {
 		os.Exit(0)
 	}()
 
-	server, err := http2_util.NewServer(addr, udmLogPath, router)
+	server_cert, err := tls.LoadX509KeyPair(udmPemPath, udmKeyPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	server, err := http2_util.NewServer(addr, udmLogPath, router, server_cert)
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)
 		return

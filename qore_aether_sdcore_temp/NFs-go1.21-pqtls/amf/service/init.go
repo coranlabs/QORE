@@ -9,6 +9,7 @@ package service
 
 import (
 	"bufio"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -116,7 +117,7 @@ func (amf *AMF) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultAmfConfigPath := path_util.Free5gcPath("free5gc/config/amfcfg.yaml")
+		DefaultAmfConfigPath := path_util.Free5gcPath("free5gc/config/amfcfg.conf")
 		if err := factory.InitConfigFactory(DefaultAmfConfigPath); err != nil {
 			return err
 		}
@@ -441,7 +442,13 @@ func (amf *AMF) Start() {
 		os.Exit(0)
 	}()
 
-	server, err := http2_util.NewServer(addr, util.AmfLogPath, router)
+	server_cert, err := tls.LoadX509KeyPair(util.AmfPemPath, util.AmfKeyPath)
+	
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	server, err := http2_util.NewServer(addr, util.AmfLogPath, router,server_cert)
 
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)

@@ -27,8 +27,7 @@ ENV GOROOT /cloudflare-go
 ENV PATH $GOROOT/bin:$GOPATH/bin:$PATH
     
     # or use GOPATH/src
-ENV go /cloudflare-go/src
-
+ENV go /cloudflare-go/bin/go
 RUN cd $GOPATH/src && mkdir -p ausf
 COPY . $GOPATH/src/ausf
 RUN cd $GOPATH/src/ausf \

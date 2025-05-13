@@ -17,11 +17,12 @@ RUN apt-get update
 RUN apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev nodejs yarn git
 
 #due to git clone issues
-RUN git config --global core.compression 9
+RUN git config --global http.postBuffer 524288000
+RUN git config --global core.compression 9 repack
 
 
 
-RUN git clone https://github.com/cloudflare/go /cloudflare-go
+RUN git clone https://github.com/lakshya-chopra/go /cloudflare-go
 WORKDIR /cloudflare-go/src
 RUN ./make.bash
 RUN apt-get clean
@@ -31,8 +32,7 @@ ENV GOROOT /cloudflare-go
 ENV PATH $GOROOT/bin:$GOPATH/bin:$PATH
     
     # or use GOPATH/src
-ENV go /cloudflare-go/src
-
+ENV go /cloudflare-go/bin/go
 
 RUN cd $GOPATH/src && mkdir -p udm
 COPY . $GOPATH/src/udm

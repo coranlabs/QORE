@@ -7,7 +7,9 @@
 package service
 
 import (
+	"crypto/tls"
 	"fmt"
+	"log"
 	"net/http"
 	_ "net/http/pprof" //Using package only for invoking initialization.
 	"os"
@@ -111,7 +113,7 @@ func (smf *SMF) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultSmfConfigPath := path_util.Free5gcPath("omec-project/smf/config/smfcfg.yaml")
+		DefaultSmfConfigPath := path_util.Free5gcPath("omec-project/smf/config/smfcfg.conf")
 		if err := factory.InitConfigFactory(DefaultSmfConfigPath); err != nil {
 			return err
 		}
@@ -372,7 +374,13 @@ func (smf *SMF) Start() {
 	time.Sleep(1000 * time.Millisecond)
 
 	HTTPAddr := fmt.Sprintf("%s:%d", context.SMF_Self().BindingIPv4, context.SMF_Self().SBIPort)
-	server, err := http2_util.NewServer(HTTPAddr, util.SmfLogPath, router)
+
+	server_cert, err := tls.LoadX509KeyPair(util.SmfPemPath, util.SmfKeyPath)
+	if err != nil{
+		log.Fatal(err)
+	}
+	
+	server, err := http2_util.NewServer(HTTPAddr, util.SmfLogPath, router, server_cert)
 
 	if server == nil {
 		initLog.Error("Initialize HTTP server failed:", err)
