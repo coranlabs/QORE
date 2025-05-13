@@ -8,8 +8,10 @@ package service
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -85,7 +87,7 @@ func (udr *UDR) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultUdrConfigPath := path_util.Free5gcPath("free5gc/config/udrcfg.yaml")
+		DefaultUdrConfigPath := path_util.Free5gcPath("free5gc/config/udrcfg.conf")
 		if err := factory.InitConfigFactory(DefaultUdrConfigPath); err != nil {
 			return err
 		}
@@ -206,7 +208,13 @@ func (udr *UDR) Start() {
 	go udr.registerNF()
 	go udr.configUpdateDb()
 
-	server, err := http2_util.NewServer(addr, udrLogPath, router)
+	server_cert, err := tls.LoadX509KeyPair(util.UdrPemPath, util.UdrKeyPath)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	server, err := http2_util.NewServer(addr, udrLogPath, router, server_cert)
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)
 		return

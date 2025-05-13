@@ -12,6 +12,7 @@ package service
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"os"
 	"os/exec"
@@ -85,7 +86,7 @@ func (nssf *NSSF) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultNssfConfigPath := path_util.Free5gcPath("free5gc/config/nssfcfg.yaml")
+		DefaultNssfConfigPath := path_util.Free5gcPath("free5gc/config/nssfcfg.conf")
 		if err := factory.InitConfigFactory(DefaultNssfConfigPath); err != nil {
 			return err
 		}
@@ -177,7 +178,9 @@ func (nssf *NSSF) Start() {
 
 	go nssf.registerNF()
 
-	server, err := http2_util.NewServer(addr, util.NSSF_LOG_PATH, router)
+	server_cert, err := tls.LoadX509KeyPair(util.NSSF_PEM_PATH, util.NSSF_KEY_PATH)
+
+	server, err := http2_util.NewServer(addr, util.NSSF_LOG_PATH, router, server_cert)
 
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)

@@ -8,6 +8,7 @@ package service
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"os"
 	"os/exec"
@@ -89,7 +90,7 @@ func (ausf *AUSF) Initialize(c *cli.Context) error {
 			return err
 		}
 	} else {
-		DefaultAusfConfigPath := path_util.Free5gcPath("free5gc/config/ausfcfg.yaml")
+		DefaultAusfConfigPath := path_util.Free5gcPath("free5gc/config/ausfcfg.conf")
 		if err := factory.InitConfigFactory(DefaultAusfConfigPath); err != nil {
 			return err
 		}
@@ -246,7 +247,8 @@ func (ausf *AUSF) Start() {
 		os.Exit(0)
 	}()
 
-	server, err := http2_util.NewServer(addr, ausfLogPath, router)
+	server_cert, err := tls.LoadX509KeyPair(util.AusfPemPath, util.AusfKeyPath)
+	server, err := http2_util.NewServer(addr, ausfLogPath, router, server_cert)
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)
 		return

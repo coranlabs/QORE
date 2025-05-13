@@ -168,6 +168,8 @@ github.com/lakshya-chopra/http2_util v1.0.0 h1:PLO92C9LwdvVh4CvX3KBMEwn9kcTvKxVW
 github.com/lakshya-chopra/http2_util v1.0.0/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
 github.com/lakshya-chopra/http2_util v1.0.2 h1:kLTaFaif058heY0gswyoWxfqcEhu7xhBn+ywOAHWI2A=
 github.com/lakshya-chopra/http2_util v1.0.2/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
+github.com/lakshya-chopra/http2_util v1.0.7 h1:4w+UyFz3jWuGHrj1ieUv0gRKKvsU0kbgGXHqMeLjY3U=
+github.com/lakshya-chopra/http2_util v1.0.7/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
 github.com/leodido/go-urn v1.2.4 h1:XlAE/cm/ms7TE/VMVoduSpNBoyc2dOxHs5MZSwAN63Q=
 github.com/leodido/go-urn v1.2.4/go.mod h1:7ZrI8mTSeBSHl/UaRyKQW1qZeMgak41ANeCNaVckg+4=
