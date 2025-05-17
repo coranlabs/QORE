@@ -32,6 +32,8 @@ func curveIDToString(id tls.CurveID) string {
 		return "X25519"
 	case tls.X25519Kyber768Draft00:
 		return "X25519-Kyber768-Draft00"
+	case tls.P256Kyber768Draft00:
+		return "P256-Kyber768-Draft00"
 	default:
 		return fmt.Sprintf("Unknown Curve ID: %d", id)
 	}
