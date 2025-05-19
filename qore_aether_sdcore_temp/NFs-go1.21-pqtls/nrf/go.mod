@@ -11,7 +11,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/google/uuid v1.6.0
-	github.com/lakshya-chopra/http2_util v1.0.7
+	github.com/lakshya-chopra/http2_util v1.0.8
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/omec-project/MongoDBLibrary v1.1.3
 	github.com/omec-project/TimeDecode v1.1.0
