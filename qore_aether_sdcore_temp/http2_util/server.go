@@ -10,6 +10,7 @@ package http2_util
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -49,6 +50,18 @@ func printTLSHandshakeCipherSuite(conn *tls.Conn) {
 		fmt.Printf("Cipher Suite chosen : %s\n", cipherSuite)
 		fmt.Printf("Negotiated protocol : %s\n", state.NegotiatedProtocol)
 		fmt.Println()
+	} else {
+
+		err := conn.Handshake()
+		if err != nil {
+			log.Fatalf("Handshake not completed, Error: %s\n", err)
+		} else {
+			log.Println("Handshake done, Error: nil.")
+			cipherSuite := tls.CipherSuiteName(state.CipherSuite)
+			fmt.Printf("TLS version : %s\n", state.Version)
+			fmt.Printf("Cipher Suite chosen : %s\n", cipherSuite)
+			fmt.Printf("Negotiated protocol : %s\n", state.NegotiatedProtocol)
+		}
 	}
 }
 
