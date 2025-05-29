@@ -54,6 +54,7 @@ RUN apk update && apk add -U vim strace net-tools curl netcat-openbsd bind-tools
 # Set working dir
 WORKDIR /free5gc
 RUN mkdir -p udm/
+RUN touch udmsslkey.log
 
 # Copy executable and default certs
 COPY --from=builder /go/src/udm/bin/* ./udm

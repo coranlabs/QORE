@@ -197,7 +197,15 @@ func PrintCertificateDetails(cert *x509.Certificate) {
 	// fmt.Printf("URIs: %v\n", cert.URIs)
 	fmt.Printf("Signature Algorithm: %s\n", cert.SignatureAlgorithm)
 
-	fmt.Printf("%s End %s\n", sep, sep)
+	fmt.Println("\nPEM Encoded Certificate:")
+	pemBlock := &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: cert.Raw,
+	}
+	pemBytes := pem.EncodeToMemory(pemBlock)
+	fmt.Println(string(pemBytes))
+
+	fmt.Printf("%s\n End %s\n", sep, sep)
 }
 
 func ReadCertificate(filename string) (*x509.Certificate, error) {
@@ -259,7 +267,8 @@ func (nrf *NRF) Start() {
 		log.Fatal(err)
 	}
 
-	//print
+	//print cert
+
 	cert_x509, _ := ReadCertificate(util.NrfPemPath)
 	PrintCertificateDetails(cert_x509)
 
@@ -279,6 +288,7 @@ func (nrf *NRF) Start() {
 	if serverScheme == "http" {
 		err = server.ListenAndServe()
 	} else if serverScheme == "https" {
+		log.Println("Serving PQ TLS")
 		err = server.ListenAndServeTLS("", "")
 	}
 

@@ -67,7 +67,6 @@ var SendRegisterNFInstance = func(nrfUri, nfInstanceId string, profile models.Nf
 			time.Sleep(2 * time.Second)
 			continue
 		}
-		fmt.Println("\nregistered to NRF\n")
 		defer func() {
 			if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
 				logger.ConsumerLog.Errorf("GetIdentityData response body cannot close: %+v", rspCloseErr)
@@ -75,7 +74,6 @@ var SendRegisterNFInstance = func(nrfUri, nfInstanceId string, profile models.Nf
 		}()
 
 		status := res.StatusCode
-		fmt.Printf("\nStatus:  %d\n", status)
 		if status == http.StatusOK {
 			// NFUpdate
 			break
