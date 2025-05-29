@@ -318,6 +318,14 @@ func PrintCertificateDetails(cert *x509.Certificate) {
 	// fmt.Printf("URIs: %v\n", cert.URIs)
 	fmt.Printf("Signature Algorithm: %s\n", cert.SignatureAlgorithm)
 
+	fmt.Println("\nPEM Encoded Certificate:")
+	pemBlock := &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: cert.Raw,
+	}
+	pemBytes := pem.EncodeToMemory(pemBlock)
+	fmt.Println(string(pemBytes))
+
 	fmt.Printf("%s End %s", sep, sep)
 }
 
@@ -443,12 +451,12 @@ func (amf *AMF) Start() {
 	}()
 
 	server_cert, err := tls.LoadX509KeyPair(util.AmfPemPath, util.AmfKeyPath)
-	
-	if err != nil{
+
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	server, err := http2_util.NewServer(addr, util.AmfLogPath, router,server_cert)
+	server, err := http2_util.NewServer(addr, util.AmfLogPath, router, server_cert)
 
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)
@@ -470,6 +478,7 @@ func (amf *AMF) Start() {
 	if serverScheme == "http" {
 		err = server.ListenAndServe()
 	} else if serverScheme == "https" {
+		log.Println("Serving PQ TLS")
 		err = server.ListenAndServeTLS(util.AmfPemPath, util.AmfKeyPath)
 	}
 

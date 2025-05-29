@@ -66,6 +66,14 @@ type Keys struct {
 	UdmProfileAHNPublicKey  string `yaml:"udmProfileAHNPublicKey,omitempty"`
 	UdmProfileBHNPrivateKey string `yaml:"udmProfileBHNPrivateKey,omitempty"`
 	UdmProfileBHNPublicKey  string `yaml:"udmProfileBHNPublicKey,omitempty"`
+
+	//profile E: Kyber alone
+	UdmProfileEHNPrivateKey string `yaml:"udmProfileEHNPrivateKey,omitempty"`
+	UdmProfileEHNPublicKey  string `yaml:"udmProfileEHNPublicKey,omitempty"`
+
+	//profile F: Kyber + ECDH
+	UdmProfileFHNECCPrivateKey string `yaml:"udmProfileFHNECCPrivateKey,omitempty"`
+	UdmProfileFHNECCPublicKey  string `yaml:"udmProfileFHNECCPublicKey,omitempty"`
 }
 
 type PlmnSupportItem struct {

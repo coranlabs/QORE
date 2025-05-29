@@ -108,6 +108,28 @@ func (context *UDMContext) GetUdmProfileBHNPrivateKey() string {
 	return context.Keys.UdmProfileBHNPrivateKey
 }
 
+func (context *UDMContext) GetUdmProfileEHNPrivateKey() string {
+
+	return context.Keys.UdmProfileEHNPrivateKey
+
+}
+func (context *UDMContext) GetUdmProfileEHNPublicKey() string {
+
+	return context.Keys.UdmProfileEHNPublicKey
+
+}
+
+func (context *UDMContext) GetUdmProfileFHNECCPrivateKey() string {
+
+	return context.Keys.UdmProfileFHNECCPrivateKey
+
+}
+func (context *UDMContext) GetUdmProfileFHNECCPublicKey() string {
+
+	return context.Keys.UdmProfileFHNECCPublicKey
+
+}
+
 func (context *UDMContext) ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string,
 	dnnFromReq string) (mp map[string]models.SessionManagementSubscriptionData, ind string,
 	Dnns []models.DnnConfiguration, allDnns []map[string]models.DnnConfiguration) {

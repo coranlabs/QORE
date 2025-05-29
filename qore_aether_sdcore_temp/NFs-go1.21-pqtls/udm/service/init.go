@@ -9,11 +9,15 @@ package service
 import (
 	"bufio"
 	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -176,10 +180,54 @@ func (udm *UDM) FilterCli(c *cli.Context) (args []string) {
 	return args
 }
 
+func PrintCertificateDetails(cert *x509.Certificate) {
+
+	sep := strings.Repeat("-", 15)
+
+	fmt.Printf("\n%s Server Certificate%s\n", sep, sep)
+
+	fmt.Printf("Subject: %s\n", cert.Subject)
+	fmt.Printf("Issuer: %s\n", cert.Issuer)
+	fmt.Printf("Serial Number: %s\n", cert.SerialNumber)
+	fmt.Printf("Not Before: %s\n", cert.NotBefore)
+	fmt.Printf("Not After: %s\n", cert.NotAfter)
+	fmt.Printf("Key Usage: %x\n", cert.KeyUsage)
+	fmt.Printf("Ext Key Usage: %v\n", cert.ExtKeyUsage)
+	fmt.Printf("DNS Names: %v\n", cert.DNSNames)
+	// fmt.Printf("Email Addresses: %v\n", cert.EmailAddresses)
+	fmt.Printf("IP Addresses: %v\n", cert.IPAddresses)
+	// fmt.Printf("URIs: %v\n", cert.URIs)
+	fmt.Printf("Signature Algorithm: %s\n", cert.SignatureAlgorithm)
+
+	fmt.Printf("%s End %s\n", sep, sep)
+}
+
+func ReadCertificate(filename string) (*x509.Certificate, error) {
+	// Read the certificate file
+	certPEM, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read certificate file: %w", err)
+	}
+
+	// Decode the PEM block
+	block, _ := pem.Decode(certPEM)
+	if block == nil || block.Type != "CERTIFICATE" {
+		return nil, fmt.Errorf("failed to decode PEM block containing certificate")
+	}
+
+	// Parse the certificate
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse certificate: %w", err)
+	}
+
+	return cert, nil
+}
+
 func (udm *UDM) Start() {
 	config := factory.UdmConfig
 	configuration := config.Configuration
-	sbi := configuration.Sbi
+	// sbi := configuration.Sbi
 	serviceName := configuration.ServiceNameList
 
 	initLog.Infof("UDM Config Info: Version[%s] Description[%s]", config.Info.Version, config.Info.Description)
@@ -195,20 +243,39 @@ func (udm *UDM) Start() {
 	ueauthentication.AddService(router)
 	uecontextmanagement.AddService(router)
 
-	udmLogPath := path_util.Free5gcPath("omec-project/udmsslkey.log")
 	udmPemPath := path_util.Free5gcPath("free5gc/support/TLS/udm.pem")
 	udmKeyPath := path_util.Free5gcPath("free5gc/support/TLS/key.pem")
-	if sbi.Tls != nil {
-		udmLogPath = path_util.Free5gcPath(sbi.Tls.Log)
-		udmPemPath = path_util.Free5gcPath(sbi.Tls.Pem)
-		udmKeyPath = path_util.Free5gcPath(sbi.Tls.Key)
-	}
 
+	fmt.Println(udmPemPath)
+	fmt.Println(udmKeyPath)
+
+	udmLogPath := path_util.Free5gcPath("free5gc/udmsslkey.log")
+	// udmLogPath := "/udmsslkey.log"
+	fmt.Println(udmLogPath)
+	// if sbi.Tls != nil {
+	// 	udmLogPath = path_util.Free5gcPath(sbi.Tls.Log)
+	// 	udmPemPath = path_util.Free5gcPath(sbi.Tls.Pem)
+	// udmKeyPath = path_util.Free5gcPath(sbi.Tls.Key)
+	// }
+	fmt.Println("am here!")
+
+	// file, err := os.Create(udmLogPath)
+	// if err != nil {
+	// 	log.Fatalf("Failed to create file: %v", err)
+	// }
+	// defer file.Close()
+
+	// log.Printf("File created successfully at %s", udmLogPath)
 	self := context.UDM_Self()
+	fmt.Println("am here after UDM self!")
+
 	util.InitUDMContext(self)
+	fmt.Println("am here after UDM init!")
 	context.UDM_Self().InitNFService(serviceName, config.Info.Version)
+	fmt.Println("am here after UDM init NF service!")
 
 	addr := fmt.Sprintf("%s:%d", self.BindingIPv4, self.SBIPort)
+	fmt.Printf("Addr: %s\n", addr)
 
 	go udm.registerNF()
 
@@ -224,6 +291,10 @@ func (udm *UDM) Start() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	cert_x509, _ := ReadCertificate(udmPemPath)
+	PrintCertificateDetails(cert_x509)
+
 	server, err := http2_util.NewServer(addr, udmLogPath, router, server_cert)
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)
@@ -238,7 +309,8 @@ func (udm *UDM) Start() {
 	if serverScheme == "http" {
 		err = server.ListenAndServe()
 	} else if serverScheme == "https" {
-		err = server.ListenAndServeTLS(udmPemPath, udmKeyPath)
+		fmt.Println("Serving TLS.")
+		err = server.ListenAndServeTLS("", "")
 	}
 
 	if err != nil {
