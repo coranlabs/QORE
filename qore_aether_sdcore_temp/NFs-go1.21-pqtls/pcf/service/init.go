@@ -9,7 +9,10 @@ package service
 import (
 	"bufio"
 	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -198,6 +201,58 @@ func (pcf *PCF) FilterCli(c *cli.Context) (args []string) {
 	return args
 }
 
+func PrintCertificateDetails(cert *x509.Certificate) {
+
+	sep := strings.Repeat("-", 15)
+
+	fmt.Printf("\n%s Server Certificate%s\n", sep, sep)
+
+	fmt.Printf("Subject: %s\n", cert.Subject)
+	fmt.Printf("Issuer: %s\n", cert.Issuer)
+	fmt.Printf("Serial Number: %s\n", cert.SerialNumber)
+	fmt.Printf("Not Before: %s\n", cert.NotBefore)
+	fmt.Printf("Not After: %s\n", cert.NotAfter)
+	fmt.Printf("Key Usage: %x\n", cert.KeyUsage)
+	fmt.Printf("Ext Key Usage: %v\n", cert.ExtKeyUsage)
+	fmt.Printf("DNS Names: %v\n", cert.DNSNames)
+	// fmt.Printf("Email Addresses: %v\n", cert.EmailAddresses)
+	fmt.Printf("IP Addresses: %v\n", cert.IPAddresses)
+	// fmt.Printf("URIs: %v\n", cert.URIs)
+	fmt.Printf("Signature Algorithm: %s\n", cert.SignatureAlgorithm)
+
+	fmt.Println("\nPEM Encoded Certificate:")
+	pemBlock := &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: cert.Raw,
+	}
+	pemBytes := pem.EncodeToMemory(pemBlock)
+	fmt.Println(string(pemBytes))
+
+	fmt.Printf("%s\n End %s\n", sep, sep)
+}
+
+func ReadCertificate(filename string) (*x509.Certificate, error) {
+	// Read the certificate file
+	certPEM, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read certificate file: %w", err)
+	}
+
+	// Decode the PEM block
+	block, _ := pem.Decode(certPEM)
+	if block == nil || block.Type != "CERTIFICATE" {
+		return nil, fmt.Errorf("failed to decode PEM block containing certificate")
+	}
+
+	// Parse the certificate
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse certificate: %w", err)
+	}
+
+	return cert, nil
+}
+
 func (pcf *PCF) Start() {
 	initLog.Infoln("Server started")
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
@@ -245,7 +300,15 @@ func (pcf *PCF) Start() {
 	cert, err := tls.LoadX509KeyPair(util.PCF_PEM_PATH, util.PCF_KEY_PATH)
 	if err != nil {
 		log.Fatal(err)
+	} else {
+		log.Println("Certificate loaded")
 	}
+	x509_cert, err := ReadCertificate(util.PCF_PEM_PATH)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	PrintCertificateDetails(x509_cert)
 
 	server, err := http2_util.NewServer(addr, util.PCF_LOG_PATH, router, cert)
 	if server == nil {
