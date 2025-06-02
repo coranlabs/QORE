@@ -18,7 +18,7 @@ RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" |  tee /etc/apt/source
 RUN apt-get update
 RUN apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev  nodejs yarn git
 
-RUN git clone https://github.com/cloudflare/go /cloudflare-go
+RUN git clone https://github.com/lakshya-chopra/go /cloudflare-go
 WORKDIR /cloudflare-go/src
 RUN ./make.bash
 RUN apt-get clean
@@ -36,6 +36,13 @@ RUN apt-get update && \
     libyaml-dev && \
     apt-get clean
 
+ENV GOROOT /cloudflare-go
+# ENV GOPATH /cloudflare-go
+ENV PATH $GOROOT/bin:$GOPATH/bin:$PATH
+    
+    # or use GOPATH/src
+ENV go /cloudflare-go/bin/go    
+
 RUN cd $GOPATH/src && mkdir -p smf
 COPY . $GOPATH/src/smf
 RUN cd $GOPATH/src/smf \
@@ -47,6 +54,8 @@ FROM alpine:3.16 as smf
 
 LABEL description="ONF open source 5G Core Network" \
     version="Stage 3"
+
+ENV ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.22
 
 ARG DEBUG_TOOLS
 
@@ -60,9 +69,9 @@ RUN mkdir -p bin/
 
 # Copy executable and default certs
 COPY --from=builder /go/src/smf/bin/* ./smf
-COPY --from=builder /go/src/smf/cert/* /free5gc/support/TLS/
 
 # copy upf-adapter image
 COPY --from=builder /go/src/smf/upfadapter/upf-adapter ./bin
+COPY --from=builder /go/src/smf/cert/* /free5gc/support/TLS/
 
 WORKDIR /free5gc/smf

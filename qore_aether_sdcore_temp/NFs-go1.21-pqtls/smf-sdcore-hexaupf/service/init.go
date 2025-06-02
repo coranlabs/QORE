@@ -7,11 +7,17 @@
 package service
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	_ "net/http/pprof" //Using package only for invoking initialization.
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -143,6 +149,58 @@ func (smf *SMF) Initialize(c *cli.Context) error {
 	}
 
 	return nil
+}
+
+func PrintCertificateDetails(cert *x509.Certificate) {
+
+	sep := strings.Repeat("-", 15)
+
+	fmt.Printf("\n%s Server Certificate%s\n", sep, sep)
+
+	fmt.Printf("Subject: %s\n", cert.Subject)
+	fmt.Printf("Issuer: %s\n", cert.Issuer)
+	fmt.Printf("Serial Number: %s\n", cert.SerialNumber)
+	fmt.Printf("Not Before: %s\n", cert.NotBefore)
+	fmt.Printf("Not After: %s\n", cert.NotAfter)
+	fmt.Printf("Key Usage: %x\n", cert.KeyUsage)
+	fmt.Printf("Ext Key Usage: %v\n", cert.ExtKeyUsage)
+	fmt.Printf("DNS Names: %v\n", cert.DNSNames)
+	// fmt.Printf("Email Addresses: %v\n", cert.EmailAddresses)
+	fmt.Printf("IP Addresses: %v\n", cert.IPAddresses)
+	// fmt.Printf("URIs: %v\n", cert.URIs)
+	fmt.Printf("Signature Algorithm: %s\n", cert.SignatureAlgorithm)
+
+	fmt.Println("\nPEM Encoded Certificate:")
+	pemBlock := &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: cert.Raw,
+	}
+	pemBytes := pem.EncodeToMemory(pemBlock)
+	fmt.Println(string(pemBytes))
+
+	fmt.Printf("%s End %s", sep, sep)
+}
+
+func ReadCertificate(filename string) (*x509.Certificate, error) {
+	// Read the certificate file
+	certPEM, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read certificate file: %w", err)
+	}
+
+	// Decode the PEM block
+	block, _ := pem.Decode(certPEM)
+	if block == nil || block.Type != "CERTIFICATE" {
+		return nil, fmt.Errorf("failed to decode PEM block containing certificate")
+	}
+
+	// Parse the certificate
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse certificate: %w", err)
+	}
+
+	return cert, nil
 }
 
 func (smf *SMF) setLogLevel() {
@@ -372,7 +430,19 @@ func (smf *SMF) Start() {
 	time.Sleep(1000 * time.Millisecond)
 
 	HTTPAddr := fmt.Sprintf("%s:%d", context.SMF_Self().BindingIPv4, context.SMF_Self().SBIPort)
-	server, err := http2_util.NewServer(HTTPAddr, util.SmfLogPath, router)
+
+	server_cert, err := tls.LoadX509KeyPair(util.SmfPemPath, util.SmfKeyPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	cert, err := ReadCertificate(util.SmfPemPath)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		PrintCertificateDetails(cert)
+	}
+
+	server, err := http2_util.NewServer(HTTPAddr, util.SmfLogPath, router, server_cert)
 
 	if server == nil {
 		initLog.Error("Initialize HTTP server failed:", err)

@@ -304,6 +304,8 @@ github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORN
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/lakshya-chopra/http2_util v1.1.1 h1:g/3rg/lkYmUe4Yi+BkmSL3x0Y3kv1SF5Kx59ZZSoOCg=
+github.com/lakshya-chopra/http2_util v1.1.1/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
 github.com/leodido/go-urn v1.2.4 h1:XlAE/cm/ms7TE/VMVoduSpNBoyc2dOxHs5MZSwAN63Q=
 github.com/leodido/go-urn v1.2.4/go.mod h1:7ZrI8mTSeBSHl/UaRyKQW1qZeMgak41ANeCNaVckg+4=
@@ -358,7 +360,7 @@ github.com/omec-project/aper v1.1.0/go.mod h1:oOkKRI2BIo8SHpCsEzNbo9qiowEtEy3q+w
 github.com/omec-project/config5g v1.2.0/go.mod h1:AWFzCbbgCBx/iJwt+zWbpDGLHRpFzg24OYHqIkdcMVA=
 github.com/omec-project/flowdesc v1.1.0 h1:F2uBq+zYm7dfy1SSEiCdqmev9yWPCSChoSoQL1boBGk=
 github.com/omec-project/flowdesc v1.1.0/go.mod h1:yZo/8WStxay3J6xjA3sCto7xo4S94sHULTLn/7J5rJs=
-
+github.com/omec-project/http2_util v1.1.0/go.mod h1:QwoZRaUyhEp/kTEqXvf0gCYtfQrNHBdkVw939vsMjZY=
 github.com/omec-project/http_wrapper v1.1.0 h1:2hD8RUaR/VVg3tUUfuxsuo1/JNpZLiAE8IvATGqDME4=
 github.com/omec-project/http_wrapper v1.1.0/go.mod h1:mc045fjVVJ0/q0g4QG4nuSC0N1BIqGR/ZoK76XgifVU=
 github.com/omec-project/idgenerator v1.1.0 h1:XDHZYO13VqZCkRhMA4xNl19MqCL3AFaY2MNwoF8uzVs=
