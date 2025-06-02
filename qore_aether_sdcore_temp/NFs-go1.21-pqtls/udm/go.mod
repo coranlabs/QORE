@@ -6,7 +6,7 @@ require (
 	github.com/Nikhil690/connsert v1.3.4
 	github.com/antihax/optional v1.0.0
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
-	github.com/cloudflare/circl v1.2.0
+	github.com/cloudflare/circl v1.4.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.6.0
 	github.com/lakshya-chopra/http2_util v1.0.8
