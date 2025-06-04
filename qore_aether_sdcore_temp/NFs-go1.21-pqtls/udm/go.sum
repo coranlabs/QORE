@@ -65,6 +65,8 @@ github.com/lakshya-chopra/http2_util v1.0.8 h1:BIT2bvBTvvbHV3IDbZFrQ2RXDY3iMAzCR
 github.com/lakshya-chopra/http2_util v1.0.8/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
 github.com/lakshya-chopra/util_3gpp v1.6.2 h1:3Y2DZtmXzQI97ao0JnIzvEVq5kCYND7MSQHwzXyc7Cw=
 github.com/lakshya-chopra/util_3gpp v1.6.2/go.mod h1:3/dgQNZL1bdpM3lZAAB1DTXTzW4U/53tPXALz2BRh/A=
+github.com/lakshya-chopra/util_3gpp v1.6.3 h1:isr3j4I5UypDNwSZKW+BU9h8R1LjaqUsoEGywNYke3k=
+github.com/lakshya-chopra/util_3gpp v1.6.3/go.mod h1:ttIl56YnHpYNOBAMEtFhDa3rjgwK77Y/QPxneR3m64o=
 github.com/leodido/go-urn v1.2.4 h1:XlAE/cm/ms7TE/VMVoduSpNBoyc2dOxHs5MZSwAN63Q=
 github.com/leodido/go-urn v1.2.4/go.mod h1:7ZrI8mTSeBSHl/UaRyKQW1qZeMgak41ANeCNaVckg+4=
 github.com/mattn/go-isatty v0.0.19 h1:JITubQf0MOLdlGRuRq+jtsDlekdYPia9ZFsB8h/APPA=
