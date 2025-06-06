@@ -36,6 +36,12 @@ func curveIDToString(id tls.CurveID) string {
 		return "X25519-Kyber768-Draft00"
 	case tls.P256Kyber768Draft00:
 		return "P256-Kyber768-Draft00"
+	case tls.MLKEM768:
+		return "MLKEM768"
+	case tls.SecP256r1MLKEM768:
+		return "SecP256r1MLKEM768"
+	case tls.X25519MLKEM768:
+		return "X25519MLKEM768"
 	default:
 		return ""
 	}
@@ -122,7 +128,7 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 				return &server.TLSConfig.Certificates[0], nil
 
 			},
-			CurvePreferences: []tls.CurveID{
+			CurvePreferences: []tls.CurveID{tls.MLKEM, tls.X25519MLKEM768, tls.SecP256r1MLKEM768
 				tls.X25519Kyber768Draft00, tls.X25519, tls.CurveP256},
 			GetConfigForClient: func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
 
