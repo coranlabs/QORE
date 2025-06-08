@@ -128,7 +128,7 @@ func NewServer(bindAddr string, preMasterSecretLogPath string, handler http.Hand
 				return &server.TLSConfig.Certificates[0], nil
 
 			},
-			CurvePreferences: []tls.CurveID{tls.MLKEM, tls.X25519MLKEM768, tls.SecP256r1MLKEM768
+			CurvePreferences: []tls.CurveID{tls.MLKEM, tls.X25519MLKEM768, tls.SecP256r1MLKEM768,
 				tls.X25519Kyber768Draft00, tls.X25519, tls.CurveP256},
 			GetConfigForClient: func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
 
