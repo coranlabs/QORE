@@ -63,6 +63,8 @@ github.com/klauspost/cpuid/v2 v2.2.4 h1:acbojRNwl3o09bUq+yDCtZFc1aiwaAAxtcn8YkZX
 github.com/klauspost/cpuid/v2 v2.2.4/go.mod h1:RVVoqg1df56z8g3pUjL/3lE5UfnlrJX8tyFgg4nqhuY=
 github.com/lakshya-chopra/http2_util v1.0.8 h1:BIT2bvBTvvbHV3IDbZFrQ2RXDY3iMAzCRuhDsVTCi1U=
 github.com/lakshya-chopra/http2_util v1.0.8/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
+github.com/lakshya-chopra/http2_util v1.1.3 h1:Q8GxG14K8wkl1DwAnU9+EtJ4Owb/TW0Gigg9/jnLwTE=
+github.com/lakshya-chopra/http2_util v1.1.3/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
 github.com/lakshya-chopra/util_3gpp v1.6.2 h1:3Y2DZtmXzQI97ao0JnIzvEVq5kCYND7MSQHwzXyc7Cw=
 github.com/lakshya-chopra/util_3gpp v1.6.2/go.mod h1:3/dgQNZL1bdpM3lZAAB1DTXTzW4U/53tPXALz2BRh/A=
 github.com/lakshya-chopra/util_3gpp v1.6.3 h1:isr3j4I5UypDNwSZKW+BU9h8R1LjaqUsoEGywNYke3k=

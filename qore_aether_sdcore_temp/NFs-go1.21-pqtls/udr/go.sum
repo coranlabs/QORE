@@ -213,6 +213,8 @@ github.com/lakshya-chopra/http2_util v1.0.7 h1:4w+UyFz3jWuGHrj1ieUv0gRKKvsU0kbgG
 github.com/lakshya-chopra/http2_util v1.0.7/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
 github.com/lakshya-chopra/http2_util v1.0.8 h1:BIT2bvBTvvbHV3IDbZFrQ2RXDY3iMAzCRuhDsVTCi1U=
 github.com/lakshya-chopra/http2_util v1.0.8/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
+github.com/lakshya-chopra/http2_util v1.1.3 h1:Q8GxG14K8wkl1DwAnU9+EtJ4Owb/TW0Gigg9/jnLwTE=
+github.com/lakshya-chopra/http2_util v1.1.3/go.mod h1:Z0rJ3UW7mQqYowBLMRVhUonHhTOOQHJ5fZDP0urdOxM=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
 github.com/leodido/go-urn v1.2.4 h1:XlAE/cm/ms7TE/VMVoduSpNBoyc2dOxHs5MZSwAN63Q=
 github.com/leodido/go-urn v1.2.4/go.mod h1:7ZrI8mTSeBSHl/UaRyKQW1qZeMgak41ANeCNaVckg+4=
