@@ -12,6 +12,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -22,6 +23,11 @@ import (
 	"github.com/mohae/deepcopy"
 	"github.com/omec-project/amf/logger"
 
+	"github.com/lakshya-chopra/nas"
+	"github.com/lakshya-chopra/nas/nasConvert"
+	"github.com/lakshya-chopra/nas/nasMessage"
+	"github.com/lakshya-chopra/nas/nasType"
+	"github.com/lakshya-chopra/nas/security"
 	"github.com/omec-project/amf/consumer"
 	"github.com/omec-project/amf/context"
 	gmm_message "github.com/omec-project/amf/gmm/message"
@@ -29,11 +35,6 @@ import (
 	"github.com/omec-project/amf/producer/callback"
 	"github.com/omec-project/amf/util"
 	"github.com/omec-project/fsm"
-	"github.com/omec-project/nas"
-	"github.com/omec-project/nas/nasConvert"
-	"github.com/omec-project/nas/nasMessage"
-	"github.com/omec-project/nas/nasType"
-	"github.com/omec-project/nas/security"
 	"github.com/omec-project/ngap/ngapConvert"
 	"github.com/omec-project/ngap/ngapType"
 	"github.com/omec-project/openapi/Nnrf_NFDiscovery"
@@ -414,6 +415,10 @@ func HandleRegistrationRequest(ue *context.AmfUe, anType models.AccessType, proc
 		// TS 24.501 4.4.6: When the UE sends a REGISTRATION REQUEST or SERVICE REQUEST message that includes a NAS
 		// message container IE, the UE shall set the security header type of the initial NAS message to
 		// "integrity protected"; then the AMF shall decipher the value part of the NAS message container IE
+
+		log.Printf("Encrypt NAS message (algorithm: %+v, DLCount: 0x%0x)\n", ue.CipheringAlg, ue.DLCount.Get())
+		log.Printf("NAS ciphering key: %0x\n", ue.KnasEnc)
+
 		err := security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.ULCount.Get(), security.Bearer3GPP,
 			security.DirectionUplink, contents)
 		if err != nil {
@@ -1722,6 +1727,8 @@ func HandleServiceRequest(ue *context.AmfUe, anType models.AccessType,
 		// TS 24.501 4.4.6: When the UE sends a REGISTRATION REQUEST or SERVICE REQUEST message that includes a NAS
 		// message container IE, the UE shall set the security header type of the initial NAS message to
 		// "integrity protected"; then the AMF shall decipher the value part of the NAS message container IE
+		log.Printf("Encrypt NAS message (algorithm: %+v, DLCount: 0x%0x)\n", ue.CipheringAlg, ue.DLCount.Get())
+		log.Printf("NAS ciphering key: %0x\n", ue.KnasEnc)
 		err := security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.ULCount.Get(), security.Bearer3GPP,
 			security.DirectionUplink, contents)
 

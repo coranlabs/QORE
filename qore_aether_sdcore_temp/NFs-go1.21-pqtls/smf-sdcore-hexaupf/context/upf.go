@@ -17,8 +17,8 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/lakshya-chopra/nas/nasMessage"
 	"github.com/omec-project/idgenerator"
-	"github.com/omec-project/nas/nasMessage"
 	"github.com/omec-project/openapi/models"
 	"github.com/omec-project/pfcp/pfcpType"
 	"github.com/omec-project/pfcp/pfcpUdp"
