@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/lakshya-chopra/nas/nasMessage"
 	"github.com/omec-project/amf/consumer"
 	"github.com/omec-project/amf/context"
 	gmm_message "github.com/omec-project/amf/gmm/message"
@@ -23,7 +24,6 @@ import (
 	"github.com/omec-project/amf/util"
 	"github.com/omec-project/aper"
 	mi "github.com/omec-project/metricfunc/pkg/metricinfo"
-	"github.com/omec-project/nas/nasMessage"
 	libngap "github.com/omec-project/ngap"
 	"github.com/omec-project/ngap/ngapConvert"
 	"github.com/omec-project/ngap/ngapType"

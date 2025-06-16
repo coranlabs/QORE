@@ -16,6 +16,8 @@ import (
 
 	"github.com/mohae/deepcopy"
 
+	"github.com/lakshya-chopra/nas/nasConvert"
+	"github.com/lakshya-chopra/nas/nasMessage"
 	"github.com/omec-project/amf/consumer"
 	"github.com/omec-project/amf/context"
 	amf_context "github.com/omec-project/amf/context"
@@ -25,8 +27,6 @@ import (
 	ngap_message "github.com/omec-project/amf/ngap/message"
 	"github.com/omec-project/amf/util"
 	"github.com/omec-project/http_wrapper"
-	"github.com/omec-project/nas/nasConvert"
-	"github.com/omec-project/nas/nasMessage"
 	"github.com/omec-project/ngap/ngapType"
 	"github.com/omec-project/openapi/models"
 )

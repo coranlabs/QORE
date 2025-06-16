@@ -23,9 +23,9 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/lakshya-chopra/http2_util"
+	nasLogger "github.com/lakshya-chopra/nas/logger"
 	aperLogger "github.com/omec-project/aper/logger"
 	"github.com/omec-project/logger_util"
-	nasLogger "github.com/omec-project/nas/logger"
 	ngapLogger "github.com/omec-project/ngap/logger"
 	nrf_cache "github.com/omec-project/nrf/nrfcache"
 	"github.com/omec-project/openapi/models"
@@ -376,10 +376,10 @@ func (smf *SMF) Start() {
 	HTTPAddr := fmt.Sprintf("%s:%d", context.SMF_Self().BindingIPv4, context.SMF_Self().SBIPort)
 
 	server_cert, err := tls.LoadX509KeyPair(util.SmfPemPath, util.SmfKeyPath)
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	server, err := http2_util.NewServer(HTTPAddr, util.SmfLogPath, router, server_cert)
 
 	if server == nil {

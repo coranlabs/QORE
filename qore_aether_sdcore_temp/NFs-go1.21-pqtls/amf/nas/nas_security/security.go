@@ -9,15 +9,16 @@ package nas_security
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
 	"reflect"
 	"sync"
 
+	"github.com/lakshya-chopra/nas"
+	"github.com/lakshya-chopra/nas/nasConvert"
+	"github.com/lakshya-chopra/nas/nasMessage"
+	"github.com/lakshya-chopra/nas/security"
 	"github.com/omec-project/amf/context"
 	"github.com/omec-project/amf/logger"
-	"github.com/omec-project/nas"
-	"github.com/omec-project/nas/nasConvert"
-	"github.com/omec-project/nas/nasMessage"
-	"github.com/omec-project/nas/security"
 	"github.com/omec-project/openapi/models"
 )
 
@@ -61,8 +62,10 @@ func Encode(ue *context.AmfUe, msg *nas.Message) ([]byte, error) {
 		ue.NASLog.Tracef("plain payload:\n%+v", hex.Dump(payload))
 
 		if needCiphering {
-			ue.NASLog.Debugf("Encrypt NAS message (algorithm: %+v, DLCount: 0x%0x)", ue.CipheringAlg, ue.DLCount.Get())
-			ue.NASLog.Tracef("NAS ciphering key: %0x", ue.KnasEnc)
+			// ue.NASLog.Debugf("Encrypt NAS message (algorithm: %+v, DLCount: 0x%0x)", ue.CipheringAlg, ue.DLCount.Get())
+			log.Printf("Encrypt NAS message (algorithm: %+v, DLCount: 0x%0x)\n", ue.CipheringAlg, ue.DLCount.Get())
+			// ue.NASLog.Tracef("NAS ciphering key: %0x", ue.KnasEnc)
+			log.Printf("NAS ciphering key: %0x\n", ue.KnasEnc)
 			if err = security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.DLCount.Get(), security.Bearer3GPP,
 				security.DirectionDownlink, payload); err != nil {
 				return nil, fmt.Errorf("Encrypt error: %+v", err)
@@ -292,6 +295,9 @@ func Decode(ue *context.AmfUe, accessType models.AccessType, payload []byte) (*n
 		if ciphered {
 			ue.NASLog.Debugf("Decrypt NAS message (algorithm: %+v, ULCount: 0x%0x)", ue.CipheringAlg, ue.ULCount.Get())
 			ue.NASLog.Tracef("NAS ciphering key: %0x", ue.KnasEnc)
+
+			log.Printf("Decrypt NAS message (algorithm: %+v, DLCount: 0x%0x)\n", ue.CipheringAlg, ue.DLCount.Get())
+			log.Printf("NAS ciphering key: %0x\n", ue.KnasEnc)
 			// decrypt payload without sequence number (payload[1])
 			if err = security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.ULCount.Get(), security.Bearer3GPP,
 				security.DirectionUplink, payload[1:]); err != nil {

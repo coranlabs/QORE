@@ -16,9 +16,9 @@ import (
 
 	"github.com/antihax/optional"
 
+	"github.com/lakshya-chopra/nas/nasType"
 	amf_context "github.com/omec-project/amf/context"
 	"github.com/omec-project/amf/logger"
-	"github.com/omec-project/nas/nasType"
 	"github.com/omec-project/openapi"
 	"github.com/omec-project/openapi/Nausf_UEAuthentication"
 	"github.com/omec-project/openapi/models"

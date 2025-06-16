@@ -7,8 +7,8 @@
 package context
 
 import (
-	"github.com/omec-project/nas/nasConvert"
-	"github.com/omec-project/nas/nasMessage"
+	"github.com/lakshya-chopra/nas/nasConvert"
+	"github.com/lakshya-chopra/nas/nasMessage"
 )
 
 func (smContext *SMContext) HandlePDUSessionEstablishmentRequest(req *nasMessage.PDUSessionEstablishmentRequest) {

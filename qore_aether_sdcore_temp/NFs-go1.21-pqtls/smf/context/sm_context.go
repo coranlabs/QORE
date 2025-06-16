@@ -28,8 +28,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/omec-project/nas/nasConvert"
-	"github.com/omec-project/nas/nasMessage"
+	"github.com/lakshya-chopra/nas/nasConvert"
+	"github.com/lakshya-chopra/nas/nasMessage"
 	nrf_cache "github.com/omec-project/nrf/nrfcache"
 	"github.com/omec-project/openapi"
 	"github.com/omec-project/openapi/Namf_Communication"
