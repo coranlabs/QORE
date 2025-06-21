@@ -83,6 +83,8 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 			continue
 		}
 
+		//add a blocking thread (bad practice) to do SSL handshake.
+
 		var info *sctp.SndRcvInfo
 		if infoTmp, err := newConn.GetDefaultSentParam(); err != nil {
 			logger.NgapLog.Errorf("Get default sent param error: %+v, accept failed", err)
