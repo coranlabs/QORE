@@ -1,4 +1,4 @@
-package main
+package dtls
 
 /*
 #include <stdlib.h>
@@ -22,7 +22,7 @@ const (
 
 func check_error(err_code C.int) {
 	if err_code != 1 {
-		log.Fatalf("Error occurred: ", C.ERR_get_error())
+		log.Fatalf("Error occurred: %d", C.ERR_get_error())
 	}
 }
 
