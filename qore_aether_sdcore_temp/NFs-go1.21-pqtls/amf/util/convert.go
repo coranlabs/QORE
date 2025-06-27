@@ -28,6 +28,7 @@ func SnssaiHexToModels(hexString string) (*models.Snssai, error) {
 	return &sNssai, nil
 }
 
+
 func SnssaiModelsToHex(snssai models.Snssai) string {
 	sst := fmt.Sprintf("%02x", snssai.Sst)
 	return sst + snssai.Sd

@@ -6,6 +6,15 @@
 
 package service
 
+/*
+#include <stdlib.h>
+#include <stdio.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/bio.h>
+*/
+import "C"
+
 import (
 	"encoding/hex"
 	"io"
@@ -13,11 +22,11 @@ import (
 	"sync"
 	"syscall"
 
-	"git.cs.nctu.edu.tw/calee/sctp"
+	"github.com/lakshya-chopra/sctp"
 
+	"github.com/lakshya-chopra/dtls-cgo"
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/ngap"
-	
 )
 
 type NGAPHandler struct {
@@ -71,6 +80,8 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 
 	logger.NgapLog.Infof("Listen on %s", sctpListener.Addr())
 
+	ctx := dtls.Init_ssl_ctx(dtls.SSLMODE_SERVER)
+
 	for {
 		newConn, err := sctpListener.AcceptSCTP()
 		if err != nil {
@@ -82,6 +93,9 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 			}
 			continue
 		}
+
+		ssl := dtls.New_ssl_conn(ctx, dtls.SSLMODE_SERVER, newConn.Fd())
+		dtls.Do_ssl_handshake(ssl)
 
 		//add a blocking thread (bad practice) to do SSL handshake.
 

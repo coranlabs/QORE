@@ -1,6 +1,6 @@
 module github.com/omec-project/amf
 
-go 1.21
+go 1.22.2
 
 require (
 	git.cs.nctu.edu.tw/calee/sctp v1.1.0
@@ -11,8 +11,10 @@ require (
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.6.0
+	github.com/lakshya-chopra/dtls-cgo v0.0.6
 	github.com/lakshya-chopra/http2_util v1.1.3
 	github.com/lakshya-chopra/nas v0.0.1
+	github.com/lakshya-chopra/sctp v0.0.1
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/omec-project/MongoDBLibrary v1.1.3
@@ -46,8 +48,6 @@ require (
 	github.com/omec-project/nas v1.3.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
-	github.com/pion/logging v0.2.2 // indirect
-	github.com/pion/transport/v3 v3.0.7 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240123012728-ef4313101c80 // indirect
@@ -92,7 +92,6 @@ require (
 	github.com/omec-project/metricfunc v1.1.1
 	github.com/omec-project/nrf v1.0.1
 	github.com/pelletier/go-toml v1.7.0 // indirect
-	github.com/pion/dtls/v3 v3.0.2
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
