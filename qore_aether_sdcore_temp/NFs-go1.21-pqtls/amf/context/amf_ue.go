@@ -164,8 +164,8 @@ type AmfUe struct {
 	UESecurityCapability     nasType.UESecurityCapability `json:"ueSecurityCapability,omitempty"` // for security command
 	NgKsi                    models.NgKsi                 `json:"ngKsi,omitempty"`
 	MacFailed                bool                         `json:"macFailed,omitempty"` // set to true if the integrity check of current NAS message is failed
-	KnasInt                  [16]uint8                    `json:"knasInt,omitempty"`   // 16 byte
-	KnasEnc                  [16]uint8                    `json:"knasEnc,omitempty"`   // 16 byte
+	KnasInt                  []uint8                    `json:"knasInt,omitempty"`   // 16 byte
+	KnasEnc                  []uint8                    `json:"knasEnc,omitempty"`   // 16 byte
 	Kgnb                     []uint8                      `json:"kgnb,omitempty"`      // 32 byte
 	Kn3iwf                   []uint8                      `json:"kn3iwf,omitempty"`    // 32 byte
 	NH                       []uint8                      `json:"nh,omitempty"`        // 32 byte
