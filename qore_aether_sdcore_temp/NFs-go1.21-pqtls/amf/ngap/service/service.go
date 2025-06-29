@@ -18,6 +18,7 @@ import "C"
 import (
 	"encoding/hex"
 	"io"
+	"log"
 	"net"
 	"sync"
 	"syscall"
@@ -94,10 +95,19 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 			continue
 		}
 
-		ssl := dtls.New_ssl_conn(ctx, dtls.SSLMODE_SERVER, newConn.Fd())
-		dtls.Do_ssl_handshake(ssl)
+		//Perform SSL handshake after SCTP handshake.
 
-		//add a blocking thread (bad practice) to do SSL handshake.
+		ssl := dtls.New_ssl_conn(ctx, dtls.SSLMODE_SERVER, newConn.Fd())
+		for {
+			ret := dtls.Do_ssl_handshake(ssl)
+			if ret == 0 {
+				log.Println("Handshake successful")
+				break
+			} else {
+				log.Println(ret)
+				continue
+			}
+		}
 
 		var info *sctp.SndRcvInfo
 		if infoTmp, err := newConn.GetDefaultSentParam(); err != nil {
