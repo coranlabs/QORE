@@ -12,7 +12,7 @@ import (
 	"os"
 	"reflect"
 
-	"git.cs.nctu.edu.tw/calee/sctp"
+	"github.com/lakshya-chopra/sctp"
 
 	"fmt"
 
