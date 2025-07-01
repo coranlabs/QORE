@@ -64,6 +64,7 @@ import (
 	"github.com/omec-project/path_util"
 	pathUtilLogger "github.com/omec-project/path_util/logger"
 	"github.com/spf13/viper"
+	// "github.com/lakshya-chopra/sctp"
 )
 
 type AMF struct{}

@@ -27,6 +27,7 @@ import (
 
 	"github.com/lakshya-chopra/dtls-cgo"
 	"github.com/omec-project/amf/logger"
+	"github.com/omec-project/amf/util"
 	"github.com/omec-project/ngap"
 )
 
@@ -81,7 +82,7 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 
 	logger.NgapLog.Infof("Listen on %s", sctpListener.Addr())
 
-	ctx := dtls.Init_ssl_ctx(dtls.SSLMODE_SERVER)
+	ctx := dtls.Init_ssl_ctx(dtls.SSLMODE_SERVER,util.AmfRSAPemPath,util.AmfRSAKeyPath)
 
 	for {
 		newConn, err := sctpListener.AcceptSCTP()
