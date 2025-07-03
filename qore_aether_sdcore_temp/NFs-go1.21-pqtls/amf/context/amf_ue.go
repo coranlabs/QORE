@@ -23,9 +23,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/lakshya-chopra/nas/nasMessage"
-	"github.com/lakshya-chopra/nas/nasType"
-	"github.com/lakshya-chopra/nas/security"
+	"github.com/omec-project/nas/nasMessage"
+	"github.com/omec-project/nas/nasType"
+	"github.com/omec-project/nas/security"
 	"github.com/omec-project/UeauCommon"
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/amf/metrics"
@@ -164,8 +164,8 @@ type AmfUe struct {
 	UESecurityCapability     nasType.UESecurityCapability `json:"ueSecurityCapability,omitempty"` // for security command
 	NgKsi                    models.NgKsi                 `json:"ngKsi,omitempty"`
 	MacFailed                bool                         `json:"macFailed,omitempty"` // set to true if the integrity check of current NAS message is failed
-	KnasInt                  []uint8                    `json:"knasInt,omitempty"`   // 16 byte
-	KnasEnc                  []uint8                    `json:"knasEnc,omitempty"`   // 16 byte
+	KnasInt                  [16]uint8                    `json:"knasInt,omitempty"`   // 16 byte
+	KnasEnc                  [16]uint8                    `json:"knasEnc,omitempty"`   // 16 byte
 	Kgnb                     []uint8                      `json:"kgnb,omitempty"`      // 32 byte
 	Kn3iwf                   []uint8                      `json:"kn3iwf,omitempty"`    // 32 byte
 	NH                       []uint8                      `json:"nh,omitempty"`        // 32 byte

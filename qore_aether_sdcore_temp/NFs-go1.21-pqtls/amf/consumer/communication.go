@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lakshya-chopra/nas/nasMessage"
+	"github.com/omec-project/nas/nasMessage"
 	amf_context "github.com/omec-project/amf/context"
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/openapi"

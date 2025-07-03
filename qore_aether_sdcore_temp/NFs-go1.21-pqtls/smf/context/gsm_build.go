@@ -9,10 +9,10 @@ package context
 import (
 	"encoding/hex"
 
-	"github.com/lakshya-chopra/nas"
-	"github.com/lakshya-chopra/nas/nasConvert"
-	"github.com/lakshya-chopra/nas/nasMessage"
-	"github.com/lakshya-chopra/nas/nasType"
+	"github.com/omec-project/nas"
+	"github.com/omec-project/nas/nasConvert"
+	"github.com/omec-project/nas/nasMessage"
+	"github.com/omec-project/nas/nasType"
 	"github.com/omec-project/smf/qos"
 )
 

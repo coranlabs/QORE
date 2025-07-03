@@ -13,12 +13,12 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/lakshya-chopra/nas"
-	"github.com/lakshya-chopra/nas/nasConvert"
-	"github.com/lakshya-chopra/nas/nasMessage"
-	"github.com/lakshya-chopra/nas/security"
 	"github.com/omec-project/amf/context"
 	"github.com/omec-project/amf/logger"
+	"github.com/omec-project/nas"
+	"github.com/omec-project/nas/nasConvert"
+	"github.com/omec-project/nas/nasMessage"
+	"github.com/omec-project/nas/security"
 	"github.com/omec-project/openapi/models"
 )
 

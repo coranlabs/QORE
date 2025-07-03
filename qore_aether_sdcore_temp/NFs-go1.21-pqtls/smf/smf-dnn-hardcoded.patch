@@ -319,7 +319,7 @@ index e0854d4..995936b 100644
 +	// "reflect"
  
  	"github.com/antihax/optional"
- 	"github.com/lakshya-chopra/nas/nasMessage"
+ 	"github.com/omec-project/nas/nasMessage"
 @@ -77,6 +78,7 @@ func HandlePduSessionContextReplacement(smCtxtRef string) error {
  func HandlePDUSessionSMContextCreate(eventData interface{}) error {
  

@@ -27,9 +27,9 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/lakshya-chopra/http2_util"
-	nasLogger "github.com/lakshya-chopra/nas/logger"
 	aperLogger "github.com/omec-project/aper/logger"
 	"github.com/omec-project/logger_util"
+	nasLogger "github.com/omec-project/nas/logger"
 	ngapLogger "github.com/omec-project/ngap/logger"
 	nrf_cache "github.com/omec-project/nrf/nrfcache"
 	"github.com/omec-project/openapi/models"

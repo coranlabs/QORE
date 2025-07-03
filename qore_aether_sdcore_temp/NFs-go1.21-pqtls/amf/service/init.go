@@ -37,7 +37,7 @@ import (
 	protos "github.com/Nikhil690/connsert/proto/sdcoreConfig"
 	"github.com/fsnotify/fsnotify"
 	"github.com/lakshya-chopra/http2_util"
-	nasLogger "github.com/lakshya-chopra/nas/logger"
+	nasLogger "github.com/omec-project/nas/logger"
 	"github.com/omec-project/amf/communication"
 	"github.com/omec-project/amf/consumer"
 	"github.com/omec-project/amf/context"

@@ -3,7 +3,6 @@ module github.com/omec-project/amf
 go 1.22.2
 
 require (
-	git.cs.nctu.edu.tw/calee/sctp v1.1.0
 	github.com/Nikhil690/connsert v1.3.7
 	github.com/antihax/optional v1.0.0
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
@@ -11,9 +10,8 @@ require (
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.6.0
-	github.com/lakshya-chopra/dtls-cgo v0.0.6
+	github.com/lakshya-chopra/dtls-cgo v0.0.7
 	github.com/lakshya-chopra/http2_util v1.1.3
-	github.com/lakshya-chopra/nas v0.0.1
 	github.com/lakshya-chopra/sctp v0.0.1
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
@@ -24,6 +22,7 @@ require (
 	github.com/omec-project/http_wrapper v1.1.0
 	github.com/omec-project/idgenerator v1.1.0
 	github.com/omec-project/logger_util v1.2.0
+	github.com/omec-project/nas v1.3.0
 	github.com/omec-project/ngap v1.1.0
 	github.com/omec-project/openapi v1.2.0
 	github.com/omec-project/path_util v1.1.0
@@ -45,9 +44,9 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
-	github.com/omec-project/nas v1.3.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
+	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240123012728-ef4313101c80 // indirect

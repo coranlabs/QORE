@@ -16,7 +16,7 @@ import (
 
 	"github.com/antihax/optional"
 
-	"github.com/lakshya-chopra/nas/nasType"
+	"github.com/omec-project/nas/nasType"
 	amf_context "github.com/omec-project/amf/context"
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/openapi"

@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/omec-project/util/drsm"
 
-	"github.com/lakshya-chopra/nas/security"
+	"github.com/omec-project/nas/security"
 	"github.com/omec-project/amf/context"
 	"github.com/omec-project/amf/factory"
 	"github.com/omec-project/amf/logger"

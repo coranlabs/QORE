@@ -38,7 +38,7 @@ require (
 )
 
 require (
-	github.com/lakshya-chopra/nas v0.0.1
+	github.com/omec-project/nas v0.0.1
 	github.com/omec-project/metricfunc v1.1.1
 	github.com/omec-project/nrf v1.0.1
 	github.com/segmentio/kafka-go v0.4.38

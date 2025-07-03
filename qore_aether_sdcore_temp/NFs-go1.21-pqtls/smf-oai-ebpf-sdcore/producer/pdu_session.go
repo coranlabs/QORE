@@ -14,14 +14,14 @@ import (
 	// "reflect"
 
 	"github.com/antihax/optional"
-	"github.com/lakshya-chopra/nas/nasMessage"
+	"github.com/omec-project/nas/nasMessage"
 	"github.com/omec-project/smf/metrics"
 	"github.com/omec-project/smf/msgtypes/svcmsgtypes"
 	"github.com/omec-project/smf/qos"
 	"github.com/omec-project/smf/transaction"
 
-	"github.com/lakshya-chopra/nas"
 	"github.com/omec-project/http_wrapper"
+	"github.com/omec-project/nas"
 	"github.com/omec-project/openapi"
 	"github.com/omec-project/openapi/Namf_Communication"
 	"github.com/omec-project/openapi/Nsmf_PDUSession"

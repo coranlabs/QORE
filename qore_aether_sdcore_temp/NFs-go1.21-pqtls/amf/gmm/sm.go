@@ -10,14 +10,14 @@ package gmm
 import (
 	// "fmt"
 
-	"github.com/lakshya-chopra/nas"
-	"github.com/lakshya-chopra/nas/nasMessage"
-	"github.com/lakshya-chopra/nas/security"
 	"github.com/omec-project/amf/context"
 	gmm_message "github.com/omec-project/amf/gmm/message"
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/amf/util"
 	"github.com/omec-project/fsm"
+	"github.com/omec-project/nas"
+	"github.com/omec-project/nas/nasMessage"
+	"github.com/omec-project/nas/security"
 	"github.com/omec-project/openapi/models"
 )
 

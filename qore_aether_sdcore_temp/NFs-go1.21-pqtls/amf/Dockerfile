@@ -15,7 +15,16 @@ RUN apt-key add pubkey.gpg
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" |  tee /etc/apt/sources.list.d/yarn.list
 RUN apt-get update
-RUN apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev  nodejs yarn git
+RUN apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev  nodejs yarn libssl-dev git
+
+# WORKDIR /cloudflare-go/src
+# COPY ~/cloudflare-go /cloudflare-go/
+
+# COPY ./cloudflare-go /cloudflare-go
+
+#due to git clone issues
+RUN git config --global http.postBuffer 524288000
+RUN git config --global core.compression 9 repack
 
 RUN git clone https://github.com/lakshya-chopra/go /cloudflare-go
 WORKDIR /cloudflare-go/src
@@ -25,10 +34,14 @@ RUN apt-get clean
 # ENV GOROOT /cloudflare-go
 ENV GOPATH /cloudflare-go
 ENV PATH $GOPATH/bin:$PATH
-    
-    # or use GOPATH/src
+
+# or use GOPATH/src
 ENV go /cloudflare-go/bin/go
 ENV GOFLAGS=''
+
+ENV CGO_CFLAGS="-I/usr/include/openssl"
+ENV CGO_LDFLAGS="-L/usr/lib/x86_64-linux-gnu -lssl -lcrypto"
+
 
 RUN cd $GOPATH/src && mkdir -p amf
 COPY . $GOPATH/src/amf

@@ -8,8 +8,8 @@ package producer
 import (
 	"net/http"
 
-	"github.com/lakshya-chopra/nas"
 	"github.com/omec-project/http_wrapper"
+	"github.com/omec-project/nas"
 	"github.com/omec-project/openapi/Nsmf_PDUSession"
 	"github.com/omec-project/openapi/models"
 	"github.com/omec-project/pfcp/pfcpType"
