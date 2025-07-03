@@ -10,7 +10,7 @@ package context
 import (
 	"sync"
 
-	"github.com/lakshya-chopra/nas/nasMessage"
+	"github.com/omec-project/nas/nasMessage"
 	"github.com/omec-project/openapi/models"
 )
 

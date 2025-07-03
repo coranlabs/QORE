@@ -9,7 +9,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/lakshya-chopra/nas"
+	"github.com/omec-project/nas"
 	"github.com/omec-project/amf/context"
 	"github.com/omec-project/amf/gmm"
 	"github.com/omec-project/fsm"

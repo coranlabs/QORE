@@ -20,8 +20,8 @@ import (
 
 	"sync/atomic"
 
-	"github.com/lakshya-chopra/nas/nasMessage"
 	mi "github.com/omec-project/metricfunc/pkg/metricinfo"
+	"github.com/omec-project/nas/nasMessage"
 	"github.com/omec-project/openapi/models"
 	"github.com/omec-project/pfcp"
 	"github.com/omec-project/pfcp/pfcpType"
