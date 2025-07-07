@@ -50,8 +50,51 @@ RUN cd $GOPATH/src/amf \
 
 RUN echo $PWD
 
-FROM alpine:3.8 as amf
+# FROM alpine:3.8 as amf
 
+# # RUN mkdir -p /usr/lib64
+# # RUN mkdir -p /usr/include/openssl
+
+# # COPY --from=builder /usr/lib/x86_64-linux-gnu/* /usr/lib64
+# # COPY --from=builder /usr/include/openssl/ /usr/include/openssl
+
+# RUN apk add --no-cache openssl-dev musl-dev
+
+
+
+# ENV CGO_CFLAGS="-I/usr/include/openssl"
+# ENV CGO_LDFLAGS="-L/usr/lib64/ -lssl -lcrypto"
+
+# ENV ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.22
+
+# LABEL description="ONF open source 5G Core Network" \
+#     version="Stage 3"
+
+# ARG DEBUG_TOOLS
+
+# # Install debug tools ~ 100MB (if DEBUG_TOOLS is set to true)
+# RUN apk update
+# RUN apk add -U vim strace net-tools curl netcat-openbsd bind-tools bash
+
+# # Set working dir
+# WORKDIR /free5gc
+# RUN mkdir -p amf/
+
+# # Copy executable and default certs
+# COPY --from=builder /cloudflare-go/src/amf/bin/* ./amf
+# COPY --from=builder /cloudflare-go/src/amf/cert/* /free5gc/support/TLS/
+# WORKDIR /free5gc/amf
+
+
+#Deploy stage using Ubuntu instead of Alpine
+FROM ubuntu:20.04 as amf
+
+# Install OpenSSL and necessary debug tools
+RUN apt-get update && apt-get install -y \
+    openssl libssl-dev vim strace net-tools curl netcat dnsutils bash
+
+ENV CGO_CFLAGS="-I/usr/include/openssl"
+ENV CGO_LDFLAGS="-L/usr/lib/x86_64-linux-gnu -lssl -lcrypto"
 ENV ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.22
 
 LABEL description="ONF open source 5G Core Network" \
@@ -59,15 +102,11 @@ LABEL description="ONF open source 5G Core Network" \
 
 ARG DEBUG_TOOLS
 
-# Install debug tools ~ 100MB (if DEBUG_TOOLS is set to true)
-RUN apk update
-RUN apk add -U vim strace net-tools curl netcat-openbsd bind-tools bash
-
-# Set working dir
+# Set working directory and copy the AMF binary and certificates from the builder stage
 WORKDIR /free5gc
 RUN mkdir -p amf/
 
-# Copy executable and default certs
 COPY --from=builder /cloudflare-go/src/amf/bin/* ./amf
 COPY --from=builder /cloudflare-go/src/amf/cert/* /free5gc/support/TLS/
+
 WORKDIR /free5gc/amf
