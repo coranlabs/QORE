@@ -82,7 +82,7 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 
 	logger.NgapLog.Infof("Listen on %s", sctpListener.Addr())
 
-	ctx := dtls.Init_ssl_ctx(dtls.SSLMODE_SERVER,util.AmfRSAPemPath,util.AmfRSAKeyPath)
+	ctx := dtls.Init_ssl_ctx(dtls.SSLMODE_SERVER, util.AmfRSAPemPath, util.AmfRSAKeyPath)
 
 	for {
 		newConn, err := sctpListener.AcceptSCTP()
@@ -98,7 +98,7 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 
 		//Perform SSL handshake after SCTP handshake.
 
-		ssl := dtls.New_ssl_conn(ctx, dtls.SSLMODE_SERVER, newConn.Fd())
+		ssl := dtls.New_ssl_conn(ctx, newConn.Fd(), dtls.SSLMODE_SERVER)
 		for {
 			ret := dtls.Do_ssl_handshake(ssl)
 			if ret == 0 {
