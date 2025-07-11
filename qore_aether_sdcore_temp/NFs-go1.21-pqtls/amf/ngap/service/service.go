@@ -32,7 +32,7 @@ import (
 )
 
 type NGAPHandler struct {
-	HandleMessage      func(conn net.Conn, msg []byte)
+	HandleMessage      func(conn net.Conn, msg []byte, sslConn *dtls.SSLConn)
 	HandleNotification func(conn net.Conn, notification sctp.Notification)
 }
 
@@ -170,7 +170,7 @@ func listenAndServe(addr *sctp.SCTPAddr, handler NGAPHandler) {
 		logger.NgapLog.Infof("SCTP Accept from: | %s |", newConn.RemoteAddr().String())
 		connections.Store(newConn, newConn)
 
-		go handleConnection(newConn, readBufSize, handler)
+		go handleConnection(newConn, readBufSize, handler, ssl)
 	}
 }
 
@@ -192,7 +192,7 @@ func Stop() {
 	logger.NgapLog.Infof("SCTP server closed")
 }
 
-func handleConnection(conn *sctp.SCTPConn, bufsize uint32, handler NGAPHandler) {
+func handleConnection(conn *sctp.SCTPConn, bufsize uint32, handler NGAPHandler, ssl *dtls.SSLConn) {
 	defer func() {
 		// if AMF call Stop(), then conn.Close() will return EBADF because conn has been closed inside Stop()
 		if err := conn.Close(); err != nil && err != syscall.EBADF {
@@ -205,6 +205,13 @@ func handleConnection(conn *sctp.SCTPConn, bufsize uint32, handler NGAPHandler) 
 		buf := make([]byte, bufsize)
 
 		n, info, notification, err := conn.SCTPRead(buf)
+		log.Printf("number of enc bytes received: %d\n", n)
+
+		//decrypt buf -> only buffer is encrypted, no other component of the sctp msghdr.
+		dec_buf := make([]byte, bufsize*2)
+		n2 := dtls.New_message_decrypt(ssl, buf, dec_buf)
+		log.Printf("Length of decrypted bytes: %d\n", n)
+
 		if err != nil {
 			switch err {
 			case io.EOF, io.ErrUnexpectedEOF:
@@ -234,11 +241,11 @@ func handleConnection(conn *sctp.SCTPConn, bufsize uint32, handler NGAPHandler) 
 				continue
 			}
 
-			logger.NgapLog.Tracef("Read %d bytes", n)
-			logger.NgapLog.Tracef("Packet content:\n%+v", hex.Dump(buf[:n]))
+			logger.NgapLog.Printf("Read %d bytes\n", n)
+			logger.NgapLog.Printf("Packet content:\n%+v\n", hex.Dump(buf[:n]))
 
 			// TODO: concurrent on per-UE message
-			handler.HandleMessage(conn, buf[:n])
+			handler.HandleMessage(conn, dec_buf[:n2], ssl)
 		}
 	}
 }

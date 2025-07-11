@@ -8,7 +8,9 @@ package message
 import (
 	"os"
 
+	"github.com/lakshya-chopra/dtls-cgo"
 	"github.com/omec-project/amf/context"
+
 	// ngapf "github.com/omec-project/amf/context"
 	// gmms "github.com/omec-project/amf/gmm"
 
@@ -18,7 +20,6 @@ import (
 	"github.com/omec-project/aper"
 	"github.com/omec-project/ngap/ngapType"
 	"github.com/omec-project/openapi/models"
-	
 	// "git.cs.nctu.edu.tw/calee/sctp"
 	// "github.com/omec-project/util_3gpp/suci"
 )
@@ -60,9 +61,13 @@ func SendToRan(ran *context.AmfRan, packet []byte) {
 			return
 		}
 
-		ran.Log.Debugf("Send NGAP message To Ran")
+		// ran.Log.Debugf("Send NGAP message To Ran")
+		ran.Log.Println("Send NGAP message To Ran")
 
-		if n, err := ran.Conn.Write(packet); err != nil {
+		enc_packet1 := make([]byte, 8192)
+		dtls.New_message_encrypt(ran.SSLConn, packet, enc_packet1)
+
+		if n, err := ran.Conn.Write(enc_packet1); err != nil {
 			ran.Log.Errorf("Send error: %+v", err)
 			return
 		} else {

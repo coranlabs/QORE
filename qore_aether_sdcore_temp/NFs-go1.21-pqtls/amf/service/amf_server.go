@@ -27,6 +27,8 @@ func (s *Server) HandleMessage(srv sdcoreAmfServer.NgapService_HandleMessageServ
 	var Amf2RanMsgChan chan *sdcoreAmfServer.AmfMessage
 	Amf2RanMsgChan = make(chan *sdcoreAmfServer.AmfMessage, 100)
 
+	log.Println("here in HandleMessage (amf_server.go)")
+
 	go func() {
 		for {
 			select {

@@ -8,10 +8,12 @@
 package ngap
 
 import (
+	"log"
 	"net"
 	"os"
 	"reflect"
 
+	"github.com/lakshya-chopra/dtls-cgo"
 	"github.com/lakshya-chopra/sctp"
 
 	"fmt"
@@ -113,7 +115,7 @@ func DispatchLb(sctplbMsg *sdcoreAmfServer.SctplbMessage, Amf2RanMsgChan chan *s
 	}
 }
 
-func Dispatch(conn net.Conn, msg []byte) {
+func Dispatch(conn net.Conn, msg []byte, sslConn *dtls.SSLConn) {
 	var ran *context.AmfRan
 	amfSelf := context.AMF_Self()
 
@@ -124,12 +126,15 @@ func Dispatch(conn net.Conn, msg []byte) {
 		// logger.NgapLog.Infof("-------------------------------------------------")
 		ran = amfSelf.NewAmfRan(conn)
 	}
+	ran.SSLConn = sslConn
 
 	if len(msg) == 0 {
 		ran.Log.Infof("RAN close the connection.")
 		ran.Remove()
 		return
 	}
+
+	fmt.Println("In Dispatch")
 
 	pdu, err := ngap.Decoder(msg)
 	if err != nil {
@@ -162,6 +167,8 @@ func NgapMsgHandler(ue *context.AmfUe, msg context.NgapMsg) {
 }
 
 func DispatchNgapMsg(ran *context.AmfRan, pdu *ngapType.NGAPPDU, sctplbMsg *sdcoreAmfServer.SctplbMessage) {
+
+	log.Println("Here in dispatch ng msg.")
 
 	switch pdu.Present {
 	case ngapType.NGAPPDUPresentInitiatingMessage:

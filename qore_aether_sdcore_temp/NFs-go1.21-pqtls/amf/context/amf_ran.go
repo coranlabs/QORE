@@ -7,11 +7,21 @@
 
 package context
 
+/*
+#include <stdlib.h>
+#include <stdio.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/bio.h>
+*/
+import "C"
+
 import (
 	"fmt"
 	"net"
 	"strings"
 
+	"github.com/lakshya-chopra/dtls-cgo"
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/amf/metrics"
 	"github.com/omec-project/amf/protos/sdcoreAmfServer"
@@ -39,6 +49,8 @@ type AmfRan struct {
 	GnbId      string // RanId in string format, i.e.,mcc:mnc:gnbid
 	/* socket Connect*/
 	Conn net.Conn `json:"-"`
+	/*SSL object*/
+	SSLConn *dtls.SSLConn
 	/* Supported TA List */
 	SupportedTAList []SupportedTAI //TODO SupportedTaList store and recover from DB
 
