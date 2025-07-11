@@ -10,7 +10,7 @@ require (
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.6.0
-	github.com/lakshya-chopra/dtls-cgo v0.0.7
+	github.com/lakshya-chopra/dtls-cgo v0.1.2
 	github.com/lakshya-chopra/http2_util v1.1.3
 	github.com/lakshya-chopra/sctp v0.0.1
 	github.com/mitchellh/mapstructure v1.4.1

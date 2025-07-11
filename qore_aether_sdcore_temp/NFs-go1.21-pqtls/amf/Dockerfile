@@ -42,6 +42,9 @@ ENV GOFLAGS=''
 ENV CGO_CFLAGS="-I/usr/include/openssl"
 ENV CGO_LDFLAGS="-L/usr/lib/x86_64-linux-gnu -lssl -lcrypto"
 
+RUN apt-get install -y ca-certificates && update-ca-certificates
+RUN go env -w GOPROXY=direct
+ENV GONOSUMDB=github.com/omec-project/*
 
 RUN cd $GOPATH/src && mkdir -p amf
 COPY . $GOPATH/src/amf
@@ -89,9 +92,9 @@ RUN echo $PWD
 #Deploy stage using Ubuntu instead of Alpine
 FROM ubuntu:20.04 as amf
 
-# Install OpenSSL and necessary debug tools
 RUN apt-get update && apt-get install -y \
-    openssl libssl-dev vim strace net-tools curl netcat dnsutils bash
+    libssl-dev dnsutils bash
+
 
 ENV CGO_CFLAGS="-I/usr/include/openssl"
 ENV CGO_LDFLAGS="-L/usr/lib/x86_64-linux-gnu -lssl -lcrypto"
