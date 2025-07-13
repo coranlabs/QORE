@@ -14,8 +14,8 @@ import (
 
 var (
 	AmfLogPath = path_util.Free5gcPath("free5gc/amfsslkey.log")
-	AmfPemPath = path_util.Free5gcPath("free5gc/support/TLS/amf.pem")
-	AmfKeyPath = path_util.Free5gcPath("free5gc/support/TLS/key.pem")
+	AmfPemPath = path_util.Free5gcPath("free5gc/support/TLS/amfRSA.pem")
+	AmfKeyPath = path_util.Free5gcPath("free5gc/support/TLS/keyRSA.pem")
 
 	AmfRSAPemPath = path_util.Free5gcPath("free5gc/support/TLS/amfRSA.pem")
 	AmfRSAKeyPath = path_util.Free5gcPath("free5gc/support/TLS/keyRSA.pem")

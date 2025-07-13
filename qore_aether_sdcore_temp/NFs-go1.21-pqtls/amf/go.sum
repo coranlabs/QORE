@@ -433,11 +433,15 @@ github.com/omec-project/config5g v1.2.0/go.mod h1:AWFzCbbgCBx/iJwt+zWbpDGLHRpFzg
 github.com/omec-project/fsm v1.1.0 h1:DYa5GMlzOfHY+qyQqSPNi/SgNGE7gNWo+g72tyhxNeQ=
 github.com/omec-project/fsm v1.1.0/go.mod h1:/j5mdVQW0dt+tkgYWh5TsQCpLhxHlmSPIWDUOvTYFGw=
 github.com/omec-project/http2_util v1.1.0/go.mod h1:QwoZRaUyhEp/kTEqXvf0gCYtfQrNHBdkVw939vsMjZY=
+github.com/omec-project/http2_util v1.2.0 h1:ggQ1GjY2x6VRpKuRhZj0t9dh6eISY6LRBv4rlMD++8s=
+github.com/omec-project/http2_util v1.2.0/go.mod h1:KLgvU3o7qmG/i5XO/qITscFql2tWCAmjE6glX+dxe7M=
 github.com/omec-project/http_wrapper v1.1.0 h1:2hD8RUaR/VVg3tUUfuxsuo1/JNpZLiAE8IvATGqDME4=
 github.com/omec-project/http_wrapper v1.1.0/go.mod h1:mc045fjVVJ0/q0g4QG4nuSC0N1BIqGR/ZoK76XgifVU=
 github.com/omec-project/idgenerator v1.1.0 h1:XDHZYO13VqZCkRhMA4xNl19MqCL3AFaY2MNwoF8uzVs=
 github.com/omec-project/idgenerator v1.1.0/go.mod h1:qFK0oP9WNCBjro7ZXPzmbSzCosWmxp4KRVORPl6ztRo=
-
+github.com/omec-project/logger_conf v1.1.0/go.mod h1:2+SOX9OFbPZ+UNv8k+tvPnaWHo4CuX5G/x12dz5sWUE=
+github.com/omec-project/logger_conf v1.1.1 h1:qo0cF5gnPfth8wy+I/QjiOx+F5jB6h4GLSOdyS+ted8=
+github.com/omec-project/logger_conf v1.1.1/go.mod h1:2EwoAXjOcRTweseN+ogWifJvjocEKjz3kxRaIC4I88g=
 github.com/omec-project/logger_util v1.1.0/go.mod h1:UkD09amIhlh8P0k82A6Uz/atiZGeFS3C2wd334CKpuY=
 github.com/omec-project/logger_util v1.2.0 h1:Wtx6skInAPqSic0b97QtJcs+xHDh5798MY2WRrnUz3s=
 github.com/omec-project/logger_util v1.2.0/go.mod h1:LRHlDJdCqVjOxYvYslRryj0DFUNtxQkgxEiQ7fSCoPk=

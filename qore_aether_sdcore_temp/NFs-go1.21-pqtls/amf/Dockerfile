@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-FROM golang:1.21-bullseye AS builder
+FROM golang:1.22.5-bullseye AS builder
 
 LABEL maintainer="ONF <omec-dev@opennetworking.org>"
 
@@ -23,28 +23,35 @@ RUN apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-
 # COPY ./cloudflare-go /cloudflare-go
 
 #due to git clone issues
-RUN git config --global http.postBuffer 524288000
-RUN git config --global core.compression 9 repack
+# RUN git config --global http.postBuffer 524288000
+# RUN git config --global core.compression 9 repack
 
-RUN git clone https://github.com/lakshya-chopra/go /cloudflare-go
-WORKDIR /cloudflare-go/src
-RUN ./make.bash
-RUN apt-get clean
+# RUN git clone https://github.com/lakshya-chopra/go /cloudflare-go
+# WORKDIR /cloudflare-go/src
+# RUN ./make.bash
+# RUN apt-get clean
 
 # ENV GOROOT /cloudflare-go
-ENV GOPATH /cloudflare-go
-ENV PATH $GOPATH/bin:$PATH
+# #ENV GOPATH /cloudflare-go
+# ENV PATH $GOROOT/bin:$PATH
+RUN echo $GOPATH
 
 # or use GOPATH/src
-ENV go /cloudflare-go/bin/go
-ENV GOFLAGS=''
-
+# RUN echo "alias go=/cloudflare-go/bin/go" >> ~/.bashrc
+#RUN $go version
+#ENV GOFLAGS=''
+#RUN go env
+ENV GOINSECURE *
 ENV CGO_CFLAGS="-I/usr/include/openssl"
 ENV CGO_LDFLAGS="-L/usr/lib/x86_64-linux-gnu -lssl -lcrypto"
 
-RUN apt-get install -y ca-certificates && update-ca-certificates
-RUN go env -w GOPROXY=direct
-ENV GONOSUMDB=github.com/omec-project/*
+#RUN apt-get install -y ca-certificates && update-ca-certificates
+#RUN go env -w GOPROXY=direct
+#ENV GONOSUMDB=github.com/omec-project/*
+
+#RUN go clean -modcache
+#RUN go get github.com/omec-project/nrf@v1.4.1
+
 
 RUN cd $GOPATH/src && mkdir -p amf
 COPY . $GOPATH/src/amf
@@ -109,7 +116,7 @@ ARG DEBUG_TOOLS
 WORKDIR /free5gc
 RUN mkdir -p amf/
 
-COPY --from=builder /cloudflare-go/src/amf/bin/* ./amf
-COPY --from=builder /cloudflare-go/src/amf/cert/* /free5gc/support/TLS/
+COPY --from=builder /go/src/amf/bin/* ./amf
+COPY --from=builder /go/src/amf/cert/* /free5gc/support/TLS/
 
 WORKDIR /free5gc/amf
