@@ -9,6 +9,7 @@ package service
 
 import (
 	"bufio"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -55,7 +56,9 @@ import (
 	aperLogger "github.com/omec-project/aper/logger"
 	"github.com/omec-project/fsm"
 	fsmLogger "github.com/omec-project/fsm/logger"
-	"github.com/omec-project/http2_util"
+
+	// "github.com/omec-project/http2_util"
+	"github.com/lakshya-chopra/http2_util"
 	"github.com/omec-project/logger_util"
 	nasLogger "github.com/omec-project/nas/logger"
 	ngapLogger "github.com/omec-project/ngap/logger"
@@ -450,13 +453,13 @@ func (amf *AMF) Start() {
 		os.Exit(0)
 	}()
 
-	// server_cert, err := tls.LoadX509KeyPair(util.AmfPemPath, util.AmfKeyPath)
+	server_cert, err := tls.LoadX509KeyPair(util.AmfPemPath, util.AmfKeyPath)
 
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	server, err := http2_util.NewServer(addr, util.AmfLogPath, router)
+	server, err := http2_util.NewServer(addr, util.AmfLogPath, router, server_cert)
 
 	if server == nil {
 		initLog.Errorf("Initialize HTTP server failed: %+v", err)

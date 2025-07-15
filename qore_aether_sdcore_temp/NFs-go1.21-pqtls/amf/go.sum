@@ -433,8 +433,6 @@ github.com/omec-project/config5g v1.2.0/go.mod h1:AWFzCbbgCBx/iJwt+zWbpDGLHRpFzg
 github.com/omec-project/fsm v1.1.0 h1:DYa5GMlzOfHY+qyQqSPNi/SgNGE7gNWo+g72tyhxNeQ=
 github.com/omec-project/fsm v1.1.0/go.mod h1:/j5mdVQW0dt+tkgYWh5TsQCpLhxHlmSPIWDUOvTYFGw=
 github.com/omec-project/http2_util v1.1.0/go.mod h1:QwoZRaUyhEp/kTEqXvf0gCYtfQrNHBdkVw939vsMjZY=
-github.com/omec-project/http2_util v1.2.0 h1:ggQ1GjY2x6VRpKuRhZj0t9dh6eISY6LRBv4rlMD++8s=
-github.com/omec-project/http2_util v1.2.0/go.mod h1:KLgvU3o7qmG/i5XO/qITscFql2tWCAmjE6glX+dxe7M=
 github.com/omec-project/http_wrapper v1.1.0 h1:2hD8RUaR/VVg3tUUfuxsuo1/JNpZLiAE8IvATGqDME4=
 github.com/omec-project/http_wrapper v1.1.0/go.mod h1:mc045fjVVJ0/q0g4QG4nuSC0N1BIqGR/ZoK76XgifVU=
 github.com/omec-project/idgenerator v1.1.0 h1:XDHZYO13VqZCkRhMA4xNl19MqCL3AFaY2MNwoF8uzVs=

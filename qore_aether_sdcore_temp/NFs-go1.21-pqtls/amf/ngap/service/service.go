@@ -205,47 +205,50 @@ func handleConnection(conn *sctp.SCTPConn, bufsize uint32, handler NGAPHandler, 
 		buf := make([]byte, bufsize)
 
 		n, info, notification, err := conn.SCTPRead(buf)
-		log.Printf("number of enc bytes received: %d\n", n)
+		// log.Printf("number of enc bytes received: %d\n", n)
 
-		//decrypt buf -> only buffer is encrypted, no other component of the sctp msghdr.
-		dec_buf := make([]byte, bufsize*2)
-		n2 := dtls.New_message_decrypt(ssl, buf, dec_buf)
-		log.Printf("Length of decrypted bytes: %d\n", n)
+		if n != -1 && n != 0 {
 
-		if err != nil {
-			switch err {
-			case io.EOF, io.ErrUnexpectedEOF:
-				logger.NgapLog.Debugln("Read EOF from client")
-				return
-			case syscall.EAGAIN:
-				logger.NgapLog.Debugln("SCTP read timeout")
-				continue
-			case syscall.EINTR:
-				logger.NgapLog.Debugf("SCTPRead: %+v", err)
-				continue
-			default:
-				logger.NgapLog.Errorf("Handle connection[addr: %+v] error: %+v", conn.RemoteAddr(), err)
-				return
+			//decrypt buf -> only buffer is encrypted, no other component of the sctp msghdr.
+			dec_buf := make([]byte, 1024)
+			n2 := dtls.New_message_decrypt(ssl, buf, dec_buf)
+			log.Printf("Length of decrypted bytes: %d\n", n)
+
+			if err != nil {
+				switch err {
+				case io.EOF, io.ErrUnexpectedEOF:
+					logger.NgapLog.Debugln("Read EOF from client")
+					return
+				case syscall.EAGAIN:
+					logger.NgapLog.Debugln("SCTP read timeout")
+					continue
+				case syscall.EINTR:
+					logger.NgapLog.Debugf("SCTPRead: %+v", err)
+					continue
+				default:
+					logger.NgapLog.Errorf("Handle connection[addr: %+v] error: %+v", conn.RemoteAddr(), err)
+					return
+				}
 			}
-		}
 
-		if notification != nil {
-			if handler.HandleNotification != nil {
-				handler.HandleNotification(conn, notification)
+			if notification != nil {
+				if handler.HandleNotification != nil {
+					handler.HandleNotification(conn, notification)
+				} else {
+					logger.NgapLog.Warnf("Received sctp notification[type 0x%x] but not handled", notification.Type())
+				}
 			} else {
-				logger.NgapLog.Warnf("Received sctp notification[type 0x%x] but not handled", notification.Type())
-			}
-		} else {
-			if info == nil || info.PPID != ngap.PPID {
-				logger.NgapLog.Warnln("Received SCTP PPID != 60, discard this packet")
-				continue
-			}
+				if info == nil || info.PPID != ngap.PPID {
+					logger.NgapLog.Warnln("Received SCTP PPID != 60, discard this packet")
+					continue
+				}
 
-			logger.NgapLog.Printf("Read %d bytes\n", n)
-			logger.NgapLog.Printf("Packet content:\n%+v\n", hex.Dump(buf[:n]))
+				logger.NgapLog.Printf("Read %d bytes\n", n)
+				logger.NgapLog.Printf("Packet content:\n%+v\n", hex.Dump(buf[:n]))
 
-			// TODO: concurrent on per-UE message
-			handler.HandleMessage(conn, dec_buf[:n2], ssl)
+				// TODO: concurrent on per-UE message
+				handler.HandleMessage(conn, dec_buf[:n2], ssl)
+			}
 		}
 	}
 }
