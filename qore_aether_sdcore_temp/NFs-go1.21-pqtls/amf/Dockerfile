@@ -23,25 +23,35 @@ RUN apt-get -y install gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-
 # COPY ./cloudflare-go /cloudflare-go
 
 #due to git clone issues
-# RUN git config --global http.postBuffer 524288000
-# RUN git config --global core.compression 9 repack
+RUN git config --global http.postBuffer 524288000
+RUN git config --global core.compression 9 repack
 
-# RUN git clone https://github.com/lakshya-chopra/go /cloudflare-go
-# WORKDIR /cloudflare-go/src
-# RUN ./make.bash
-# RUN apt-get clean
-
-# ENV GOROOT /cloudflare-go
-# #ENV GOPATH /cloudflare-go
-# ENV PATH $GOROOT/bin:$PATH
-RUN echo $GOPATH
+RUN git clone https://github.com/lakshya-chopra/go /cloudflare-go
+WORKDIR /cloudflare-go/src
+RUN ./make.bash
+RUN apt-get clean
 
 # or use GOPATH/src
 # RUN echo "alias go=/cloudflare-go/bin/go" >> ~/.bashrc
 #RUN $go version
 #ENV GOFLAGS=''
 #RUN go env
-ENV GOINSECURE *
+# ENV GOINSECURE *
+
+ENV GOROOT /cloudflare-go
+ENV PATH $GOROOT/bin:$PATH
+RUN echo $GOPATH
+
+RUN echo "alias go=/cloudflare-go/bin/go" >> ~/.bashrc
+
+ENV GOFLAGS=-mod=vendor
+
+
+
+RUN go env > /tmp/go_env_output.txt && cat /tmp/go_env_output.txt
+ENV GOSUMDB off
+# RUN go env -w GOSUMDB=off
+
 ENV CGO_CFLAGS="-I/usr/include/openssl"
 ENV CGO_LDFLAGS="-L/usr/lib/x86_64-linux-gnu -lssl -lcrypto"
 
@@ -50,15 +60,17 @@ ENV CGO_LDFLAGS="-L/usr/lib/x86_64-linux-gnu -lssl -lcrypto"
 #ENV GONOSUMDB=github.com/omec-project/*
 
 #RUN go clean -modcache
-#RUN go get github.com/omec-project/nrf@v1.4.1
+# RUN go get github.com/omec-project/nrf@v1.4.1
 
 
 RUN cd $GOPATH/src && mkdir -p amf
 COPY . $GOPATH/src/amf
-RUN cd $GOPATH/src/amf \
-    && make all
+RUN cd $GOPATH/src/amf
+# RUN go mod tidy
 
-RUN echo $PWD
+# RUN go get github.com/lakshya-chopra/http2_util
+RUN cd $GOPATH/src/amf && make all
+
 
 # FROM alpine:3.8 as amf
 

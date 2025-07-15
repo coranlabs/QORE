@@ -56,8 +56,9 @@ $(GO_NF): % : $(GO_BIN_PATH)/%
 $(GO_BIN_PATH)/%: %.go $(NF_GO_FILES)
 # $(@F): The file-within-directory part of the file name of the target.
 	@echo "Start building $(@F)...."
+	@echo "Building binary at: $(ROOT_PATH)/$@"
 	cd $(GO_SRC_PATH)/ && \
-	CGO_ENABLED=1 go build -mod=readonly -o $(ROOT_PATH)/$@ $(@F).go  
+	CGO_ENABLED=1 go build -mod=vendor -o $(ROOT_PATH)/$@ $(@F).go  
 # added -mod=readonly
 
 vpath %.go $(addprefix $(GO_SRC_PATH)/, $(GO_NF))
