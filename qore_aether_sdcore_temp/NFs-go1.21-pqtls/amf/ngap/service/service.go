@@ -207,29 +207,29 @@ func handleConnection(conn *sctp.SCTPConn, bufsize uint32, handler NGAPHandler, 
 		n, info, notification, err := conn.SCTPRead(buf)
 		// log.Printf("number of enc bytes received: %d\n", n)
 
+		if err != nil {
+			switch err {
+			case io.EOF, io.ErrUnexpectedEOF:
+				logger.NgapLog.Debugln("Read EOF from client")
+				return
+			case syscall.EAGAIN:
+				logger.NgapLog.Debugln("SCTP read timeout")
+				continue
+			case syscall.EINTR:
+				logger.NgapLog.Debugf("SCTPRead: %+v", err)
+				continue
+			default:
+				logger.NgapLog.Errorf("Handle connection[addr: %+v] error: %+v", conn.RemoteAddr(), err)
+				return
+			}
+		}
+
 		if n != -1 && n != 0 {
 
 			//decrypt buf -> only buffer is encrypted, no other component of the sctp msghdr.
-			dec_buf := make([]byte, 1024)
+			dec_buf := make([]byte, bufsize)
 			n2 := dtls.New_message_decrypt(ssl, buf, dec_buf)
 			log.Printf("Length of decrypted bytes: %d\n", n)
-
-			if err != nil {
-				switch err {
-				case io.EOF, io.ErrUnexpectedEOF:
-					logger.NgapLog.Debugln("Read EOF from client")
-					return
-				case syscall.EAGAIN:
-					logger.NgapLog.Debugln("SCTP read timeout")
-					continue
-				case syscall.EINTR:
-					logger.NgapLog.Debugf("SCTPRead: %+v", err)
-					continue
-				default:
-					logger.NgapLog.Errorf("Handle connection[addr: %+v] error: %+v", conn.RemoteAddr(), err)
-					return
-				}
-			}
 
 			if notification != nil {
 				if handler.HandleNotification != nil {
@@ -247,7 +247,9 @@ func handleConnection(conn *sctp.SCTPConn, bufsize uint32, handler NGAPHandler, 
 				logger.NgapLog.Printf("Packet content:\n%+v\n", hex.Dump(buf[:n]))
 
 				// TODO: concurrent on per-UE message
-				handler.HandleMessage(conn, dec_buf[:n2], ssl)
+				if n2 != -1 {
+					handler.HandleMessage(conn, dec_buf[:n2], ssl)
+				}
 			}
 		}
 	}
