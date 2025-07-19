@@ -262,6 +262,18 @@ func (nrf *NRF) Start() {
 	bindAddr := factory.NrfConfig.GetSbiBindingAddr()
 	initLog.Infof("Binding addr: [%s]", bindAddr)
 
+	//CA
+	caCert, err := ioutil.ReadFile(util.CACertPath)
+	if err != nil {
+		log.Fatalf("Failed to read CA certificate: %v", err)
+	}
+
+	// Create a new certificate pool and add the CA certificate to it
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	log.Println("CA certificate loaded")
+
 	cert, err := tls.LoadX509KeyPair(util.NrfPemPath, util.NrfKeyPath)
 	if err != nil {
 		log.Fatal(err)

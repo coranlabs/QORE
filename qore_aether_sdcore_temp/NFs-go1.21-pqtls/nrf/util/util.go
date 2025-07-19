@@ -20,8 +20,10 @@ import (
 
 var (
 	NrfLogPath = path_util.Free5gcPath("free5gc/nrfsslkey.log")
-	NrfPemPath = path_util.Free5gcPath("free5gc/support/TLS/nrfpq.pem")
-	NrfKeyPath = path_util.Free5gcPath("free5gc/support/TLS/keypq.pem")
+	NrfPemPath = path_util.Free5gcPath("free5gc/support/TLS/nrf.pem")
+	NrfKeyPath = path_util.Free5gcPath("free5gc/support/TLS/key.pem")
+	CACertPath = path_util.Free5gcPath("free5gc/support/TLS/dl_CA.crt")
+	CAKeyPath  = path_util.Free5gcPath("free5gc/support/TLS/dl_CA.key")
 )
 
 func MarshToJsonString(v interface{}) (result []string) {

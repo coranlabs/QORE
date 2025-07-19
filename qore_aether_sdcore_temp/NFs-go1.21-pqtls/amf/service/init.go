@@ -453,6 +453,15 @@ func (amf *AMF) Start() {
 		os.Exit(0)
 	}()
 
+	caCert, err := ioutil.ReadFile(util.CACertPath)
+	if err != nil {
+		log.Fatalf("Failed to read CA certificate: %v", err)
+	}
+
+	// Create a new certificate pool and add the CA certificate to it
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
 	server_cert, err := tls.LoadX509KeyPair(util.AmfPemPath, util.AmfKeyPath)
 
 	if err != nil {
