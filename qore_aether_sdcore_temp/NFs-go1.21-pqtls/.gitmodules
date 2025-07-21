@@ -4,6 +4,3 @@
 [submodule "amf/vendor/github.com/lakshya-chopra/sctp"]
 	path = amf/vendor/github.com/lakshya-chopra/sctp
 	url = https://github.com/lakshya-chopra/sctp.git
-[submodule "udm"]
-	path = udm
-	url = https://github.com/lakshya-chopra/udm-suci.git
