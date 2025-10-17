@@ -1,0 +1,226 @@
+================================================================================
+                                    NOTICE
+================================================================================
+
+This software contains code from multiple open source projects with different 
+licenses. Please review the licensing terms below carefully.
+
+================================================================================
+SECTION 1: coRAN LABS ORIGINAL CONTRIBUTIONS
+================================================================================
+
+The following components are original contributions by coRAN LABS and 
+Contributors, licensed under the coRAN LABS Public License v1.0:
+
+1. Post-Quantum mTLS (PQ-mTLS) Implementation
+   - Location: All files containing PQ-mTLS, PQC, or post-quantum cryptography
+   - Copyright (C) 2024 coRAN LABS and Contributors
+   - License: coRAN LABS Public License v1.0
+   - Primary Contributor: lakshya-chopra
+
+2. Post-Quantum TLS (PQ-TLS) Implementation  
+   - Location: qore_aether_sdcore/pqtls-sdcore/
+   - Copyright (C) 2024 coRAN LABS and Contributors
+   - License: coRAN LABS Public License v1.0
+   - Primary Contributor: lakshya-chopra
+
+3. Quantum-Resistant Network Functions (QRNG integration)
+   - Location: QORE documentation and integration modules
+   - Copyright (C) 2024 coRAN LABS and Contributors
+   - License: coRAN LABS Public License v1.0
+
+4. QORE Documentation and Architecture
+   - Location: Root level documentation (AKA/, ML-DSA/, PQ-mTLS/, etc.)
+   - Copyright (C) 2024 coRAN LABS and Contributors
+   - License: coRAN LABS Public License v1.0
+
+================================================================================
+SECTION 2: THIRD-PARTY OPEN SOURCE COMPONENTS
+================================================================================
+
+This software includes code derived from the following open source projects:
+
+--------------------------------------------------------------------------------
+2.1 OpenAirInterface (OAI) 5G Core Network
+--------------------------------------------------------------------------------
+   - Location: coran_free5gc/ (base 5G Core NF implementations)
+   - Copyright: OpenAirInterface Software Alliance
+   - License: OAI Public License v1.1 (Apache 2.0 based with patent clause)
+   - URL: https://openairinterface.org/
+   - Source: https://gitlab.eurecom.fr/oai/cn5g/
+   - Modifications: Enhanced with Post-Quantum cryptography support
+
+--------------------------------------------------------------------------------
+2.2 Free5GC Project
+--------------------------------------------------------------------------------
+   - Location: coran_free5gc/ (selected modules and utilities)
+   - Copyright: Free5GC.org Contributors
+   - License: Apache License 2.0
+   - URL: https://free5gc.org/
+   - Source: https://github.com/free5gc/free5gc
+   - Modifications: Integration with PQ-mTLS and architectural enhancements
+
+--------------------------------------------------------------------------------
+2.3 Open Networking Foundation (ONF) - Aether SD-Core
+--------------------------------------------------------------------------------
+   - Location: qore_aether_sdcore/NFs-go1.21-pqtls/
+   - Copyright: Open Networking Foundation
+   - License: Apache License 2.0
+   - URL: https://opennetworking.org/aether/
+   - Source: https://github.com/omec-project/
+   - Modifications: Post-Quantum TLS integration, DTLS enhancements
+
+--------------------------------------------------------------------------------
+2.4 gNB Simulator
+--------------------------------------------------------------------------------
+   - Copyright: UERANSIM Contributors
+   - License: GPL v3.0
+   - URL: https://github.com/aligungr/UERANSIM
+   - Modifications: Integration for PQ testing
+
+--------------------------------------------------------------------------------
+2.5 MongoDB Go Driver
+--------------------------------------------------------------------------------
+   - License: Apache License 2.0
+   - URL: https://github.com/mongodb/mongo-go-driver
+
+--------------------------------------------------------------------------------
+2.6 YAML Parser (gopkg.in/yaml)
+--------------------------------------------------------------------------------
+   - License: Apache License 2.0 / MIT
+   - URL: https://github.com/go-yaml/yaml
+
+--------------------------------------------------------------------------------
+2.7 Logrus (Structured Logger)
+--------------------------------------------------------------------------------
+   - License: MIT License
+   - URL: https://github.com/sirupsen/logrus
+
+--------------------------------------------------------------------------------
+2.8 Cobra (CLI Framework)
+--------------------------------------------------------------------------------
+   - License: Apache License 2.0
+   - URL: https://github.com/spf13/cobra
+
+--------------------------------------------------------------------------------
+2.9 SCTP Library
+--------------------------------------------------------------------------------
+   - License: BSD License
+   - URL: https://github.com/ishidawataru/sctp
+
+--------------------------------------------------------------------------------
+2.10 GTP (GPRS Tunneling Protocol) Library
+--------------------------------------------------------------------------------
+   - License: MIT License
+   - URL: https://github.com/wmnsk/go-gtp
+
+================================================================================
+SECTION 3: CRYPTOGRAPHIC COMPONENTS
+================================================================================
+
+3.1 Post-Quantum Cryptography Algorithms
+    - ML-KEM (Kyber): NIST standardized key encapsulation mechanism
+    - ML-DSA (Dilithium): NIST standardized digital signature algorithm
+    - Implementation: Original integration by coRAN LABS
+
+3.2 Cloudflare Circl Library
+    - License: BSD 3-Clause License
+    - URL: https://github.com/cloudflare/circl
+    - Usage: PQC primitives and cryptographic operations
+
+3.3 OpenSSL / BoringSSL
+    - License: Apache License 2.0
+    - URL: https://www.openssl.org/ / https://boringssl.googlesource.com/
+    - Usage: Traditional TLS and cryptographic functions
+
+3.4 liboqs (Open Quantum Safe)
+    - License: MIT License
+    - URL: https://github.com/open-quantum-safe/liboqs
+    - Usage: Post-Quantum cryptographic algorithm implementations
+
+================================================================================
+SECTION 4: GOLANG STANDARD LIBRARY AND EXTENDED PACKAGES
+================================================================================
+
+4.1 Go Programming Language
+    - License: BSD 3-Clause License
+    - Copyright: The Go Authors
+    - URL: https://golang.org/LICENSE
+
+4.2 Go Extended Packages (golang.org/x/*)
+    - net, crypto, sys, sync packages
+    - License: BSD 3-Clause License
+    - URL: https://cs.opensource.google/go/x
+
+================================================================================
+SECTION 5: CONTAINERIZATION AND ORCHESTRATION
+================================================================================
+
+5.1 Docker
+    - License: Apache License 2.0
+    - URL: https://www.docker.com/
+
+5.2 Kubernetes
+    - License: Apache License 2.0  
+    - URL: https://kubernetes.io/
+
+================================================================================
+SECTION 6: LICENSE PRECEDENCE
+================================================================================
+
+In case of conflicts between licenses:
+
+1. For files explicitly marked with a specific license header, that license 
+   governs for that file.
+
+2. For Post-Quantum cryptography additions and modifications: coRAN LABS 
+   Public License v1.0 applies.
+
+3. For unmodified third-party components: Original component license applies.
+
+4. For components derived from multiple sources: Most restrictive license applies,
+   or dual-licensing if explicitly indicated.
+
+================================================================================
+SECTION 7: ATTRIBUTION REQUIREMENTS
+================================================================================
+
+When distributing this software or derivatives, You must:
+
+1. Retain this NOTICE file in its entirety
+2. Preserve all copyright notices in source files
+3. Clearly indicate modifications You have made
+4. Credit coRAN LABS for Post-Quantum cryptography enhancements
+5. Credit all original open source projects listed above
+
+================================================================================
+SECTION 8: EXPORT COMPLIANCE
+================================================================================
+
+This software contains cryptographic implementations. Your use, distribution,
+or export of this software may be subject to export control laws and regulations
+in your jurisdiction, including but not limited to:
+  - U.S. Export Administration Regulations (EAR)
+  - EU export control regulations
+  - Wassenaar Arrangement on Export Controls
+
+You are solely responsible for complying with all applicable export control laws.
+
+================================================================================
+SECTION 9: CONTACT INFORMATION
+================================================================================
+
+For questions about licensing or attribution:
+  - Email: opensource@coranlabs.org
+  - Commercial licensing: licensing@coranlabs.org
+
+For technical questions or contributions:
+  - GitHub: https://github.com/coRAN-LABS/
+  - Website: https://coranlabs.org/
+
+================================================================================
+
+Copyright (C) 2024 coRAN LABS and Contributors
+All rights reserved under respective licenses.
+
+This NOTICE file must be retained in all distributions of this software.
