@@ -2,8 +2,6 @@
 
 A complete 5G Core Network implementation with Post-Quantum Cryptography support.
 
-## Release: rel-1.0
-
 This repository contains the integrated codebase for all CORAN 5G Network Functions with PQ-Security enhancements.
 
 ## Network Functions (NFs)
@@ -59,21 +57,6 @@ This repository contains the integrated codebase for all CORAN 5G Network Functi
 - ✅ PQ-Security Phase 1 & 2 implementation
 - ✅ Container-ready with Docker support
 - ✅ Kubernetes deployment support
-
-## Version
-
-**Release**: rel-1.0  
-**Base Branch**: coran-pq-security  
-**Date**: October 2024
-
-## Contributors
-
-- Lakshya Chopra
-- SHANKAR
-- Khushi Chhillar (kcl17)
-- Satyam (Satya-git-hub)
-- Nikhil (Nikhil690)
-- AddyTiv
 
 ## License
 
