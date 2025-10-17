@@ -7,7 +7,7 @@
       </a>
     </td>
     <td style="border-collapse: collapse; border: none; vertical-align: center;">
-      <b><h1>QORE</h1></b>
+      <b><h1>QORE: Post-Quantum Secure Core</h1></b>
       <b><h2>A Strategic Initiative to Quantumize the Global 5G Ecosystem</h2>
     </td>
   </tr>
@@ -91,7 +91,7 @@ QORE systematically integrates Post-Quantum Cryptography across all layers of th
 - **Edge and Cloud Infrastructure**: Multi-access Edge Computing security, network slicing isolation, cloud-native security
 - **Standards Integration**: Collaboration with 3GPP, IETF, and industry partners for quantum-safe specifications
 
-**Note**: RAN-level quantum security (gNodeB, O-RAN, RIC) is covered separately under the **q-RAN** initiative.
+**Note**: RAN-level quantum security (gNodeB, O-RAN, RIC) is covered separately under the **Q-RAN** initiative.
 
 ## Quantumization Status
 
