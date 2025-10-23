@@ -392,7 +392,7 @@ QORE is an open research initiative. We welcome contributions from academia, ind
 
 ```bash
 # Fork the repository
-git clone https://github.com/YOUR_USERNAME/qore-rel1.git
+git clone https://github.com/coranlabs/QORE.git
 
 # Create a feature branch
 git checkout -b feature/pqc-implementation
@@ -409,10 +409,6 @@ git push origin feature/pqc-implementation
 ---
 
 ## Publications and Media
-
-### Academic Papers
-1. "Post-Quantum mTLS for 5G Service-Based Architecture" - IEEE INFOCOM 2024 Workshop
-2. "Quantum-Resistant SUPI Encryption in 5G Standalone Networks" - ACM CCS 2024
 
 ### Whitepapers and Technical Documentation
 - [coRAN Labs Whitepapers Repository](https://github.com/coranlabs/WhitePapers) - Comprehensive technical documentation, architecture guides, and research papers
@@ -455,11 +451,11 @@ For commercial deployment, product integration, or custom development:
 ### coRAN Labs
 - **Website**: [www.coranlabs.com](https://www.coranlabs.com/)
 - **Email**: contact@coranlabs.com
-- **GitHub**: [github.com/coRAN-LABS](https://github.com/coRAN-LABS)
+- **GitHub**: [github.com/coranlabs](https://github.com/coranlabs)
 
 ### Technical Support
-- **Issue Tracker**: [GitHub Issues](https://github.com/coRAN-LABS/qore-rel1/issues)
-- **Discussion Forum**: [GitHub Discussions](https://github.com/coRAN-LABS/qore-rel1/discussions)
+- **Issue Tracker**: [GitHub Issues](https://github.com/coranlabs/QORE/issues)
+- **Discussion Forum**: [GitHub Discussions](https://github.com/coranlabs/QORE/discussions)
 
 ---
 
