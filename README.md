@@ -317,8 +317,8 @@ While symmetric cryptography has higher quantum resistance, QORE upgrades to AES
 
 ```bash
 # Clone the repository
-git clone https://github.com/coRAN-LABS/qore-rel1.git
-cd qore-rel1/qore_free5gc
+git clone https://github.com/coranlabs/QORE.git
+cd QORE/qore_free5gc
 
 # Build containers with PQ support
 docker-compose build
@@ -340,7 +340,7 @@ docker-compose logs -f amf
 > **Note**: For production deployments with Charmed Aether SD-Core, PQ-PKI Dashboard, and commercial support, see our [enterprise offerings](mailto:contact@coranlabs.com).
 
 ```bash
-cd qore-rel1/qore_aether_sdcore
+cd QORE/qore_aether_sdcore
 
 # Install via Helm
 helm install sd-core-pq ./helm-charts/sd-core-pq
@@ -361,7 +361,7 @@ kubectl get pods -n aether
 - Established coRAN LABS Public License framework
 - Launched community engagement with LFN, Anuket, and ONAP
 
-### 2025 Focus Areas
+### 2025-26 Focus Areas
 - Complete quantumization of additional open source 5G Core platforms (OAI, Open5GS, Magma)
 - 3GPP Release 17+ compliance and standards alignment
 - Performance optimization and production deployment support
