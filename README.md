@@ -7,7 +7,7 @@
       </a>
     </td>
     <td style="border-collapse: collapse; border: none; vertical-align: center;">
-      <b><h1>QORE: Post-Quantum Secure Core</h1></b>
+      <b><h1>QORE: Quantum Secure 5G/B5G Core</h1></b>
       <b><h2>A Strategic Initiative to Quantumize the Global 5G Ecosystem</h2>
     </td>
   </tr>
