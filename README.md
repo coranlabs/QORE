@@ -20,9 +20,44 @@
 
 ---
 
+## Abstract
+
+Quantum computing is reshaping the security landscape of modern telecommunications. The cryptographic foundations that secure today's 5G systems, including RSA, Elliptic Curve Cryptography (ECC), and Diffie-Hellman (DH), are all susceptible to attacks enabled by Shor's algorithm. QORE introduces a quantum-secure 5G and Beyond 5G (B5G) Core framework that provides a clear pathway for transitioning both the 5G Core Network Functions and User Equipment (UE) to Post-Quantum Cryptography (PQC).
+
+The framework uses NIST-standardized lattice-based algorithms **Module-Lattice Key Encapsulation Mechanism (ML-KEM)** and **Module-Lattice Digital Signature Algorithm (ML-DSA)** and applies them across the 5G Service-Based Architecture (SBA). A **Hybrid PQC (HPQC)** configuration is also proposed, combining classical and quantum-safe primitives to maintain interoperability during migration. Experimental validation indicates that ML-KEM delivers quantum security with only minor performance overhead, satisfying the stringent low-latency and high-throughput requirements of carrier-grade 5G systems.
+
+---
+
+## Research Publication
+
+This work is documented in our research paper:
+
+**"QORE: Quantum Secure 5G/B5G Core"**  
+*Vipin Rathi, Lakshya Chopra, Rudraksh Rawal, Nitin Rajput, Shiva Valia, Madhav Aggarwal, Aditya Gairola*
+
+arXiv: [https://arxiv.org/abs/2510.19982](https://arxiv.org/abs/2510.19982)  
+PDF: [https://arxiv.org/pdf/2510.19982](https://arxiv.org/pdf/2510.19982)  
+HTML: [https://arxiv.org/html/2510.19982](https://arxiv.org/html/2510.19982)
+
+**Submitted**: October 22, 2025 | **Pages**: 23 | **Subjects**: Cryptography and Security, Distributed Computing, Networking
+
+If you use QORE in your research or implementation, please cite our paper:
+
+```bibtex
+@article{qore2024,
+  title={QORE: Quantum Secure 5G/B5G Core},
+  author={Rathi, Vipin and Chopra, Lakshya and Rawal, Rudraksh and Rajput, Nitin and Valia, Shiva and Aggarwal, Madhav and Gairola, Aditya},
+  journal={arXiv preprint arXiv:2510.19982},
+  year={2024},
+  url={https://arxiv.org/abs/2510.19982}
+}
+```
+
+---
+
 ## Overview
 
-**QORE (QORE)** is a comprehensive research and development initiative by [coRAN Labs](https://www.coranlabs.com/) to systematically integrate **Post-Quantum Cryptography (PQC)** and **Quantum Random Number Generation (QRNG)** across the entire open source 5G/6G ecosystem. As quantum computing capabilities advance, traditional cryptographic methods face obsolescence. QORE addresses this existential threat by creating quantum-resistant implementations of all major open source cellular core networks.
+**QORE (Quantum Secure 5G/B5G Core)** is a comprehensive research and development initiative by [coRAN Labs](https://www.coranlabs.com/) to systematically integrate **Post-Quantum Cryptography (PQC)** and **Quantum Random Number Generation (QRNG)** across the entire open source 5G/6G ecosystem. As quantum computing capabilities advance, traditional cryptographic methods face obsolescence. QORE addresses this existential threat by creating quantum-resistant implementations of all major open source cellular core networks.
 
 ### Mission Statement
 
@@ -38,15 +73,17 @@ To ensure the long-term security and viability of open source telecommunications
 2. [Project Scope](#project-scope)
 3. [Quantumization Status](#quantumization-status)
 4. [Technical Architecture](#technical-architecture)
-5. [Post-Quantum Technologies](#post-quantum-technologies)
-6. [Migration Path](#migration-path)
-7. [Security Features](#security-features)
-8. [Getting Started](#getting-started)
-9. [Roadmap](#roadmap)
-10. [Contributing](#contributing)
-11. [Publications and Media](#publications-and-media)
-12. [License](#license)
-13. [Contact](#contact)
+5. [Post-Quantum Cryptographic Primitives](#post-quantum-cryptographic-primitives)
+6. [Security Protocols](#security-protocols)
+7. [Migration Strategy](#migration-strategy)
+8. [Performance Evaluation](#performance-evaluation)
+9. [Security Features](#security-features)
+10. [Getting Started](#getting-started)
+11. [Roadmap](#roadmap)
+12. [Contributing](#contributing)
+13. [Publications and Media](#publications-and-media)
+14. [License](#license)
+15. [Contact](#contact)
 
 ---
 
@@ -54,12 +91,13 @@ To ensure the long-term security and viability of open source telecommunications
 
 ### The Quantum Threat
 
-Modern telecommunications infrastructure relies on cryptographic algorithms (RSA, ECDH, ECDSA) that will become vulnerable to quantum computers implementing Shor's algorithm. The timeline for cryptographically-relevant quantum computers (CRQCs) is uncertain, with estimates ranging from 5-15 years. However, several factors demand immediate action:
+Modern telecommunications infrastructure relies on cryptographic algorithms (RSA, ECDH, ECDSA) that will become vulnerable to quantum computers implementing **Shor's algorithm**. The timeline for cryptographically-relevant quantum computers (CRQCs) is uncertain, with estimates ranging from 5-15 years. However, several factors demand immediate action:
 
-- **Harvest Now, Decrypt Later (HNDL)**: Adversaries are already capturing encrypted traffic for future decryption
-- **Long Infrastructure Lifecycles**: 5G equipment deployed today will operate for 10-20 years
-- **Regulatory Requirements**: Governments are beginning to mandate quantum-resistant cryptography
-- **3GPP Evolution**: Standards bodies are actively developing PQC integration specifications
+- **Harvest Now, Decrypt Later (HNDL)**: Adversaries are already capturing encrypted traffic for future decryption when quantum computers become available
+- **Long Infrastructure Lifecycles**: 5G equipment deployed today will operate for 10-20 years, extending well into the quantum era
+- **Regulatory Requirements**: Governments and standards bodies are beginning to mandate quantum-resistant cryptography
+- **3GPP Evolution**: Standards bodies (3GPP SA3 and SA5) are actively developing PQC integration specifications
+- **NIST PQC Standardization**: FIPS 203 (ML-KEM), FIPS 204 (ML-DSA), and FIPS 205 (SLH-DSA) have been standardized
 
 ### Why Open Source Matters
 
@@ -86,12 +124,15 @@ QORE aims to quantumize **every significant open source mobile core network impl
 
 QORE systematically integrates Post-Quantum Cryptography across all layers of the 5G/6G ecosystem:
 
-- **Core Network Functions**: Service-Based Architecture security, Network Function authentication, subscriber identity protection, certificate infrastructure
+- **Core Network Functions**: Service-Based Architecture (SBA) security, Network Function authentication, subscriber identity protection, certificate infrastructure
 - **Control and User Planes**: Secure interfaces (N2, N3, N4) with quantum-resistant protocols
+- **User Equipment (UE)**: Post-quantum SUPI concealment and UE-to-network authentication
 - **Edge and Cloud Infrastructure**: Multi-access Edge Computing security, network slicing isolation, cloud-native security
 - **Standards Integration**: Collaboration with 3GPP, IETF, and industry partners for quantum-safe specifications
 
 **Note**: RAN-level quantum security (gNodeB, O-RAN, RIC) is covered separately under the **Q-RAN** initiative.
+
+---
 
 ## Quantumization Status
 
@@ -149,50 +190,86 @@ QORE systematically integrates Post-Quantum Cryptography across all layers of th
 
 ## Technical Architecture
 
-### Post-Quantum Technologies
+### Post-Quantum Cryptographic Primitives
 
-QORE integrates NIST-standardized Post-Quantum Cryptographic algorithms:
+QORE integrates NIST-standardized Post-Quantum Cryptographic algorithms based on lattice-based cryptography:
 
 #### Key Encapsulation Mechanisms
 **ML-KEM (Module-Lattice-Based Key Encapsulation Mechanism)**
 - **Standard**: FIPS 203
-- **Security Levels**: ML-KEM-512, ML-KEM-768, ML-KEM-1024
-- **Use Cases**: TLS/DTLS key exchange, SUPI encryption, IPsec IKEv2
-- **Implementation**: Cloudflare Circl library, liboqs
+- **Security Levels**: 
+  - ML-KEM-512 (AES-128 equivalent)
+  - ML-KEM-768 (AES-192 equivalent) - **Recommended**
+  - ML-KEM-1024 (AES-256 equivalent)
+- **Use Cases**: TLS/DTLS key exchange, SUPI encryption (SUCI), IPsec IKEv2
+- **Performance**: 236,000 key exchanges per second (ML-KEM-768)
+- **Implementation**: Cloudflare Circl library, liboqs, wolfSSL
 
 #### Digital Signatures
 **ML-DSA (Module-Lattice-Based Digital Signature Algorithm)**
 - **Standard**: FIPS 204
-- **Security Levels**: ML-DSA-44, ML-DSA-65, ML-DSA-87
+- **Security Levels**: 
+  - ML-DSA-44 (AES-128 equivalent)
+  - ML-DSA-65 (AES-192 equivalent) - **Recommended**
+  - ML-DSA-87 (AES-256 equivalent)
 - **Use Cases**: Certificate signatures, NF authentication, message signing
-- **Implementation**: Circl, liboqs
+- **Performance**: 1.15 million signature verifications per second
+- **Implementation**: Circl, liboqs, wolfSSL
 
 #### Hash-Based Signatures (Future)
 **SLH-DSA (Stateless Hash-Based Digital Signature Algorithm)**
 - **Standard**: FIPS 205
 - **Planned Integration**: Q3 2025 for certificate authority root keys
+- **Use Case**: Long-term certificate authority security
 
-### Cryptographic Protocols
+### Hybrid Post-Quantum Cryptography (HPQC)
 
-#### PQ-mTLS 1.3 (Post-Quantum Mutual TLS)
+QORE implements a **Hybrid PQC** approach to ensure backward compatibility and smooth migration:
+
+- **Hybrid Key Exchange**: Combines classical ECDHE with ML-KEM
+- **Hybrid Signatures**: Combines classical ECDSA with ML-DSA
+- **Interoperability**: Enables gradual migration from classical to quantum-safe cryptography
+- **Crypto-Agility**: Framework supports multiple cryptographic primitives and easy switching
+
+---
+
+## Security Protocols
+
+### PQ-mTLS 1.3 (Post-Quantum Mutual TLS)
 Quantum-resistant adaptation of TLS 1.3 for Service-Based Interface (SBI) protection:
 - Replaces ECDHE with ML-KEM for key exchange
 - Uses ML-DSA for certificate signatures
 - Maintains TLS 1.3 handshake efficiency
 - Backward compatibility with hybrid mode (classical + PQ)
+- **Handshake Overhead**: 8-12 ms additional latency (acceptable for carrier-grade systems)
 
-#### PQ-DTLS 1.3 (Post-Quantum Datagram TLS)
+### PQ-DTLS 1.3 (Post-Quantum Datagram TLS)
 Secures connection-oriented protocols over unreliable transports:
 - Used for N2 interface (NGAP over SCTP between gNB and AMF)
 - Protects control plane signaling
 - Low latency suitable for radio interface timing requirements
+- Supports handshake fragmentation for UDP transport
 
-#### PQ-IPsec (Post-Quantum IPsec)
+### PQ-IPsec (Post-Quantum IPsec)
 Quantum-safe user plane encryption:
 - IKEv2 with ML-KEM for key establishment
 - Protects N3 (gNB-UPF), N4 (SMF-UPF), N9 (UPF-UPF) interfaces
 - ESP encryption with AES-256-GCM
 - Hardware acceleration support for line-rate performance
+
+### PQ-OAuth 2.0
+Post-quantum authentication and authorization:
+- OAuth 2.0 framework with ML-DSA signatures
+- Secure API access for Network Functions
+- Token-based authentication with quantum-safe signatures
+- Integration with enterprise identity systems
+
+### PQ-SUCI (Post-Quantum Subscriber Concealment)
+Quantum-resistant SUPI (Subscription Permanent Identifier) encryption:
+- **Profile A**: ML-KEM-768 key encapsulation
+- **Profile B**: ML-KEM-1024 for high-security deployments
+- **Hybrid Mode**: Combined classical ECIES + ML-KEM
+- Prevents IMSI catching attacks even in quantum era
 
 ### Quantum Random Number Generation
 
@@ -201,27 +278,89 @@ Quantum-safe user plane encryption:
 - Eliminates pseudo-random number generator (PRNG) vulnerabilities
 - Used for cryptographic key generation, nonces, IVs
 - API integration with multiple QRNG providers (ID Quantique, Quintessence Labs)
+- Entropy pool management for high-throughput systems
 
 ---
 
-## Migration Path
+## Migration Strategy
+
+### Phased Migration Approach
+
+QORE proposes a **four-phase migration strategy** to transition from classical to post-quantum cryptography:
+
+#### Phase 1: Core Network Function SBI Upgrades
+- Upgrade inter-NF communication to PQ-mTLS 1.3
+- Deploy ML-DSA certificate infrastructure
+- Implement hybrid mode for backward compatibility
+- **Duration**: 6-12 months
+
+#### Phase 2: RAN Interface Security Enhancements
+- Implement PQ-DTLS for N2 control plane
+- Deploy PQ-IPsec for N3 user plane
+- Integrate with Q-RAN implementations
+- **Duration**: 6-12 months
+
+#### Phase 3: OAuth and UE Security Implementation
+- Upgrade to PQ-OAuth 2.0
+- Implement PQ-SUCI for subscriber identity protection
+- Deploy QRNG for UE key generation
+- **Duration**: 6-12 months
+
+#### Phase 4: Full Homogeneous PQC Deployment
+- Remove classical cryptography fallback
+- Pure post-quantum cryptography deployment
+- Complete QRNG integration
+- **Duration**: 6-12 months
 
 ### Classical to Post-Quantum Transition
 
 | **Feature** | **Classical Core** | **QORE (Post-Quantum Core)** | **Status** |
 |-------------|-------------------|------------------------------|------------|
-| **SBI Communication** | mTLS | PQ-mTLS 1.3 | Completed |
-| **SUPI to SUCI** | ECIES | PQ-IES (ML-KEM) | Completed |
-|  |  | PQ-IES (Hybrid ML-KEM) | Completed |
-| **Digital Certificates** | Classical Certificates | ML-DSA | Completed |
-| **N2 Control Plane** | DTLS | PQ-DTLS 1.3 | Completed |
-| **N2 User Data** | IPSec | PQ-IPSec (IKEv2 with PQ) | Completed |
-| **N3 User Data** | IPSec | PQ-IPSec (IKEv2 with PQ) | Completed |
-| **N4 User Data** | IPSec | PQ-IPSec (IKEv2 with PQ) | Completed |
-| **PKI** | Classical PKI/Private CA | PQ-PKI/Private PQ-CA | Completed |
-| **Symmetric Key** | AES-128 | AES-256* | Completed |
-| **Random Number** | PRNG | QRNG* | Completed |
+| **SBI Communication** | mTLS (ECDHE + RSA) | PQ-mTLS 1.3 (ML-KEM + ML-DSA) | - Completed |
+| **SUPI to SUCI** | ECIES (Profile A/B) | PQ-IES (ML-KEM-768/1024) | - Completed |
+|  |  | Hybrid (ECIES + ML-KEM) | - Completed |
+| **Digital Certificates** | RSA-2048/4096, ECDSA | ML-DSA-65/87 | - Completed |
+| **N2 Control Plane** | DTLS 1.2/1.3 | PQ-DTLS 1.3 | - Completed |
+| **N3/N4/N9 User Plane** | IPSec (IKEv2 + DH) | PQ-IPSec (IKEv2 + ML-KEM) | - Completed |
+| **PKI** | Classical PKI/CA | PQ-PKI/PQ-CA | - Completed |
+| **OAuth 2.0** | Classical OAuth | PQ-OAuth 2.0 | - Completed |
+| **Symmetric Key** | AES-128 | AES-256 | - Completed |
+| **Random Number** | PRNG | QRNG | - Completed |
 
+---
+
+## Performance Evaluation
+
+### Cryptographic Operation Performance
+
+Based on experimental validation documented in the research paper:
+
+| **Operation** | **Algorithm** | **Operations/Second** | **Latency** |
+|---------------|---------------|----------------------|-------------|
+| Key Exchange | ML-KEM-768 | 236,000 ops/s | ~4.2 μs |
+| Signature Generation | ML-DSA-65 | 45,000 ops/s | ~22 μs |
+| Signature Verification | ML-DSA-65 | 1,150,000 ops/s | ~0.87 μs |
+
+### TLS Handshake Performance
+
+| **Protocol** | **Handshake Time** | **Overhead** |
+|--------------|-------------------|--------------|
+| Classical TLS 1.3 | 15-20 ms | Baseline |
+| PQ-mTLS 1.3 (ML-KEM-768) | 23-32 ms | +8-12 ms |
+| Hybrid PQ-mTLS | 25-35 ms | +10-15 ms |
+
+### GPU Acceleration
+
+- **Performance Improvement**: Up to 10x speedup for ML-KEM operations
+- **Use Cases**: High-throughput UPF deployments, certificate authorities
+- **Recommended Hardware**: NVIDIA A100, H100 GPUs
+
+### Key Findings
+
+- **Minimal Performance Impact**: Post-quantum cryptography adds only 8-12 ms to TLS handshakes  
+- **Carrier-Grade Performance**: ML-KEM achieves 236K operations/second, suitable for production  
+- **High Throughput**: Signature verification at 1.15M ops/s enables scalable PKI  
+- **Hardware Acceleration**: GPU support provides additional performance headroom
 
 ---
 
@@ -238,6 +377,7 @@ The Service-Based Architecture in 5G Core relies on HTTP/2 with TLS for inter-NF
 - Perfect Forward Secrecy (PFS) with ML-KEM key exchange
 - Session resumption with post-quantum session tickets
 - HTTP/2 multiplexing preserved
+- Zero-trust security model
 
 ---
 
@@ -264,12 +404,14 @@ Post-Quantum Public Key Infrastructure (PQ-PKI) with ML-DSA signatures:
 <img src="./docs/signature_pq.png" alt="PQ Certificate Verification" width="800">
 
 **Components**:
-- Root CA with ML-DSA-87 signatures
+- Root CA with ML-DSA-87 signatures (long-term security)
 - Intermediate CAs for organizational hierarchy
-- End-entity certificates for each NF
+- End-entity certificates for each NF (ML-DSA-65)
 - Certificate Revocation Lists (CRL) with quantum-safe signatures
 - OCSP responder with PQ authentication
+- Hybrid certificate chains for migration support
 
+**Enterprise Features**:
 - Web-based PQ-PKI Dashboard for enterprise deployments
 - Certificate lifecycle management (issuance, renewal, revocation)
 - Real-time monitoring and audit logging
@@ -292,11 +434,17 @@ True randomness is critical for cryptographic security. QORE integrates QRNG for
 
 <img src="./docs/QRNG_int.png" alt="QRNG Integration" width="700">
 
+**Benefits**:
+- True quantum entropy (non-deterministic)
+- Eliminates PRNG predictability attacks
+- Certified entropy sources (NIST SP 800-90B compliant)
+- Fail-safe fallback to hardware RNG
+
 ---
 
 ### Enhanced Symmetric Encryption
 
-While symmetric cryptography has higher quantum resistance, QORE upgrades to AES-256 for defense-in-depth:
+While symmetric cryptography has higher quantum resistance (Grover's algorithm provides only quadratic speedup), QORE upgrades to AES-256 for defense-in-depth:
 
 <img src="./docs/symmetric.png" alt="AES-256 Symmetric Encryption" width="500">
 
@@ -312,6 +460,7 @@ While symmetric cryptography has higher quantum resistance, QORE upgrades to AES
 - **Orchestration** (for Aether): Kubernetes 1.24+ with Helm 3.8+
 - **Hardware**: x86_64 architecture, 8+ CPU cores, 16GB+ RAM
 - **Networking**: Multiple network interfaces or VLAN support for user/control plane separation
+- **Optional**: NVIDIA GPU for hardware acceleration
 
 ### Quick Start: Free5GC Variant
 
@@ -335,8 +484,6 @@ docker-compose logs -f amf
 
 ### Quick Start: Aether SD-Core Variant
 
-
-
 > **Note**: For production deployments with Charmed Aether SD-Core, PQ-PKI Dashboard, and commercial support, see our [enterprise offerings](mailto:contact@coranlabs.com).
 
 ```bash
@@ -349,24 +496,29 @@ helm install sd-core-pq ./helm-charts/sd-core-pq
 kubectl get pods -n aether
 ```
 
-**Detailed Documentation**: See individual project directories for deployment guides.
+**Detailed Documentation**: See individual project directories for deployment guides, configuration options, and troubleshooting.
 
 ---
 
 ## Roadmap
 
 ### 2024-25 (Completed)
-- Successfully quantumized Free5GC and Aether SD-Core platforms
-- Integrated ML-KEM, ML-DSA, and QRNG across all network functions
-- Established coRAN LABS Public License framework
-- Launched community engagement with LFN, Anuket, and ONAP
+- - Successfully quantumized Free5GC and Aether SD-Core platforms
+- - Integrated ML-KEM, ML-DSA, and QRNG across all network functions
+- - Implemented hybrid PQC mode for migration support
+- - Established coRAN LABS Public License framework
+- - Launched community engagement with LFN, Anuket, and ONAP
+- - Published research paper on arXiv (arXiv:2510.19982) documenting QORE architecture and implementation
+- - Experimental validation with carrier-grade performance metrics
 
 ### 2025-26 Focus Areas
 - Complete quantumization of additional open source 5G Core platforms (OAI, Open5GS, Magma)
 - 3GPP Release 17+ compliance and standards alignment
-- Performance optimization and production deployment support
+- Performance optimization and GPU acceleration enhancements
+- Production deployment support and operator trials
 - Multi-vendor interoperability testing and certification
 - Enhanced QRNG integration and edge deployment optimization
+- SLH-DSA integration for CA root keys
 
 ### 2026 and Beyond
 - Advanced quantum-safe features (network slicing, MEC security)
@@ -374,6 +526,7 @@ kubectl get pods -n aether
 - Expanded ecosystem support and operator production pilots
 - AI/ML integration for quantum threat detection and response
 - Contribution to 3GPP Release 18+ quantum security specifications
+- Quantum Key Distribution (QKD) integration research
 
 ---
 
@@ -410,6 +563,12 @@ git push origin feature/pqc-implementation
 
 ## Publications and Media
 
+### Research Papers
+- **QORE: Quantum Secure 5G/B5G Core** - Rathi et al., 2024  
+  arXiv:2510.19982 | [PDF](https://arxiv.org/pdf/2510.19982) | [Abstract](https://arxiv.org/abs/2510.19982) | [HTML](https://arxiv.org/html/2510.19982)
+  
+  *Published: October 22, 2025 | 23 pages | Subjects: Cryptography and Security, Distributed Computing, Networking*
+
 ### Whitepapers and Technical Documentation
 - [coRAN Labs Whitepapers Repository](https://github.com/coranlabs/WhitePapers) - Comprehensive technical documentation, architecture guides, and research papers
 
@@ -424,6 +583,9 @@ git push origin feature/pqc-implementation
 2. **ONAP TSC**: [Quantum Security Integration Proposal](https://lists.onap.org/g/onap-tsc/message/9611)
 3. **LFN CNTI**: Input from ETSI on Quantum Security & Encryption - [PoC Slides](https://share.google/3zyXvHcW4i5jXn9zS)
 4. **QORE Project Presentation**: [Slides and Technical Overview](https://share.google/IQKQa9fy4813DsL1M)
+
+### Media Coverage
+- [Quantum Zeitgeist: QORE Enables Transition to Post-Quantum Cryptography](https://quantumzeitgeist.com/quantum-networks-secure-b5g-core-qore-enables-transition-post-cryptography/)
 
 ---
 
@@ -456,6 +618,11 @@ For commercial deployment, product integration, or custom development:
 ### Technical Support
 - **Issue Tracker**: [GitHub Issues](https://github.com/coranlabs/QORE/issues)
 - **Discussion Forum**: [GitHub Discussions](https://github.com/coranlabs/QORE/discussions)
+
+### Research Collaboration
+For research partnerships, academic collaboration, or joint publications:
+- **Email**: contact@coranlabs.com
+- **Cite Our Work**: See [Research Publication](#research-publication) section
 
 ---
 
