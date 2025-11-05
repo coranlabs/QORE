@@ -42,7 +42,7 @@ arXiv: [https://arxiv.org/abs/2510.19982](https://arxiv.org/abs/2510.19982) | PD
 ```bibtex
 @article{qore2024,
   title={QORE: Quantum Secure 5G/B5G Core},
-  author={Rathi, Vipin and Chopra, Lakshya and Rawal, Rudraksh and Rajput, Nitin and Valia, Shiva and Aggarwal, Madhav and Gairola, Aditya},
+  author={ Vipin Rathi , Lakshya Chopra , Nitin Rajput , Rudraksh Rawal , Madhav Aggarwal , Shiva Valia , Aditya Gairola }
   journal={arXiv preprint arXiv:2510.19982},
   year={2024}
 }
